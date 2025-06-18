@@ -1,0 +1,68 @@
+# DeVAIC Configuration File
+# This file contains the default configuration for DeVAIC
+
+[rules]
+# Categories of vulnerabilities to analyze
+enabled_categories = [
+    "injection",
+    "authentication",
+    "authorization", 
+    "cryptographic",
+    "deserialization",
+    "logging",
+    "validation"
+]
+
+# Minimum severity level to report (CRITICAL, HIGH, MEDIUM, LOW, INFO)
+severity_threshold = "LOW"
+
+# Custom rules (rule_id = enabled)
+[rules.custom_rules]
+# Add custom rule overrides here
+# "C001" = false  # Disable specific rule
+
+[output]
+# Output format: table, json, sarif
+format = "table"
+
+# Output file path (optional)
+# file = "devaic-report.json"
+
+# Enable verbose output
+verbose = false
+
+# Enable colored output
+colors = true
+
+[analysis]
+# Maximum file size to analyze (in bytes)
+max_file_size = 10485760  # 10MB
+
+# File patterns to exclude from analysis
+exclude_patterns = [
+    "*.git/*",
+    "target/*",
+    "build/*",
+    "node_modules/*",
+    "*.min.js",
+    "*.bundle.js",
+    "vendor/*",
+    "third_party/*"
+]
+
+# File patterns to include in analysis
+include_patterns = [
+    "*.c",
+    "*.h",
+    "*.cpp",
+    "*.hpp",
+    "*.py",
+    "*.st",     # Structured Text
+    "*.scl",    # Sequential Control Language
+    "*.fbd",    # Function Block Diagram
+    "*.ld",     # Ladder Diagram
+    "*.il"      # Instruction List
+]
+
+# Follow symbolic links during directory traversal
+follow_symlinks = false

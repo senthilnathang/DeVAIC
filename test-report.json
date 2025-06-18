@@ -1,0 +1,192 @@
+{
+  "summary": {
+    "total_vulnerabilities": 15,
+    "by_severity": {
+      "HIGH": 5,
+      "MEDIUM": 3,
+      "CRITICAL": 7
+    },
+    "by_category": {
+      "injection": 4,
+      "deserialization": 1,
+      "authentication": 4,
+      "cryptographic": 5,
+      "logging": 1
+    },
+    "by_language": {
+      "Python": 15
+    }
+  },
+  "vulnerabilities": [
+    {
+      "id": "PY001",
+      "severity": "Critical",
+      "category": "authentication",
+      "description": "Hardcoded secret or credential detected",
+      "file_path": "examples/vulnerable.py",
+      "line_number": 9,
+      "column": 0,
+      "source_code": "API_KEY = \"sk-1234567890abcdef1234567890abcdef\"",
+      "recommendation": "Use environment variables or secure credential management systems"
+    },
+    {
+      "id": "PY001",
+      "severity": "Critical",
+      "category": "authentication",
+      "description": "Hardcoded secret or credential detected",
+      "file_path": "examples/vulnerable.py",
+      "line_number": 9,
+      "column": 0,
+      "source_code": "API_KEY = \"sk-1234567890abcdef1234567890abcdef\"",
+      "recommendation": "Use environment variables or secure credential management systems"
+    },
+    {
+      "id": "PY001",
+      "severity": "Critical",
+      "category": "authentication",
+      "description": "Hardcoded secret or credential detected",
+      "file_path": "examples/vulnerable.py",
+      "line_number": 10,
+      "column": 0,
+      "source_code": "DATABASE_PASSWORD = \"admin123\"",
+      "recommendation": "Use environment variables or secure credential management systems"
+    },
+    {
+      "id": "PY001",
+      "severity": "Critical",
+      "category": "authentication",
+      "description": "Hardcoded secret or credential detected",
+      "file_path": "examples/vulnerable.py",
+      "line_number": 11,
+      "column": 0,
+      "source_code": "SECRET_TOKEN = \"very_secret_token_12345\"",
+      "recommendation": "Use environment variables or secure credential management systems"
+    },
+    {
+      "id": "PY002",
+      "severity": "High",
+      "category": "injection",
+      "description": "Potential SQL injection vulnerability detected",
+      "file_path": "examples/vulnerable.py",
+      "line_number": 18,
+      "column": 0,
+      "source_code": "query = f\"SELECT * FROM users WHERE id = {user_id}\"",
+      "recommendation": "Use parameterized queries or prepared statements"
+    },
+    {
+      "id": "PY003",
+      "severity": "High",
+      "category": "injection",
+      "description": "Potential command injection vulnerability detected",
+      "file_path": "examples/vulnerable.py",
+      "line_number": 31,
+      "column": 0,
+      "source_code": "subprocess.run(f\"python {script_name}\", shell=True)",
+      "recommendation": "Validate and sanitize input, use subprocess with shell=False"
+    },
+    {
+      "id": "PY003",
+      "severity": "Critical",
+      "category": "injection",
+      "description": "Potential command injection vulnerability detected",
+      "file_path": "examples/vulnerable.py",
+      "line_number": 51,
+      "column": 0,
+      "source_code": "result = eval(expression)",
+      "recommendation": "Validate and sanitize input, use subprocess with shell=False"
+    },
+    {
+      "id": "PY003",
+      "severity": "Critical",
+      "category": "injection",
+      "description": "Potential command injection vulnerability detected",
+      "file_path": "examples/vulnerable.py",
+      "line_number": 56,
+      "column": 0,
+      "source_code": "exec(code)",
+      "recommendation": "Validate and sanitize input, use subprocess with shell=False"
+    },
+    {
+      "id": "PY004",
+      "severity": "Critical",
+      "category": "deserialization",
+      "description": "Unsafe deserialization detected",
+      "file_path": "examples/vulnerable.py",
+      "line_number": 36,
+      "column": 0,
+      "source_code": "return pickle.loads(data)",
+      "recommendation": "Use safe serialization formats like JSON, avoid pickle with untrusted data"
+    },
+    {
+      "id": "PY005",
+      "severity": "Medium",
+      "category": "cryptographic",
+      "description": "Weak cryptographic algorithm detected",
+      "file_path": "examples/vulnerable.py",
+      "line_number": 41,
+      "column": 0,
+      "source_code": "return hashlib.md5(password.encode()).hexdigest()",
+      "recommendation": "Use stronger hashing algorithms like SHA-256 or SHA-3"
+    },
+    {
+      "id": "PY005",
+      "severity": "Medium",
+      "category": "cryptographic",
+      "description": "Weak cryptographic algorithm detected",
+      "file_path": "examples/vulnerable.py",
+      "line_number": 46,
+      "column": 0,
+      "source_code": "return hashlib.sha1(data.encode()).hexdigest()",
+      "recommendation": "Use stronger hashing algorithms like SHA-256 or SHA-3"
+    },
+    {
+      "id": "PY006",
+      "severity": "Medium",
+      "category": "logging",
+      "description": "Debug mode enabled in production code",
+      "file_path": "examples/vulnerable.py",
+      "line_number": 59,
+      "column": 0,
+      "source_code": "DEBUG = True",
+      "recommendation": "Disable debug mode in production environments"
+    },
+    {
+      "id": "PY007",
+      "severity": "High",
+      "category": "cryptographic",
+      "description": "Insecure random number generator used for security purposes",
+      "file_path": "examples/vulnerable.py",
+      "line_number": 66,
+      "column": 17,
+      "source_code": "str(random.randint(0, 9))",
+      "recommendation": "Use secrets module for cryptographically secure random numbers"
+    },
+    {
+      "id": "PY007",
+      "severity": "High",
+      "category": "cryptographic",
+      "description": "Insecure random number generator used for security purposes",
+      "file_path": "examples/vulnerable.py",
+      "line_number": 66,
+      "column": 21,
+      "source_code": "random.randint(0, 9)",
+      "recommendation": "Use secrets module for cryptographically secure random numbers"
+    },
+    {
+      "id": "PY007",
+      "severity": "High",
+      "category": "cryptographic",
+      "description": "Insecure random number generator used for security purposes",
+      "file_path": "examples/vulnerable.py",
+      "line_number": 74,
+      "column": 20,
+      "source_code": "random.choice(chars)",
+      "recommendation": "Use secrets module for cryptographically secure random numbers"
+    }
+  ],
+  "files_analyzed": 1,
+  "analysis_duration": {
+    "secs": 0,
+    "nanos": 11933408
+  }
+}

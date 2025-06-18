@@ -1,0 +1,57 @@
+[package]
+name = "devaic"
+version = "0.1.0"
+edition = "2021"
+authors = ["DeVAIC Team"]
+description = "Static code analyzer for vulnerability detection in embedded C, Python, and SCADA programming"
+license = "MIT"
+repository = "https://github.com/dessertlab/DeVAIC"
+
+[dependencies]
+# Core dependencies
+clap = { version = "4.0", features = ["derive"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+anyhow = "1.0"
+thiserror = "1.0"
+
+# Language parsing
+tree-sitter = "0.20"
+tree-sitter-c = "0.20"
+tree-sitter-python = "0.20"
+
+# Regex and pattern matching
+regex = "1.7"
+lazy_static = "1.4"
+
+# File handling and I/O
+walkdir = "2.3"
+glob = "0.3"
+
+# Logging
+log = "0.4"
+env_logger = "0.10"
+
+# Async runtime (if needed)
+tokio = { version = "1.0", features = ["full"], optional = true }
+
+# Configuration
+config = "0.13"
+toml = "0.7"
+
+# Report generation
+tabled = "0.12"
+colored = "2.0"
+
+[dev-dependencies]
+tempfile = "3.0"
+assert_cmd = "2.0"
+predicates = "3.0"
+
+[features]
+default = []
+async = ["tokio"]
+
+[[bin]]
+name = "devaic"
+path = "src/main.rs"
