@@ -1,5 +1,9 @@
 pub mod c_parser;
+pub mod cpp_parser;
 pub mod python_parser;
+pub mod java_parser;
+pub mod javascript_parser;
+pub mod typescript_parser;
 pub mod scada_parser;
 
 use crate::{error::Result, Language};
@@ -50,7 +54,11 @@ impl ParserFactory {
     pub fn create_parser(language: &Language) -> Result<Box<dyn Parser>> {
         match language {
             Language::C => Ok(Box::new(c_parser::CParser::new())),
+            Language::Cpp => Ok(Box::new(cpp_parser::CppParser::new())),
             Language::Python => Ok(Box::new(python_parser::PythonParser::new())),
+            Language::Java => Ok(Box::new(java_parser::JavaParser::new())),
+            Language::Javascript => Ok(Box::new(javascript_parser::JavascriptParser::new())),
+            Language::TypeScript => Ok(Box::new(typescript_parser::TypeScriptParser::new())),
             Language::Scada => Ok(Box::new(scada_parser::ScadaParser::new())),
         }
     }

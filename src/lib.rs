@@ -13,7 +13,11 @@ pub use config::Config;
 #[derive(Debug, Clone, PartialEq)]
 pub enum Language {
     C,
+    Cpp,
     Python,
+    Java,
+    Javascript,
+    TypeScript,
     Scada,
 }
 
@@ -21,7 +25,11 @@ impl Language {
     pub fn from_extension(ext: &str) -> Option<Self> {
         match ext.to_lowercase().as_str() {
             "c" | "h" => Some(Language::C),
+            "cpp" | "cc" | "cxx" | "c++" | "hpp" | "hxx" | "h++" => Some(Language::Cpp),
             "py" => Some(Language::Python),
+            "java" => Some(Language::Java),
+            "js" | "jsx" | "mjs" | "cjs" => Some(Language::Javascript),
+            "ts" | "tsx" => Some(Language::TypeScript),
             "st" | "scl" | "fbd" | "ld" | "il" => Some(Language::Scada),
             _ => None,
         }

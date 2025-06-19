@@ -1,5 +1,9 @@
 pub mod c_rules;
+pub mod cpp_rules;
 pub mod python_rules;
+pub mod java_rules;
+pub mod javascript_rules;
+pub mod typescript_rules;
 pub mod scada_rules;
 
 use crate::{
@@ -12,7 +16,11 @@ use crate::{
 pub struct RuleEngine {
     config: RulesConfig,
     c_rules: c_rules::CRules,
+    cpp_rules: cpp_rules::CppRules,
     python_rules: python_rules::PythonRules,
+    java_rules: java_rules::JavaRules,
+    javascript_rules: javascript_rules::JavascriptRules,
+    typescript_rules: typescript_rules::TypeScriptRules,
     scada_rules: scada_rules::ScadaRules,
 }
 
@@ -21,7 +29,11 @@ impl RuleEngine {
         Self {
             config: config.clone(),
             c_rules: c_rules::CRules::new(),
+            cpp_rules: cpp_rules::CppRules::new(),
             python_rules: python_rules::PythonRules::new(),
+            java_rules: java_rules::JavaRules::new(),
+            javascript_rules: javascript_rules::JavascriptRules::new(),
+            typescript_rules: typescript_rules::TypeScriptRules::new(),
             scada_rules: scada_rules::ScadaRules::new(),
         }
     }
@@ -33,8 +45,20 @@ impl RuleEngine {
             Language::C => {
                 vulnerabilities.extend(self.c_rules.analyze(source_file, ast)?);
             }
+            Language::Cpp => {
+                vulnerabilities.extend(self.cpp_rules.analyze(source_file, ast)?);
+            }
             Language::Python => {
                 vulnerabilities.extend(self.python_rules.analyze(source_file, ast)?);
+            }
+            Language::Java => {
+                vulnerabilities.extend(self.java_rules.analyze(source_file, ast)?);
+            }
+            Language::Javascript => {
+                vulnerabilities.extend(self.javascript_rules.analyze(source_file, ast)?);
+            }
+            Language::TypeScript => {
+                vulnerabilities.extend(self.typescript_rules.analyze(source_file, ast)?);
             }
             Language::Scada => {
                 vulnerabilities.extend(self.scada_rules.analyze(source_file, ast)?);
