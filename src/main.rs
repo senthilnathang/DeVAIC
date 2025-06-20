@@ -142,11 +142,32 @@ fn count_analyzed_files(path: &PathBuf, config: &Config) -> usize {
         .into_iter()
         .filter_map(|e| e.ok())
         .filter(|entry| entry.file_type().is_file())
-        .filter(|entry| should_analyze_file(entry.path(), config))
+        .filter(|entry| would_analyze_file(entry.path(), config))
         .count()
 }
 
-fn should_analyze_file(path: &std::path::Path, config: &Config) -> bool {
+fn would_analyze_file(path: &std::path::Path, config: &Config) -> bool {
+    // Use the exact same logic as analyze_file to determine if a file would be analyzed
+    
+    // First check if file has extension (same as analyze_file)
+    let extension = match path.extension().and_then(|ext| ext.to_str()) {
+        Some(ext) => ext,
+        None => return false, // Skip files without extensions (same as analyze_file)
+    };
+
+    // Check if language is supported (same as analyze_file)
+    if devaic::Language::from_extension(extension).is_none() {
+        return false; // Skip files with unsupported extensions (same as analyze_file)
+    }
+
+    // Check file size (same as analyze_file)
+    if let Ok(metadata) = std::fs::metadata(path) {
+        if metadata.len() as usize > config.analysis.max_file_size {
+            return false; // Skip files that exceed size limit (same as analyze_file)
+        }
+    }
+
+    // Check exclude/include patterns
     let path_str = path.to_string_lossy();
     
     // Check exclude patterns
@@ -189,12 +210,38 @@ mod tests {
         // Create test files
         fs::write(temp_path.join("test.c"), "int main() { return 0; }").unwrap();
         fs::write(temp_path.join("test.py"), "print('hello')").unwrap();
+        fs::write(temp_path.join("test.java"), "public class Test {}").unwrap();
         fs::write(temp_path.join("test.txt"), "not code").unwrap();
+        fs::write(temp_path.join("noext"), "no extension").unwrap();
 
         let config = Config::default();
         let count = count_analyzed_files(&temp_path.to_path_buf(), &config);
         
-        // Should count .c and .py files, not .txt
-        assert_eq!(count, 2);
+        // Should count only .c, .py, and .java files (supported languages), not .txt or files without extensions
+        assert_eq!(count, 3);
+    }
+
+    #[test]
+    fn test_would_analyze_file() {
+        let temp_dir = TempDir::new().unwrap();
+        let temp_path = temp_dir.path();
+        
+        // Create test files
+        fs::write(temp_path.join("test.c"), "int main() { return 0; }").unwrap();
+        fs::write(temp_path.join("test.py"), "print('hello')").unwrap();
+        fs::write(temp_path.join("test.java"), "public class Test {}").unwrap();
+        fs::write(temp_path.join("test.txt"), "not code").unwrap();
+        fs::write(temp_path.join("noext"), "no extension").unwrap();
+        
+        let config = Config::default();
+        
+        // Test supported extensions
+        assert!(would_analyze_file(&temp_path.join("test.c"), &config));
+        assert!(would_analyze_file(&temp_path.join("test.py"), &config));
+        assert!(would_analyze_file(&temp_path.join("test.java"), &config));
+        
+        // Test unsupported extensions
+        assert!(!would_analyze_file(&temp_path.join("test.txt"), &config));
+        assert!(!would_analyze_file(&temp_path.join("noext"), &config));
     }
 }

@@ -5,6 +5,8 @@ pub mod java_rules;
 pub mod javascript_rules;
 pub mod typescript_rules;
 pub mod scada_rules;
+pub mod owasp_llm_rules;
+pub mod owasp_web_rules;
 
 use crate::{
     config::RulesConfig,
@@ -22,6 +24,8 @@ pub struct RuleEngine {
     javascript_rules: javascript_rules::JavascriptRules,
     typescript_rules: typescript_rules::TypeScriptRules,
     scada_rules: scada_rules::ScadaRules,
+    owasp_llm_rules: owasp_llm_rules::OwaspLlmRules,
+    owasp_web_rules: owasp_web_rules::OwaspWebRules,
 }
 
 impl RuleEngine {
@@ -35,6 +39,8 @@ impl RuleEngine {
             javascript_rules: javascript_rules::JavascriptRules::new(),
             typescript_rules: typescript_rules::TypeScriptRules::new(),
             scada_rules: scada_rules::ScadaRules::new(),
+            owasp_llm_rules: owasp_llm_rules::OwaspLlmRules::new(),
+            owasp_web_rules: owasp_web_rules::OwaspWebRules::new(),
         }
     }
 
@@ -64,6 +70,10 @@ impl RuleEngine {
                 vulnerabilities.extend(self.scada_rules.analyze(source_file, ast)?);
             }
         }
+
+        // Run OWASP rules on all files regardless of language
+        vulnerabilities.extend(self.owasp_llm_rules.analyze(source_file, ast)?);
+        vulnerabilities.extend(self.owasp_web_rules.analyze(source_file, ast)?);
 
         // Filter by severity threshold
         let threshold_severity = self.parse_severity(&self.config.severity_threshold);
@@ -113,6 +123,8 @@ pub trait RuleSet {
 
 pub fn create_vulnerability(
     id: &str,
+    cwe: Option<&str>,
+    vulnerability_type: &str,
     severity: Severity,
     category: &str,
     description: &str,
@@ -124,6 +136,8 @@ pub fn create_vulnerability(
 ) -> Vulnerability {
     Vulnerability {
         id: id.to_string(),
+        cwe: cwe.map(|s| s.to_string()),
+        vulnerability_type: vulnerability_type.to_string(),
         severity,
         category: category.to_string(),
         description: description.to_string(),

@@ -10,7 +10,10 @@ enabled_categories = [
     "cryptographic",
     "deserialization",
     "logging",
-    "validation"
+    "validation",
+    "configuration",
+    "llm_security",
+    "web_security"
 ]
 
 # Minimum severity level to report (CRITICAL, HIGH, MEDIUM, LOW, INFO)
@@ -67,7 +70,10 @@ include_patterns = [
     "*.jsx",
     "*.mjs",
     "*.cjs",
+    "*.ts",
+    "*.tsx",
     "*.st",     # Structured Text
+    "*.sl",     # Structured Language (SCADA)
     "*.scl",    # Sequential Control Language
     "*.fbd",    # Function Block Diagram
     "*.ld",     # Ladder Diagram

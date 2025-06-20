@@ -13,6 +13,10 @@ pub struct PythonRules {
     command_injection_patterns: Vec<Regex>,
     unsafe_deserialization_patterns: Vec<Regex>,
     weak_crypto_patterns: Vec<Regex>,
+    security_misconfig_patterns: Vec<Regex>,
+    path_traversal_patterns: Vec<Regex>,
+    xxe_patterns: Vec<Regex>,
+    csrf_patterns: Vec<Regex>,
 }
 
 impl PythonRules {
@@ -43,6 +47,25 @@ impl PythonRules {
                 Regex::new(r#"(?i)hashlib\.(md5|sha1)\s*\("#).unwrap(),
                 Regex::new(r#"(?i)Crypto\.Hash\.(MD5|SHA1)"#).unwrap(),
             ],
+            security_misconfig_patterns: vec![
+                Regex::new(r#"(?i)(DEBUG|TESTING)\s*=\s*True"#).unwrap(),
+                Regex::new(r#"(?i)SSL_VERIFY\s*=\s*False"#).unwrap(),
+                Regex::new(r#"(?i)verify\s*=\s*False"#).unwrap(),
+                Regex::new(r#"(?i)ALLOWED_HOSTS\s*=\s*\[\s*\*\s*\]"#).unwrap(),
+            ],
+            path_traversal_patterns: vec![
+                Regex::new(r#"(?i)open\s*\(\s*.*\+.*\."#).unwrap(),
+                Regex::new(r#"(?i)os\.path\.join\s*\(.*input.*\)"#).unwrap(),
+            ],
+            xxe_patterns: vec![
+                Regex::new(r#"(?i)xml\.etree\.ElementTree\.parse"#).unwrap(),
+                Regex::new(r#"(?i)xml\.dom\.minidom\.parse"#).unwrap(),
+                Regex::new(r#"(?i)lxml\.etree\.parse"#).unwrap(),
+            ],
+            csrf_patterns: vec![
+                Regex::new(r#"(?i)csrf_exempt"#).unwrap(),
+                Regex::new(r#"(?i)CSRF_COOKIE_SECURE\s*=\s*False"#).unwrap(),
+            ],
         }
     }
 
@@ -55,6 +78,8 @@ impl PythonRules {
                 if pattern.is_match(line) {
                     vulnerabilities.push(create_vulnerability(
                         "PY001",
+                        Some("CWE-798"),
+                        "Hardcoded Credentials",
                         Severity::Critical,
                         "authentication",
                         "Hardcoded secret or credential detected",
@@ -80,6 +105,8 @@ impl PythonRules {
                 if pattern.is_match(line) {
                     vulnerabilities.push(create_vulnerability(
                         "PY002",
+                        Some("CWE-89"),
+                        "SQL Injection",
                         Severity::High,
                         "injection",
                         "Potential SQL injection vulnerability detected",
@@ -109,8 +136,16 @@ impl PythonRules {
                         Severity::High
                     };
 
+                    let (cwe, vuln_type) = if line.contains("eval") || line.contains("exec") {
+                        ("CWE-95", "Code Injection")
+                    } else {
+                        ("CWE-78", "Command Injection")
+                    };
+                    
                     vulnerabilities.push(create_vulnerability(
                         "PY003",
+                        Some(cwe),
+                        vuln_type,
                         severity,
                         "injection",
                         "Potential command injection vulnerability detected",
@@ -142,6 +177,8 @@ impl PythonRules {
 
                     vulnerabilities.push(create_vulnerability(
                         "PY004",
+                        Some("CWE-502"),
+                        "Unsafe Deserialization",
                         severity,
                         "deserialization",
                         "Unsafe deserialization detected",
@@ -167,6 +204,8 @@ impl PythonRules {
                 if pattern.is_match(line) {
                     vulnerabilities.push(create_vulnerability(
                         "PY005",
+                        Some("CWE-327"),
+                        "Weak Cryptography",
                         Severity::Medium,
                         "cryptographic",
                         "Weak cryptographic algorithm detected",
@@ -194,8 +233,10 @@ impl PythonRules {
                     let start_pos = node.start_position();
                     vulnerabilities.push(create_vulnerability(
                         "PY006",
+                        Some("CWE-489"),
+                        "Security Misconfiguration",
                         Severity::Medium,
-                        "logging",
+                        "configuration",
                         "Debug mode enabled in production code",
                         &source_file.path.to_string_lossy(),
                         start_pos.row + 1,
@@ -233,6 +274,8 @@ impl PythonRules {
                         let start_pos = node.start_position();
                         vulnerabilities.push(create_vulnerability(
                             "PY007",
+                            Some("CWE-338"),
+                            "Weak Random Number Generation",
                             Severity::High,
                             "cryptographic",
                             "Insecure random number generator used for security purposes",
@@ -246,6 +289,122 @@ impl PythonRules {
                 }
             }
         });
+
+        Ok(vulnerabilities)
+    }
+
+    fn check_security_misconfig(&self, source_file: &SourceFile, ast: &ParsedAst) -> Result<Vec<Vulnerability>> {
+        let mut vulnerabilities = Vec::new();
+        let lines: Vec<&str> = ast.source.lines().collect();
+
+        for (line_num, line) in lines.iter().enumerate() {
+            for pattern in &self.security_misconfig_patterns {
+                if pattern.is_match(line) {
+                    let (cwe, vuln_type, description) = if line.contains("DEBUG") || line.contains("TESTING") {
+                        ("CWE-489", "Security Misconfiguration", "Debug mode enabled in production")
+                    } else if line.contains("SSL_VERIFY") || line.contains("verify") {
+                        ("CWE-295", "Security Misconfiguration", "SSL certificate verification disabled")
+                    } else {
+                        ("CWE-16", "Security Misconfiguration", "Insecure configuration detected")
+                    };
+
+                    vulnerabilities.push(create_vulnerability(
+                        "PY008",
+                        Some(cwe),
+                        vuln_type,
+                        Severity::High,
+                        "configuration",
+                        description,
+                        &source_file.path.to_string_lossy(),
+                        line_num + 1,
+                        0,
+                        line.trim(),
+                        "Review and secure configuration settings",
+                    ));
+                }
+            }
+        }
+
+        Ok(vulnerabilities)
+    }
+
+    fn check_path_traversal(&self, source_file: &SourceFile, ast: &ParsedAst) -> Result<Vec<Vulnerability>> {
+        let mut vulnerabilities = Vec::new();
+        let lines: Vec<&str> = ast.source.lines().collect();
+
+        for (line_num, line) in lines.iter().enumerate() {
+            for pattern in &self.path_traversal_patterns {
+                if pattern.is_match(line) {
+                    vulnerabilities.push(create_vulnerability(
+                        "PY009",
+                        Some("CWE-22"),
+                        "Path Traversal",
+                        Severity::High,
+                        "validation",
+                        "Potential path traversal vulnerability detected",
+                        &source_file.path.to_string_lossy(),
+                        line_num + 1,
+                        0,
+                        line.trim(),
+                        "Validate and sanitize file paths, use os.path.abspath and check boundaries",
+                    ));
+                }
+            }
+        }
+
+        Ok(vulnerabilities)
+    }
+
+    fn check_xxe(&self, source_file: &SourceFile, ast: &ParsedAst) -> Result<Vec<Vulnerability>> {
+        let mut vulnerabilities = Vec::new();
+        let lines: Vec<&str> = ast.source.lines().collect();
+
+        for (line_num, line) in lines.iter().enumerate() {
+            for pattern in &self.xxe_patterns {
+                if pattern.is_match(line) {
+                    vulnerabilities.push(create_vulnerability(
+                        "PY010",
+                        Some("CWE-611"),
+                        "XML External Entity (XXE)",
+                        Severity::High,
+                        "validation",
+                        "Potential XXE vulnerability in XML parsing",
+                        &source_file.path.to_string_lossy(),
+                        line_num + 1,
+                        0,
+                        line.trim(),
+                        "Disable external entity processing in XML parsers",
+                    ));
+                }
+            }
+        }
+
+        Ok(vulnerabilities)
+    }
+
+    fn check_csrf(&self, source_file: &SourceFile, ast: &ParsedAst) -> Result<Vec<Vulnerability>> {
+        let mut vulnerabilities = Vec::new();
+        let lines: Vec<&str> = ast.source.lines().collect();
+
+        for (line_num, line) in lines.iter().enumerate() {
+            for pattern in &self.csrf_patterns {
+                if pattern.is_match(line) {
+                    vulnerabilities.push(create_vulnerability(
+                        "PY011",
+                        Some("CWE-352"),
+                        "Cross-Site Request Forgery (CSRF)",
+                        Severity::Medium,
+                        "authentication",
+                        "CSRF protection disabled or misconfigured",
+                        &source_file.path.to_string_lossy(),
+                        line_num + 1,
+                        0,
+                        line.trim(),
+                        "Enable CSRF protection and secure cookie settings",
+                    ));
+                }
+            }
+        }
 
         Ok(vulnerabilities)
     }
@@ -291,6 +450,10 @@ impl RuleSet for PythonRules {
         all_vulnerabilities.extend(self.check_weak_cryptography(source_file, ast)?);
         all_vulnerabilities.extend(self.check_debug_mode(source_file, ast)?);
         all_vulnerabilities.extend(self.check_insecure_random(source_file, ast)?);
+        all_vulnerabilities.extend(self.check_security_misconfig(source_file, ast)?);
+        all_vulnerabilities.extend(self.check_path_traversal(source_file, ast)?);
+        all_vulnerabilities.extend(self.check_xxe(source_file, ast)?);
+        all_vulnerabilities.extend(self.check_csrf(source_file, ast)?);
 
         Ok(all_vulnerabilities)
     }

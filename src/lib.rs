@@ -30,7 +30,7 @@ impl Language {
             "java" => Some(Language::Java),
             "js" | "jsx" | "mjs" | "cjs" => Some(Language::Javascript),
             "ts" | "tsx" => Some(Language::TypeScript),
-            "st" | "scl" | "fbd" | "ld" | "il" => Some(Language::Scada),
+            "st" | "sl" | "scl" | "fbd" | "ld" | "il" => Some(Language::Scada),
             _ => None,
         }
     }
@@ -39,6 +39,8 @@ impl Language {
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct Vulnerability {
     pub id: String,
+    pub cwe: Option<String>,
+    pub vulnerability_type: String,
     pub severity: Severity,
     pub category: String,
     pub description: String,

@@ -24,6 +24,10 @@ pub struct Summary {
 struct VulnerabilityRow {
     #[tabled(rename = "ID")]
     id: String,
+    #[tabled(rename = "CWE")]
+    cwe: String,
+    #[tabled(rename = "Type")]
+    vulnerability_type: String,
     #[tabled(rename = "Severity")]
     severity: String,
     #[tabled(rename = "Category")]
@@ -79,6 +83,8 @@ impl Report {
 
                 VulnerabilityRow {
                     id: v.id.clone(),
+                    cwe: v.cwe.as_ref().unwrap_or(&"N/A".to_string()).clone(),
+                    vulnerability_type: v.vulnerability_type.clone(),
                     severity: severity_str,
                     category: v.category.clone(),
                     file: v.file_path.clone(),
@@ -148,7 +154,12 @@ impl Report {
         if !self.summary.by_category.is_empty() {
             summary.push_str("\nBy Category:\n");
             for (category, count) in &self.summary.by_category {
-                summary.push_str(&format!("- {}: {}\n", category, count));
+                let category_display = match category.as_str() {
+                    "llm_security" => "OWASP LLM Security",
+                    "web_security" => "OWASP Web Security",
+                    _ => category,
+                };
+                summary.push_str(&format!("- {}: {}\n", category_display, count));
             }
         }
 
@@ -171,8 +182,16 @@ impl Summary {
             // Extract language from file extension
             let language = if vuln.file_path.ends_with(".c") || vuln.file_path.ends_with(".h") {
                 "C"
+            } else if vuln.file_path.ends_with(".cpp") || vuln.file_path.ends_with(".hpp") {
+                "C++"
             } else if vuln.file_path.ends_with(".py") {
                 "Python"
+            } else if vuln.file_path.ends_with(".java") {
+                "Java"
+            } else if vuln.file_path.ends_with(".js") || vuln.file_path.ends_with(".jsx") {
+                "JavaScript"
+            } else if vuln.file_path.ends_with(".ts") || vuln.file_path.ends_with(".tsx") {
+                "TypeScript"
             } else if vuln.file_path.ends_with(".st") || vuln.file_path.ends_with(".scl") {
                 "SCADA"
             } else {
@@ -298,6 +317,8 @@ mod tests {
         let vulnerabilities = vec![
             Vulnerability {
                 id: "TEST001".to_string(),
+                cwe: Some("CWE-120".to_string()),
+                vulnerability_type: "Buffer Overflow".to_string(),
                 severity: Severity::High,
                 category: "injection".to_string(),
                 description: "Test vulnerability".to_string(),
@@ -322,6 +343,8 @@ mod tests {
         let vulnerabilities = vec![
             Vulnerability {
                 id: "TEST001".to_string(),
+                cwe: Some("CWE-95".to_string()),
+                vulnerability_type: "Code Injection".to_string(),
                 severity: Severity::Medium,
                 category: "validation".to_string(),
                 description: "Test vulnerability".to_string(),

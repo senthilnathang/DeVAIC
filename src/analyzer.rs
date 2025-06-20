@@ -33,12 +33,12 @@ impl Analyzer {
             if entry.file_type().is_file() {
                 let file_path = entry.path();
                 
-                if self.should_analyze_file(file_path) {
-                    match self.analyze_file(file_path) {
-                        Ok(mut file_vulns) => vulnerabilities.append(&mut file_vulns),
-                        Err(e) => {
-                            log::warn!("Failed to analyze {}: {}", file_path.display(), e);
-                        }
+                // Load all files instead of filtering by extension
+                log::debug!("Loading file: {}", file_path.display());
+                match self.analyze_file(file_path) {
+                    Ok(mut file_vulns) => vulnerabilities.append(&mut file_vulns),
+                    Err(e) => {
+                        log::debug!("Skipped file {}: {}", file_path.display(), e);
                     }
                 }
             }
@@ -48,12 +48,22 @@ impl Analyzer {
     }
 
     pub fn analyze_file(&self, path: &Path) -> Result<Vec<Vulnerability>> {
-        let extension = path.extension()
-            .and_then(|ext| ext.to_str())
-            .ok_or_else(|| DevaicError::Parse("No file extension found".to_string()))?;
+        let extension = match path.extension().and_then(|ext| ext.to_str()) {
+            Some(ext) => ext,
+            None => {
+                // Skip files without extensions
+                return Ok(Vec::new());
+            }
+        };
 
-        let language = Language::from_extension(extension)
-            .ok_or_else(|| DevaicError::UnsupportedLanguage(extension.to_string()))?;
+        let language = match Language::from_extension(extension) {
+            Some(lang) => lang,
+            None => {
+                // Skip files with unsupported extensions but still load them
+                log::debug!("Unsupported language extension: {} for file: {}", extension, path.display());
+                return Ok(Vec::new());
+            }
+        };
 
         let content = std::fs::read_to_string(path)?;
         
@@ -71,32 +81,4 @@ impl Analyzer {
         self.rule_engine.analyze(&source_file, &ast)
     }
 
-    fn should_analyze_file(&self, path: &Path) -> bool {
-        let path_str = path.to_string_lossy();
-        
-        // Check exclude patterns
-        for pattern in &self.config.analysis.exclude_patterns {
-            if glob::Pattern::new(pattern)
-                .map(|p| p.matches(&path_str))
-                .unwrap_or(false)
-            {
-                return false;
-            }
-        }
-
-        // Check include patterns
-        if !self.config.analysis.include_patterns.is_empty() {
-            for pattern in &self.config.analysis.include_patterns {
-                if glob::Pattern::new(pattern)
-                    .map(|p| p.matches(&path_str))
-                    .unwrap_or(false)
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        true
-    }
 }

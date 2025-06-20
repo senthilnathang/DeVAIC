@@ -64,6 +64,8 @@ impl JavaRules {
                 if pattern.is_match(line) {
                     vulnerabilities.push(create_vulnerability(
                         "JAVA001",
+                        Some("CWE-89"),
+                        "SQL Injection",
                         Severity::High,
                         "injection",
                         "Potential SQL injection vulnerability",
@@ -79,6 +81,8 @@ impl JavaRules {
             if line.contains("getParameter(") && line.contains("execute") {
                 vulnerabilities.push(create_vulnerability(
                     "JAVA002",
+                    Some("CWE-89"),
+                    "SQL Injection",
                     Severity::High,
                     "injection",
                     "User input directly used in SQL execution",
@@ -103,6 +107,8 @@ impl JavaRules {
                 if pattern.is_match(line) {
                     vulnerabilities.push(create_vulnerability(
                         "JAVA003",
+                        Some("CWE-502"),
+                        "Unsafe Deserialization",
                         Severity::High,
                         "deserialization",
                         "Unsafe deserialization detected",
@@ -132,6 +138,8 @@ impl JavaRules {
                     if !context.contains("setFeature") || !context.contains("XMLConstants.FEATURE_SECURE_PROCESSING") {
                         vulnerabilities.push(create_vulnerability(
                             "JAVA004",
+                            Some("CWE-611"),
+                            "XML External Entity (XXE)",
                             Severity::High,
                             "injection",
                             "XML External Entity (XXE) vulnerability - XML parser not configured securely",
@@ -178,6 +186,8 @@ impl JavaRules {
 
                     vulnerabilities.push(create_vulnerability(
                         "JAVA005",
+                        Some("CWE-327"),
+                        "Weak Cryptography",
                         severity,
                         "cryptographic",
                         "Weak cryptographic algorithm or implementation",
@@ -204,6 +214,8 @@ impl JavaRules {
                     if line.contains("getParameter(") || line.contains("user") || line.contains("input") {
                         vulnerabilities.push(create_vulnerability(
                             "JAVA006",
+                            Some("CWE-470"),
+                            "Unsafe Reflection",
                             Severity::High,
                             "validation",
                             "Unsafe reflection with user-controlled input",
@@ -230,6 +242,8 @@ impl JavaRules {
                 if pattern.is_match(line) {
                     vulnerabilities.push(create_vulnerability(
                         "JAVA007",
+                        Some("CWE-22"),
+                        "Path Traversal",
                         Severity::High,
                         "validation",
                         "Potential path traversal vulnerability",
@@ -260,6 +274,8 @@ impl JavaRules {
                 
                 vulnerabilities.push(create_vulnerability(
                     "JAVA008",
+                    Some("CWE-798"),
+                    "Hardcoded Credentials",
                     Severity::High,
                     "authentication",
                     "Hardcoded credentials detected",
@@ -287,6 +303,8 @@ impl JavaRules {
                     let start_pos = node.start_position();
                     vulnerabilities.push(create_vulnerability(
                         "JAVA009",
+                        Some("CWE-330"),
+                        "Weak Random Number Generation",
                         Severity::Medium,
                         "cryptographic",
                         "Insecure random number generation",

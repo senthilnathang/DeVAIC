@@ -53,6 +53,8 @@ impl ScadaRules {
                 if pattern.is_match(line) {
                     vulnerabilities.push(create_vulnerability(
                         "SCADA001",
+                        Some("CWE-798"),
+                        "Hardcoded Credentials",
                         Severity::Critical,
                         "authentication",
                         "Hardcoded credentials detected in SCADA code",
@@ -84,6 +86,8 @@ impl ScadaRules {
 
                     vulnerabilities.push(create_vulnerability(
                         "SCADA002",
+                        Some("CWE-319"),
+                        "Insecure Communication",
                         severity,
                         "cryptographic",
                         "Insecure communication protocol detected",
@@ -109,6 +113,8 @@ impl ScadaRules {
                 if pattern.is_match(line) {
                     vulnerabilities.push(create_vulnerability(
                         "SCADA003",
+                        Some("CWE-119"),
+                        "Memory Safety Issue",
                         Severity::High,
                         "validation",
                         "Unsafe memory operation detected",
@@ -134,6 +140,8 @@ impl ScadaRules {
                 if pattern.is_match(line) {
                     vulnerabilities.push(create_vulnerability(
                         "SCADA004",
+                        Some("CWE-20"),
+                        "Input Validation",
                         Severity::Medium,
                         "validation",
                         "Lack of input validation detected",
@@ -159,6 +167,8 @@ impl ScadaRules {
                 if pattern.is_match(line) {
                     vulnerabilities.push(create_vulnerability(
                         "SCADA005",
+                        Some("CWE-287"),
+                        "Weak Authentication",
                         Severity::High,
                         "authorization",
                         "Weak authentication configuration detected",
@@ -191,6 +201,8 @@ impl ScadaRules {
                 
                 vulnerabilities.push(create_vulnerability(
                     "SCADA006",
+                    Some("CWE-863"),
+                    "Authorization Bypass",
                     Severity::Critical,
                     "authorization",
                     "Safety-critical operation without proper validation",
@@ -220,6 +232,8 @@ impl ScadaRules {
                 
                 vulnerabilities.push(create_vulnerability(
                     "SCADA007",
+                    Some("CWE-362"),
+                    "Race Condition",
                     Severity::Medium,
                     "validation",
                     "Timing-sensitive operation without proper synchronization",
@@ -249,6 +263,8 @@ impl ScadaRules {
                 
                 vulnerabilities.push(create_vulnerability(
                     "SCADA008",
+                    Some("CWE-1188"),
+                    "Default Configuration",
                     Severity::Low,
                     "authentication",
                     "Default configuration detected",

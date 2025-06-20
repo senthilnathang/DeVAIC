@@ -42,6 +42,8 @@ impl CRules {
                 if pattern.is_match(line) {
                     vulnerabilities.push(create_vulnerability(
                         "C001",
+                        Some("CWE-120"),
+                        "Buffer Overflow",
                         Severity::High,
                         "injection",
                         "Potential buffer overflow vulnerability detected",
@@ -67,6 +69,8 @@ impl CRules {
                 if pattern.is_match(line) {
                     vulnerabilities.push(create_vulnerability(
                         "C002",
+                        Some("CWE-134"),
+                        "Format String Vulnerability",
                         Severity::Medium,
                         "injection",
                         "Potential format string vulnerability detected",
@@ -98,6 +102,8 @@ impl CRules {
                             let start_pos = node.start_position();
                             vulnerabilities.push(create_vulnerability(
                                 "C003",
+                                Some("CWE-190"),
+                                "Integer Overflow",
                                 Severity::Medium,
                                 "validation",
                                 "Potential integer overflow in arithmetic operation with user input",
@@ -141,6 +147,8 @@ impl CRules {
                 if !context.contains("if") && !context.contains("NULL") && !context.contains("nullptr") {
                     vulnerabilities.push(create_vulnerability(
                         "C004",
+                        Some("CWE-476"),
+                        "NULL Pointer Dereference",
                         Severity::High,
                         "validation",
                         "Potential null pointer dereference",

@@ -63,6 +63,8 @@ impl CppRules {
                     if line.contains("new ") && !line.contains("std::") {
                         vulnerabilities.push(create_vulnerability(
                             "CPP001",
+                            Some("CWE-401"),
+                            "Memory Management Error",
                             Severity::High,
                             "cryptographic",
                             "Raw pointer allocation detected - consider using smart pointers",
@@ -77,6 +79,8 @@ impl CppRules {
                     if line.contains("malloc") || line.contains("free") {
                         vulnerabilities.push(create_vulnerability(
                             "CPP002",
+                            Some("CWE-401"),
+                            "Memory Management Error",
                             Severity::Medium,
                             "validation",
                             "C-style memory management in C++ code",
@@ -94,6 +98,8 @@ impl CppRules {
         if new_allocations.len() != delete_deallocations.len() {
             vulnerabilities.push(create_vulnerability(
                 "CPP003",
+                Some("CWE-401"),
+                "Memory Leak",
                 Severity::High,
                 "validation",
                 "Potential memory leak - mismatched new/delete calls",
@@ -117,6 +123,8 @@ impl CppRules {
                 if pattern.is_match(line) {
                     vulnerabilities.push(create_vulnerability(
                         "CPP004",
+                        Some("CWE-120"),
+                        "Buffer Overflow",
                         Severity::High,
                         "injection",
                         "Unsafe C function used in C++ code",
@@ -141,6 +149,8 @@ impl CppRules {
             if line.contains("catch(...)") || line.contains("catch (...)") {
                 vulnerabilities.push(create_vulnerability(
                     "CPP005",
+                    Some("CWE-754"),
+                    "Improper Check for Unusual Conditions",
                     Severity::Medium,
                     "logging",
                     "Generic exception catch block - potential information loss",
@@ -155,6 +165,8 @@ impl CppRules {
             if line.contains("throw ") && !line.contains("noexcept") {
                 vulnerabilities.push(create_vulnerability(
                     "CPP006",
+                    Some("CWE-755"),
+                    "Improper Exception Handling",
                     Severity::Low,
                     "validation",
                     "Exception thrown without noexcept specification",
@@ -182,6 +194,8 @@ impl CppRules {
                     let start_pos = node.start_position();
                     vulnerabilities.push(create_vulnerability(
                         "CPP007",
+                        Some("CWE-416"),
+                        "Use After Free",
                         Severity::Medium,
                         "validation",
                         "Potential iterator invalidation",
@@ -197,6 +211,8 @@ impl CppRules {
                     let start_pos = node.start_position();
                     vulnerabilities.push(create_vulnerability(
                         "CPP008",
+                        Some("CWE-252"),
+                        "Unchecked Return Value",
                         Severity::Medium,
                         "validation",
                         "std::find result not checked against end() iterator",
@@ -221,6 +237,8 @@ impl CppRules {
             if line.contains("static_cast") && line.contains("*") {
                 vulnerabilities.push(create_vulnerability(
                     "CPP009",
+                    Some("CWE-704"),
+                    "Incorrect Type Conversion",
                     Severity::Medium,
                     "validation",
                     "Potentially unsafe static_cast with pointers",
@@ -235,6 +253,8 @@ impl CppRules {
             if line.contains("reinterpret_cast") {
                 vulnerabilities.push(create_vulnerability(
                     "CPP010",
+                    Some("CWE-704"),
+                    "Incorrect Type Conversion",
                     Severity::High,
                     "validation",
                     "Dangerous reinterpret_cast usage",
