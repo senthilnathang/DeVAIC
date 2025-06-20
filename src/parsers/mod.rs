@@ -29,17 +29,21 @@ impl SourceFile {
 
 #[derive(Debug)]
 pub struct ParsedAst {
-    pub tree: Tree,
+    pub tree: Option<Tree>,
     pub source: String,
 }
 
 impl ParsedAst {
     pub fn new(tree: Tree, source: String) -> Self {
-        Self { tree, source }
+        Self { tree: Some(tree), source }
+    }
+    
+    pub fn new_source_only(source: String) -> Self {
+        Self { tree: None, source }
     }
 
-    pub fn root_node(&self) -> Node {
-        self.tree.root_node()
+    pub fn root_node(&self) -> Option<Node> {
+        self.tree.as_ref().map(|t| t.root_node())
     }
 }
 

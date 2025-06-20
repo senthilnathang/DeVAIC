@@ -4,13 +4,14 @@ pub mod rules;
 pub mod report;
 pub mod config;
 pub mod error;
+pub mod semgrep;
 
 pub use analyzer::Analyzer;
 pub use error::{DevaicError, Result};
 pub use report::Report;
 pub use config::Config;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize, Copy)]
 pub enum Language {
     C,
     Cpp,

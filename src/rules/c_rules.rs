@@ -89,9 +89,9 @@ impl CRules {
 
     fn check_integer_overflow(&self, source_file: &SourceFile, ast: &ParsedAst) -> Result<Vec<Vulnerability>> {
         let mut vulnerabilities = Vec::new();
-        let root_node = ast.root_node();
         
-        self.traverse_node(&root_node, &ast.source, |node, source_slice| {
+        if let Some(root_node) = ast.root_node() {
+            self.traverse_node(&root_node, &ast.source, |node, source_slice| {
             if node.kind() == "binary_expression" {
                 if let Some(operator_node) = node.child_by_field_name("operator") {
                     let operator = &source_slice[operator_node.byte_range()];
@@ -117,16 +117,17 @@ impl CRules {
                     }
                 }
             }
-        });
+            });
+        }
 
         Ok(vulnerabilities)
     }
 
     fn check_null_pointer_dereference(&self, source_file: &SourceFile, ast: &ParsedAst) -> Result<Vec<Vulnerability>> {
         let mut vulnerabilities = Vec::new();
-        let root_node = ast.root_node();
         
-        self.traverse_node(&root_node, &ast.source, |node, source_slice| {
+        if let Some(root_node) = ast.root_node() {
+            self.traverse_node(&root_node, &ast.source, |node, source_slice| {
             // Look for pointer dereferences without null checks
             if node.kind() == "pointer_expression" {
                 let start_pos = node.start_position();
@@ -160,7 +161,8 @@ impl CRules {
                     ));
                 }
             }
-        });
+            });
+        }
 
         Ok(vulnerabilities)
     }

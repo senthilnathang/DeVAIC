@@ -43,6 +43,14 @@ struct Cli {
     /// Maximum file size to analyze (in bytes)
     #[arg(long, default_value = "10485760")] // 10MB
     max_file_size: usize,
+
+    /// Use Semgrep-style rules
+    #[arg(long)]
+    semgrep: bool,
+
+    /// Directory containing Semgrep YAML rules
+    #[arg(long)]
+    rules_dir: Option<PathBuf>,
 }
 
 #[derive(Clone, ValueEnum)]
@@ -87,10 +95,16 @@ fn main() -> Result<()> {
     let start_time = Instant::now();
     
     // Perform analysis
-    let vulnerabilities = if cli.target.is_file() {
-        analyzer.analyze_file(&cli.target)?
+    let vulnerabilities = if cli.semgrep {
+        // Use Semgrep-style analysis
+        run_semgrep_analysis(&cli, &config)?
     } else {
-        analyzer.analyze_directory(&cli.target)?
+        // Use traditional analysis
+        if cli.target.is_file() {
+            analyzer.analyze_file(&cli.target)?
+        } else {
+            analyzer.analyze_directory(&cli.target)?
+        }
     };
 
     let analysis_duration = start_time.elapsed();
@@ -194,6 +208,141 @@ fn would_analyze_file(path: &std::path::Path, config: &Config) -> bool {
     }
 
     true
+}
+
+fn run_semgrep_analysis(cli: &Cli, config: &Config) -> Result<Vec<devaic::Vulnerability>> {
+    use devaic::semgrep::SemgrepEngine;
+    use devaic::parsers::{SourceFile, ParsedAst};
+    use walkdir::WalkDir;
+    
+    let mut engine = SemgrepEngine::new();
+    
+    // Load rules from directory
+    let default_rules_dir = PathBuf::from("rules");
+    let rules_dir = cli.rules_dir.as_ref()
+        .unwrap_or(&default_rules_dir);
+    
+    if rules_dir.exists() {
+        match engine.load_rules_from_directory(rules_dir) {
+            Ok(count) => {
+                if cli.verbose {
+                    println!("Loaded {} Semgrep rules from {}", count, rules_dir.display());
+                }
+            }
+            Err(e) => {
+                eprintln!("Warning: Failed to load Semgrep rules: {}", e);
+            }
+        }
+    } else if cli.verbose {
+        println!("Rules directory {} not found, using built-in rules", rules_dir.display());
+    }
+    
+    // Validate rules
+    if let Err(errors) = engine.validate_rules() {
+        eprintln!("Rule validation errors:");
+        for error in errors {
+            eprintln!("  {}", error);
+        }
+        return Err(devaic::DevaicError::Config(
+            "Rule validation failed".to_string()
+        ).into());
+    }
+    
+    if cli.verbose {
+        let stats = engine.get_rule_statistics();
+        stats.print_summary();
+    }
+    
+    let mut all_vulnerabilities = Vec::new();
+    
+    // Analyze files
+    if cli.target.is_file() {
+        if let Some(vuln) = analyze_file_with_semgrep(&cli.target, &engine, config)? {
+            all_vulnerabilities.extend(vuln);
+        }
+    } else {
+        // Analyze directory
+        for entry in WalkDir::new(&cli.target)
+            .follow_links(config.analysis.follow_symlinks)
+            .into_iter()
+            .filter_map(|e| e.ok())
+            .filter(|entry| entry.file_type().is_file())
+            .filter(|entry| would_analyze_file(entry.path(), config))
+        {
+            if let Some(vulns) = analyze_file_with_semgrep(entry.path(), &engine, config)? {
+                all_vulnerabilities.extend(vulns);
+            }
+        }
+    }
+    
+    Ok(all_vulnerabilities)
+}
+
+// Simple AST representation for Semgrep analysis
+struct SimpleParsedAst {
+    source: String,
+}
+
+impl devaic::semgrep::engine::AstLike for SimpleParsedAst {
+    fn source(&self) -> &str {
+        &self.source
+    }
+    
+    fn root_node(&self) -> () {
+        // Simplified for demo - real implementation would return tree-sitter Node
+    }
+}
+
+fn analyze_file_with_semgrep(
+    file_path: &std::path::Path, 
+    engine: &devaic::semgrep::SemgrepEngine,
+    config: &Config,
+) -> Result<Option<Vec<devaic::Vulnerability>>> {
+    use devaic::{Language, parsers::SourceFile};
+    
+    // Determine language from extension
+    let extension = match file_path.extension().and_then(|ext| ext.to_str()) {
+        Some(ext) => ext,
+        None => return Ok(None),
+    };
+    
+    let language = match Language::from_extension(extension) {
+        Some(lang) => lang,
+        None => return Ok(None),
+    };
+    
+    // Read file
+    let content = match std::fs::read_to_string(file_path) {
+        Ok(content) => content,
+        Err(e) => {
+            eprintln!("Warning: Failed to read {}: {}", file_path.display(), e);
+            return Ok(None);
+        }
+    };
+    
+    // Create source file
+    let source_file = SourceFile::new(file_path.to_path_buf(), content, language);
+    
+    // For Semgrep analysis, we create a simple AST representation
+    // In a full implementation, this would use proper tree-sitter parsing
+    let ast = SimpleParsedAst {
+        source: source_file.content.clone(),
+    };
+    
+    // Analyze with Semgrep engine
+    match engine.analyze_file(&source_file, &ast) {
+        Ok(semgrep_vulns) => {
+            let vulnerabilities: Vec<devaic::Vulnerability> = semgrep_vulns
+                .into_iter()
+                .map(|v| v.to_vulnerability())
+                .collect();
+            Ok(Some(vulnerabilities))
+        }
+        Err(e) => {
+            eprintln!("Warning: Semgrep analysis failed for {}: {}", file_path.display(), e);
+            Ok(None)
+        }
+    }
 }
 
 #[cfg(test)]

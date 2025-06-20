@@ -224,9 +224,9 @@ impl PythonRules {
 
     fn check_debug_mode(&self, source_file: &SourceFile, ast: &ParsedAst) -> Result<Vec<Vulnerability>> {
         let mut vulnerabilities = Vec::new();
-        let root_node = ast.root_node();
         
-        self.traverse_node(&root_node, &ast.source, |node, source_slice| {
+        if let Some(root_node) = ast.root_node() {
+            self.traverse_node(&root_node, &ast.source, |node, source_slice| {
             if node.kind() == "assignment" {
                 let node_text = &source_slice[node.byte_range()];
                 if node_text.contains("DEBUG") && node_text.contains("True") {
@@ -246,16 +246,17 @@ impl PythonRules {
                     ));
                 }
             }
-        });
+            });
+        }
 
         Ok(vulnerabilities)
     }
 
     fn check_insecure_random(&self, source_file: &SourceFile, ast: &ParsedAst) -> Result<Vec<Vulnerability>> {
         let mut vulnerabilities = Vec::new();
-        let root_node = ast.root_node();
         
-        self.traverse_node(&root_node, &ast.source, |node, source_slice| {
+        if let Some(root_node) = ast.root_node() {
+            self.traverse_node(&root_node, &ast.source, |node, source_slice| {
             if node.kind() == "call" {
                 let node_text = &source_slice[node.byte_range()];
                 if node_text.contains("random.") && !node_text.contains("secrets.") {
@@ -288,7 +289,8 @@ impl PythonRules {
                     }
                 }
             }
-        });
+            });
+        }
 
         Ok(vulnerabilities)
     }

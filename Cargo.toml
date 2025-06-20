@@ -43,6 +43,12 @@ tokio = { version = "1.0", features = ["full"], optional = true }
 config = "0.13"
 toml = "0.7"
 
+# YAML support for Semgrep rules
+serde_yaml = "0.9"
+
+# Date/time for SARIF output
+chrono = { version = "0.4", features = ["serde"] }
+
 # Report generation
 tabled = "0.12"
 colored = "2.0"

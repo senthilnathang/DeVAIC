@@ -807,9 +807,9 @@ impl TypeScriptRules {
 
     fn check_unsafe_redirects(&self, source_file: &SourceFile, ast: &ParsedAst) -> Result<Vec<Vulnerability>> {
         let mut vulnerabilities = Vec::new();
-        let root_node = ast.root_node();
         
-        self.traverse_node(&root_node, &ast.source, |node, source_slice| {
+        if let Some(root_node) = ast.root_node() {
+            self.traverse_node(&root_node, &ast.source, |node, source_slice| {
             if node.kind() == "call_expression" {
                 let expr_text = &source_slice[node.byte_range()];
                 
@@ -830,7 +830,8 @@ impl TypeScriptRules {
                     ));
                 }
             }
-        });
+            });
+        }
 
         Ok(vulnerabilities)
     }

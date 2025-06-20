@@ -61,6 +61,6 @@ public class HelloWorld {
         assert!(result.is_ok());
         
         let ast = result.unwrap();
-        assert!(!ast.tree.root_node().has_error());
+        assert!(!ast.tree.as_ref().unwrap().root_node().has_error());
     }
 }
