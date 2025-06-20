@@ -1,0 +1,129 @@
+rules:
+  - id: unsafe-type-assertion
+    message: "Unsafe type assertion detected. Consider using type guards instead."
+    severity: warning
+    languages:
+      - TypeScript
+    patterns:
+      - pattern: $VAR as $TYPE
+      - pattern: <$TYPE>$VAR
+    metadata:
+      category: "security"
+      subcategory:
+        - "type-safety"
+      technology:
+        - "typescript"
+    fix: |
+      // Use type guards instead of unsafe assertions:
+      function is$TYPE(value: unknown): value is $TYPE {
+        // Add proper type checking logic here
+        return typeof value === 'object' && value !== null;
+      }
+      
+      if (is$TYPE($VAR)) {
+        // Now $VAR is safely typed as $TYPE
+      }
+
+  - id: any-type-usage
+    message: "Usage of 'any' type reduces type safety. Consider using more specific types."
+    severity: info
+    languages:
+      - TypeScript
+    patterns:
+      - pattern: |
+          $PARAM: any
+      - pattern: |
+          function $FUNC(...): any
+      - pattern: |
+          const $VAR: any = ...
+    metadata:
+      category: "security"
+      subcategory:
+        - "type-safety"
+      technology:
+        - "typescript"
+
+  - id: non-null-assertion-unsafe
+    message: "Non-null assertion operator (!) used without proper validation"
+    severity: warning
+    languages:
+      - TypeScript
+    pattern: $VAR!.$PROPERTY
+    metadata:
+      category: "security"
+      subcategory:
+        - "type-safety"
+      technology:
+        - "typescript"
+    fix: |
+      // Use optional chaining or proper null checks:
+      $VAR?.$PROPERTY
+      // Or:
+      if ($VAR !== null && $VAR !== undefined) {
+        $VAR.$PROPERTY
+      }
+
+  - id: eval-with-any-type
+    message: "Using eval() with 'any' type is extremely dangerous"
+    severity: error
+    languages:
+      - TypeScript
+    pattern: |
+      eval($VAR)
+    pattern-inside: |
+      $VAR: any
+    metadata:
+      cwe: "CWE-94"
+      category: "security"
+      confidence: critical
+      subcategory:
+        - "code-injection"
+        - "type-safety"
+
+  - id: unsafe-object-access
+    message: "Unsafe object property access that could lead to prototype pollution"
+    severity: warning
+    languages:
+      - TypeScript
+    patterns:
+      - pattern: $OBJ[$USER_INPUT]
+      - pattern: $OBJ[req.$PARAM]
+    metadata:
+      cwe: "CWE-1321"
+      category: "security"
+      subcategory:
+        - "prototype-pollution"
+      technology:
+        - "typescript"
+
+  - id: module-augmentation-unsafe
+    message: "Unsafe global module augmentation detected"
+    severity: warning
+    languages:
+      - TypeScript
+    pattern: |
+      declare global {
+        interface $INTERFACE {
+          $PROPERTY: any;
+        }
+      }
+    metadata:
+      category: "security"
+      subcategory:
+        - "type-safety"
+        - "global-pollution"
+
+  - id: decorator-injection-risk
+    message: "Decorator with user input poses injection risk"
+    severity: error
+    languages:
+      - TypeScript
+    pattern: |
+      @$DECORATOR($USER_INPUT)
+    metadata:
+      cwe: "CWE-94"
+      category: "security"
+      subcategory:
+        - "code-injection"
+      technology:
+        - "typescript"

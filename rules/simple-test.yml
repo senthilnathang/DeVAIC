@@ -1,0 +1,10 @@
+rules:
+  - id: eval-detection
+    message: "Detected use of eval() function which can be dangerous"
+    severity: error
+    languages:
+      - Javascript
+    pattern: !Pattern "eval"
+    metadata:
+      cwe: "CWE-94"
+      category: "security"

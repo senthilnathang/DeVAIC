@@ -1,0 +1,75 @@
+rules:
+  - id: eval-injection
+    message: "Detected use of eval() with user input. This can lead to code injection vulnerabilities."
+    severity: error
+    languages:
+      - Javascript
+      - TypeScript
+    pattern: eval($USER_INPUT)
+    metadata:
+      cwe: "CWE-94"
+      owasp: "A03:2021 – Injection"
+      category: "security"
+      confidence: high
+      likelihood: high
+      impact: high
+      subcategory:
+        - "code-injection"
+      technology:
+        - "javascript"
+        - "typescript"
+      references:
+        - "https://owasp.org/www-community/attacks/Code_Injection"
+        - "https://cwe.mitre.org/data/definitions/94.html"
+    fix: |
+      // Instead of using eval(), consider safer alternatives:
+      // 1. Use JSON.parse() for parsing JSON data
+      // 2. Use Function constructor with proper validation
+      // 3. Use a templating engine with auto-escaping
+      JSON.parse($USER_INPUT)
+
+  - id: eval-dangerous-call
+    message: "Use of eval() detected. This is dangerous and should be avoided."
+    severity: warning
+    languages:
+      - Javascript
+      - TypeScript
+    pattern: eval(...)
+    metadata:
+      cwe: "CWE-94"
+      category: "security"
+      confidence: medium
+    fix: |
+      // Consider safer alternatives to eval():
+      // - JSON.parse() for JSON data
+      // - Proper validation and sanitization
+      // - Use of safer templating engines
+
+  - id: function-constructor-injection
+    message: "Detected Function constructor with user input. This can lead to code injection."
+    severity: error
+    languages:
+      - Javascript
+      - TypeScript
+    patterns:
+      - pattern: new Function($USER_INPUT)
+      - pattern: Function($USER_INPUT)
+    metadata:
+      cwe: "CWE-94"
+      category: "security"
+      confidence: high
+
+  - id: settimeout-string-injection
+    message: "setTimeout() with string argument can lead to code injection"
+    severity: error
+    languages:
+      - Javascript
+      - TypeScript
+    pattern: setTimeout($STRING, ...)
+    metavariable-pattern:
+      metavariable: $STRING
+      pattern-regex: '^".*"$|^''.*''$|^`.*`$'
+    metadata:
+      cwe: "CWE-94"
+      category: "security"
+      confidence: high

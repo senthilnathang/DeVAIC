@@ -1,0 +1,136 @@
+rules:
+  - id: sql-injection-format
+    message: "SQL injection vulnerability: string formatting in SQL query"
+    severity: error
+    languages:
+      - Python
+    patterns:
+      - pattern: |
+          $CURSOR.execute("$QUERY" % $USER_INPUT)
+      - pattern: |
+          $CURSOR.execute("$QUERY".format($USER_INPUT))
+      - pattern: |
+          $CURSOR.execute(f"$QUERY{$USER_INPUT}")
+    metadata:
+      cwe: "CWE-89"
+      owasp: "A03:2021 – Injection"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "sql-injection"
+    fix: |
+      # Use parameterized queries instead:
+      cursor.execute("SELECT * FROM users WHERE id = %s", (user_input,))
+      # Or for SQLAlchemy:
+      session.execute(text("SELECT * FROM users WHERE id = :user_id"), {"user_id": user_input})
+
+  - id: command-injection-os-system
+    message: "Command injection vulnerability: os.system() with user input"
+    severity: error
+    languages:
+      - Python
+    patterns:
+      - pattern: os.system($USER_INPUT)
+      - pattern: os.system("$CMD" + $USER_INPUT)
+      - pattern: os.system(f"$CMD{$USER_INPUT}")
+    metadata:
+      cwe: "CWE-78"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "command-injection"
+    fix: |
+      # Use subprocess with proper argument separation:
+      import subprocess
+      subprocess.run([$CMD, $USER_INPUT], check=True)
+
+  - id: eval-injection
+    message: "Code injection vulnerability: eval() with user input"
+    severity: error
+    languages:
+      - Python
+    patterns:
+      - pattern: eval($USER_INPUT)
+      - pattern: exec($USER_INPUT)
+      - pattern: compile($USER_INPUT, ...)
+    metadata:
+      cwe: "CWE-94"
+      category: "security"
+      confidence: critical
+      subcategory:
+        - "code-injection"
+    fix: |
+      # Avoid eval() and exec() with user input
+      # For JSON data, use json.loads():
+      import json
+      data = json.loads($USER_INPUT)
+      # For mathematical expressions, use ast.literal_eval():
+      import ast
+      result = ast.literal_eval($USER_INPUT)
+
+  - id: subprocess-shell-injection
+    message: "Command injection: subprocess with shell=True and user input"
+    severity: error
+    languages:
+      - Python
+    patterns:
+      - pattern: subprocess.call($USER_INPUT, shell=True)
+      - pattern: subprocess.run($USER_INPUT, shell=True)
+      - pattern: subprocess.Popen($USER_INPUT, shell=True)
+    metadata:
+      cwe: "CWE-78"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "command-injection"
+
+  - id: ldap-injection
+    message: "LDAP injection vulnerability detected"
+    severity: error
+    languages:
+      - Python
+    pattern: |
+      $CONN.search($DN, "(&(objectClass=user)(cn=$USER_INPUT))")
+    metadata:
+      cwe: "CWE-90"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "ldap-injection"
+
+  - id: xpath-injection
+    message: "XPath injection vulnerability detected"
+    severity: error
+    languages:
+      - Python
+    patterns:
+      - pattern: |
+          $DOC.xpath("//user[@name='$USER_INPUT']")
+      - pattern: |
+          $DOC.xpath(f"//user[@name='{$USER_INPUT}']")
+    metadata:
+      cwe: "CWE-643"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "xpath-injection"
+
+  - id: pickle-deserialization
+    message: "Unsafe deserialization: pickle.loads() with untrusted data"
+    severity: error
+    languages:
+      - Python
+    patterns:
+      - pattern: pickle.loads($USER_INPUT)
+      - pattern: pickle.load($USER_FILE)
+    metadata:
+      cwe: "CWE-502"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "deserialization"
+    fix: |
+      # Avoid pickle for untrusted data. Use JSON instead:
+      import json
+      data = json.loads($USER_INPUT)
+      # Or use safer serialization formats like msgpack with validation

@@ -1,0 +1,124 @@
+rules:
+  - id: xss-innerhtml
+    message: "Potential XSS vulnerability: innerHTML assignment with user input"
+    severity: error
+    languages:
+      - Javascript
+      - TypeScript
+    pattern: |
+      $ELEMENT.innerHTML = $USER_INPUT
+    metadata:
+      cwe: "CWE-79"
+      owasp: "A03:2021 – Injection"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "xss"
+    fix: |
+      // Use textContent instead of innerHTML, or sanitize the input
+      $ELEMENT.textContent = $USER_INPUT;
+      // Or use a sanitization library like DOMPurify
+      $ELEMENT.innerHTML = DOMPurify.sanitize($USER_INPUT);
+
+  - id: xss-innerHTML-concat
+    message: "XSS vulnerability: innerHTML with string concatenation"
+    severity: error
+    languages:
+      - Javascript
+      - TypeScript
+    patterns:
+      - pattern: $ELEMENT.innerHTML = $PREFIX + $USER_INPUT
+      - pattern: $ELEMENT.innerHTML = $PREFIX + $USER_INPUT + $SUFFIX
+      - pattern: $ELEMENT.innerHTML = `$PREFIX${$USER_INPUT}$SUFFIX`
+    metadata:
+      cwe: "CWE-79"
+      category: "security"
+      confidence: high
+
+  - id: react-dangerous-html
+    message: "React XSS: dangerouslySetInnerHTML with user input"
+    severity: error
+    languages:
+      - Javascript
+      - TypeScript
+    pattern: |
+      dangerouslySetInnerHTML={{__html: $USER_INPUT}}
+    metadata:
+      cwe: "CWE-79"
+      category: "security"
+      confidence: critical
+      technology:
+        - "react"
+    fix: |
+      // Sanitize the HTML content before using dangerouslySetInnerHTML
+      dangerouslySetInnerHTML={{__html: DOMPurify.sanitize($USER_INPUT)}}
+
+  - id: angular-bypass-sanitization
+    message: "Angular XSS: bypassSecurityTrustHtml without sanitization"
+    severity: error
+    languages:
+      - Javascript
+      - TypeScript
+    pattern: |
+      $SANITIZER.bypassSecurityTrustHtml($USER_INPUT)
+    metadata:
+      cwe: "CWE-79"
+      category: "security"
+      confidence: high
+      technology:
+        - "angular"
+
+  - id: vue-v-html-xss
+    message: "Vue.js XSS: v-html directive with user input"
+    severity: error
+    languages:
+      - Javascript
+      - TypeScript
+    pattern-regex: 'v-html\s*=\s*["\']?\w*["\']?'
+    metadata:
+      cwe: "CWE-79"
+      category: "security"
+      confidence: medium
+      technology:
+        - "vue"
+
+  - id: document-write-xss
+    message: "XSS vulnerability: document.write() with user input"
+    severity: error
+    languages:
+      - Javascript
+      - TypeScript
+    patterns:
+      - pattern: document.write($USER_INPUT)
+      - pattern: document.writeln($USER_INPUT)
+    metadata:
+      cwe: "CWE-79"
+      category: "security"
+      confidence: high
+    fix: |
+      // Avoid using document.write() and document.writeln()
+      // Use DOM manipulation methods instead:
+      const element = document.createElement('div');
+      element.textContent = $USER_INPUT;
+      document.body.appendChild(element);
+
+  - id: jquery-html-xss
+    message: "jQuery XSS: .html() method with user input"
+    severity: error
+    languages:
+      - Javascript
+      - TypeScript
+    patterns:
+      - pattern: $($SELECTOR).html($USER_INPUT)
+      - pattern: $ELEMENT.html($USER_INPUT)
+    metadata:
+      cwe: "CWE-79"
+      category: "security"
+      confidence: high
+      technology:
+        - "jquery"
+    fix: |
+      // Use .text() instead of .html() for user input
+      $($SELECTOR).text($USER_INPUT);
+      // Or sanitize the HTML content
+      $($SELECTOR).html(DOMPurify.sanitize($USER_INPUT));
