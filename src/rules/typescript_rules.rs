@@ -128,7 +128,7 @@ impl TypeScriptRules {
             ],
             hardcoded_secrets_patterns: vec![
                 // Enhanced secret detection patterns
-                Regex::new(r#"(?i)(password|pwd|secret|key|token|api_key)\s*[:=]\s*['"][^'"]{8,}['"]"#).unwrap(),
+                Regex::new(r#"(?i)(password|pwd|secret|key|token|api_key)\s*[:=]\s*['"][^'"]{12,}['"]"#).unwrap(), // Longer minimum length to reduce test value false positives
                 Regex::new(r#"(?i)(bearer|basic)\s+['"][^'"]+['"]"#).unwrap(),
                 Regex::new(r#"(?i)authorization\s*[:=]\s*['"][^'"]+['"]"#).unwrap(),
                 // AWS keys
@@ -137,8 +137,8 @@ impl TypeScriptRules {
                 // GitHub tokens
                 Regex::new(r"ghp_[A-Za-z0-9]{36}").unwrap(),
                 Regex::new(r"github_pat_[A-Za-z0-9_]{82}").unwrap(),
-                // JWT tokens
-                Regex::new(r"eyJ[A-Za-z0-9_/+=]+\.eyJ[A-Za-z0-9_/+=]+\.[A-Za-z0-9_/+=]*").unwrap(),
+                // JWT tokens - exclude obvious examples/tests
+                Regex::new(r"eyJ[A-Za-z0-9_/+=]{20,}\.eyJ[A-Za-z0-9_/+=]{20,}\.[A-Za-z0-9_/+=]{10,}").unwrap(), // Require minimum realistic lengths
                 // Database URLs
                 Regex::new(r"mongodb://[^:]+:[^@]+@").unwrap(),
                 Regex::new(r"postgres://[^:]+:[^@]+@").unwrap(),
@@ -149,17 +149,17 @@ impl TypeScriptRules {
             ],
             type_assertion_patterns: vec![
                 // Enhanced type assertion patterns
-                Regex::new(r"as\s+any\b").unwrap(),
+                Regex::new(r"\bas\s+any\b").unwrap(),
                 Regex::new(r"<any>").unwrap(),
-                Regex::new(r"as\s+unknown\s+as\s+").unwrap(),
+                Regex::new(r"\bas\s+unknown\s+as\s+\w+").unwrap(), // More specific pattern
                 Regex::new(r"as\s+\{\s*\[key:\s*string\]\s*:\s*any\s*\}").unwrap(),
-                // Dangerous casting patterns
-                Regex::new(r"as\s+\w+\[\]").unwrap(), // Casting to array without validation
+                // Dangerous casting patterns - more specific
+                Regex::new(r"\bas\s+\w+\[\]").unwrap(),
                 Regex::new(r"<\w+\[\]>").unwrap(),
-                // Non-null assertion operator overuse
-                Regex::new(r"\.!\s*\.!\s*\.").unwrap(), // Multiple non-null assertions
-                // Type assertion on user input
-                Regex::new(r"req\.\w+\s+as\s+").unwrap(),
+                // Non-null assertion operator overuse - more specific
+                Regex::new(r"\.!\s*\.!\s*\.!+").unwrap(), // 3+ consecutive assertions
+                // Type assertion on user input - more specific to actual user input
+                Regex::new(r"req\.(body|params|query)\s+as\s+").unwrap(),
             ],
             any_type_patterns: vec![
                 // Enhanced any type patterns
@@ -167,20 +167,20 @@ impl TypeScriptRules {
                 Regex::new(r"<any>").unwrap(),
                 Regex::new(r"Array<any>").unwrap(),
                 Regex::new(r"Promise<any>").unwrap(),
-                Regex::new(r"Record<string,\s*any>").unwrap(),
+                // Remove Record<string, any> as it's often legitimate for JSON parsing
                 Regex::new(r"Map<\w+,\s*any>").unwrap(),
                 Regex::new(r"Set<any>").unwrap(),
-                // Function with any parameters
-                Regex::new(r"function\s+\w*\s*\([^)]*:\s*any").unwrap(),
-                Regex::new(r"=>\s*\([^)]*:\s*any").unwrap(),
-                // Generic with any
-                Regex::new(r"<[^>]*any[^>]*>").unwrap(),
+                // Function with any parameters - more specific
+                Regex::new(r"function\s+\w+\s*\([^)]*:\s*any\s*[,)]").unwrap(),
+                Regex::new(r"=>\s*\([^)]*:\s*any\s*[,)]").unwrap(),
+                // Generic with any - keep simple
+                Regex::new(r"<[^>]*\bany\b[^>]*>").unwrap(),
             ],
             strict_null_patterns: vec![
                 // Strict null check bypass patterns
-                Regex::new(r"!\s*\.\s*").unwrap(), // Non-null assertion
-                Regex::new(r"as\s+\w+").unwrap(), // Type assertion potentially bypassing null checks
-                Regex::new(r"\?\.\w+\s*!").unwrap(), // Optional chaining followed by non-null assertion
+                Regex::new(r"\w+!\s*\.\s*\w+!\s*\.").unwrap(), // Multiple consecutive non-null assertions
+                Regex::new(r"\bas\s+\w+\b").unwrap(), // Simple type assertion check
+                Regex::new(r"\?\.\w+\s*!").unwrap(), // Optional chaining with assertion
             ],
             enum_patterns: vec![
                 // Enum security patterns
@@ -195,12 +195,12 @@ impl TypeScriptRules {
             ],
             redos_patterns: vec![
                 // Regular Expression Denial of Service patterns
-                Regex::new(r"\(\.\*\)\+").unwrap(), // (.*)+
-                Regex::new(r"\(\.\+\)\+").unwrap(), // (.+)+
-                Regex::new(r"\(\[\^.\]\*\)\+").unwrap(), // ([^.]*)+
-                Regex::new(r"\(\[\^.\]\+\)\+").unwrap(), // ([^.]+)+
-                Regex::new(r"\(\w\*\)\+").unwrap(), // (\w*)+
-                Regex::new(r"\(\w\+\)\+").unwrap(), // (\w+)+
+                Regex::new(r"\b\(\.\*\)\+\b").unwrap(), // (.*)+ with word boundaries
+                Regex::new(r"\b\(\.\+\)\+\b").unwrap(), // (.+)+ with word boundaries
+                Regex::new(r"\b\(\[\^[^\]]+\]\*\)\+\b").unwrap(), // ([^x]*)+
+                Regex::new(r"\b\(\[\^[^\]]+\]\+\)\+\b").unwrap(), // ([^x]+)+
+                Regex::new(r"\b\(\\w\*\)\+\b").unwrap(), // (\w*)+ with word boundaries
+                Regex::new(r"\b\(\\w\+\)\+\b").unwrap(), // (\w+)+ with word boundaries
                 // Nested quantifiers
                 Regex::new(r"\([^)]*\*[^)]*\)\*").unwrap(),
                 Regex::new(r"\([^)]*\+[^)]*\)\+").unwrap(),
@@ -498,9 +498,20 @@ impl TypeScriptRules {
         let lines: Vec<&str> = ast.source.lines().collect();
 
         for (line_num, line) in lines.iter().enumerate() {
+            // Skip comments and empty lines
+            let trimmed = line.trim();
+            if trimmed.starts_with("//") || trimmed.starts_with("*") || trimmed.is_empty() {
+                continue;
+            }
+            
             // Check type assertions
             for pattern in &self.type_assertion_patterns {
                 if pattern.is_match(line) {
+                    // Skip if it's a comment or in a test file context
+                    if line.contains("//") && line.find("//").unwrap() < pattern.find(line).unwrap().start() {
+                        continue;
+                    }
+                    
                     let severity = if line.contains("req.") || line.contains("as unknown as") {
                         Severity::High
                     } else {
@@ -525,7 +536,12 @@ impl TypeScriptRules {
 
             // Check any types
             for pattern in &self.any_type_patterns {
-                if pattern.is_match(line) && !line.trim_start().starts_with("//") {
+                if pattern.is_match(line) {
+                    // Skip if it's a comment, in JSDoc, or Record<string, any> (often legitimate)
+                    if line.contains("//") || line.contains("/**") || line.contains("Record<string,") {
+                        continue;
+                    }
+                    
                     vulnerabilities.push(create_vulnerability(
                         "TS014",
                         Some("CWE-704"),
