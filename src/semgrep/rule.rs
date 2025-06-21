@@ -5,7 +5,7 @@ use super::pattern::{Pattern, PatternOperator};
 use super::autofix::AutoFix;
 use super::metavariable::MetavariableBinding;
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct SemgrepRule {
     /// Unique identifier for the rule
     pub id: String,
@@ -45,6 +45,146 @@ pub struct SemgrepRule {
     /// Maximum Semgrep version supported
     #[serde(skip_serializing_if = "Option::is_none")]
     pub max_version: Option<String>,
+}
+
+impl<'de> Deserialize<'de> for SemgrepRule {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        use serde::de::Error;
+        
+        #[derive(Deserialize)]
+        struct RuleHelper {
+            id: String,
+            message: String,
+            severity: SemgrepSeverity,
+            languages: Vec<Language>,
+            #[serde(default)]
+            metadata: HashMap<String, serde_yaml::Value>,
+            fix: Option<String>,
+            paths: Option<PathFilter>,
+            #[serde(default)]
+            options: RuleOptions,
+            min_version: Option<String>,
+            max_version: Option<String>,
+            // Pattern fields - only one should be present
+            pattern: Option<String>,
+            #[serde(rename = "pattern-regex")]
+            pattern_regex: Option<String>,
+            patterns: Option<Vec<serde_yaml::Value>>,
+            #[serde(rename = "pattern-either")]
+            pattern_either: Option<Vec<serde_yaml::Value>>,
+        }
+        
+        let helper = RuleHelper::deserialize(deserializer)?;
+        
+        // Determine the pattern type
+        let pattern = if let Some(p) = helper.pattern {
+            PatternOperator::Pattern(p)
+        } else if let Some(p) = helper.pattern_regex {
+            PatternOperator::PatternRegex(p)
+        } else if let Some(patterns) = helper.patterns {
+            // Convert patterns array to PatternOperator::Patterns
+            let mut pattern_ops = Vec::new();
+            for pattern_val in patterns {
+                if let Some(pattern_str) = pattern_val.get("pattern").and_then(|v| v.as_str()) {
+                    // Check if this pattern has an associated metavariable-regex
+                    if let Some(metavar_regex) = pattern_val.get("metavariable-regex") {
+                        if let (Some(metavar), Some(regex)) = (
+                            metavar_regex.get("metavariable").and_then(|v| v.as_str()),
+                            metavar_regex.get("regex").and_then(|v| v.as_str())
+                        ) {
+                            // Create a combined pattern with both the base pattern and metavariable constraint
+                            let base_pattern = PatternOperator::Pattern(pattern_str.to_string());
+                            let metavar_constraint = PatternOperator::MetavariableRegex {
+                                metavariable: metavar.to_string(),
+                                regex: regex.to_string(),
+                            };
+                            pattern_ops.push(PatternOperator::Patterns(vec![base_pattern, metavar_constraint]));
+                        } else {
+                            pattern_ops.push(PatternOperator::Pattern(pattern_str.to_string()));
+                        }
+                    } else {
+                        pattern_ops.push(PatternOperator::Pattern(pattern_str.to_string()));
+                    }
+                } else if let Some(pattern_regex) = pattern_val.get("pattern-regex").and_then(|v| v.as_str()) {
+                    pattern_ops.push(PatternOperator::PatternRegex(pattern_regex.to_string()));
+                } else if let Some(_metavar_regex) = pattern_val.get("metavariable-regex") {
+                    // Handle standalone metavariable-regex patterns
+                    if let (Some(metavar), Some(regex)) = (
+                        pattern_val.get("metavariable").and_then(|v| v.as_str()),
+                        pattern_val.get("regex").and_then(|v| v.as_str())
+                    ) {
+                        pattern_ops.push(PatternOperator::MetavariableRegex {
+                            metavariable: metavar.to_string(),
+                            regex: regex.to_string(),
+                        });
+                    }
+                } else if pattern_val.is_mapping() {
+                    // Handle other complex pattern structures
+                    let pattern_obj = parse_pattern_object(&pattern_val)?;
+                    pattern_ops.push(pattern_obj);
+                }
+            }
+            PatternOperator::Patterns(pattern_ops)
+        } else if let Some(pattern_either) = helper.pattern_either {
+            // Convert pattern-either array
+            let mut pattern_ops = Vec::new();
+            for pattern_val in pattern_either {
+                if let Some(pattern_str) = pattern_val.get("pattern").and_then(|v| v.as_str()) {
+                    pattern_ops.push(PatternOperator::Pattern(pattern_str.to_string()));
+                } else if let Some(pattern_regex) = pattern_val.get("pattern-regex").and_then(|v| v.as_str()) {
+                    pattern_ops.push(PatternOperator::PatternRegex(pattern_regex.to_string()));
+                }
+            }
+            PatternOperator::PatternEither(pattern_ops)
+        } else {
+            return Err(D::Error::custom("Rule must have a pattern, pattern-regex, patterns, or pattern-either field"));
+        };
+        
+        // Convert fix string to AutoFix if present
+        let autofix = helper.fix.map(|fix_str| AutoFix::new(fix_str));
+        
+        Ok(SemgrepRule {
+            id: helper.id,
+            message: helper.message,
+            severity: helper.severity,
+            languages: helper.languages,
+            pattern,
+            metadata: helper.metadata,
+            fix: autofix,
+            paths: helper.paths,
+            options: helper.options,
+            min_version: helper.min_version,
+            max_version: helper.max_version,
+        })
+    }
+}
+
+fn parse_pattern_object<E>(pattern_val: &serde_yaml::Value) -> Result<PatternOperator, E>
+where
+    E: serde::de::Error,
+{
+    if let Some(pattern_str) = pattern_val.get("pattern").and_then(|v| v.as_str()) {
+        Ok(PatternOperator::Pattern(pattern_str.to_string()))
+    } else if let Some(pattern_regex) = pattern_val.get("pattern-regex").and_then(|v| v.as_str()) {
+        Ok(PatternOperator::PatternRegex(pattern_regex.to_string()))
+    } else if let Some(_metavar_regex) = pattern_val.get("metavariable-regex") {
+        if let (Some(metavar), Some(regex)) = (
+            pattern_val.get("metavariable").and_then(|v| v.as_str()),
+            pattern_val.get("regex").and_then(|v| v.as_str())
+        ) {
+            Ok(PatternOperator::MetavariableRegex {
+                metavariable: metavar.to_string(),
+                regex: regex.to_string(),
+            })
+        } else {
+            Err(E::custom("metavariable-regex must have both metavariable and regex fields"))
+        }
+    } else {
+        Err(E::custom("Unknown pattern structure"))
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

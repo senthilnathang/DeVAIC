@@ -212,9 +212,16 @@ mod tests {
     
     #[test]
     fn test_autofix_suggestion_application() {
+        let range = Range {
+            start_byte: 9,  // Start of "dangerous"
+            end_byte: 18,   // End of "dangerous"
+            start_point: Point { row: 0, column: 9 },
+            end_point: Point { row: 0, column: 18 },
+        };
+        
         let suggestion = AutoFixSuggestion::new(
-            create_test_range(),
-            "secureFunction()".to_string(),
+            range,
+            "secureFunction".to_string(),
             FixConfidence::High,
         );
         

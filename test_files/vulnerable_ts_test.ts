@@ -61,9 +61,48 @@ class UnsafeService {
 }
 
 // Prototype pollution in TypeScript
-function merge<T>(target: T, source: any): T {
-    return Object.assign(target, source.__proto__);
+// Rule: unsafe-object-property-assignment
+function basicProtoPollution(obj: any, key: string, value: any) {
+    obj[key] = value; // DETECT: obj[keyVariable] = value
 }
+
+function eventProtoPollution(obj: any, event: any) {
+    obj[event.target.name] = event.target.value; // DETECT: obj[event.target.name] = value
+}
+
+function reqProtoPollution(obj: any, req: any) {
+    obj[req.params.id] = "data"; // DETECT: obj[req.params.id] = value (covered by req.$PARAM)
+}
+
+function safeProtoPollution(obj: any, value: any) {
+    obj["fixedProperty"] = value; // SAFE: obj["literalKey"] = value
+}
+
+// Existing related code (for context, not direct match for the modified rule)
+function merge<T>(target: T, source: any): T {
+    return Object.assign(target, source.__proto__); // Not $OBJ[$KEY] = $VALUE
+}
+
+// Eval patterns in TypeScript
+// Rule: eval-dangerous-call (testing in TS context)
+let tsVar = "typescript code";
+eval(tsVar); // DETECT: eval(variable)
+eval('foo' + tsVar + 'bar'); // DETECT: eval('...' + var + '...')
+eval(`foo ${tsVar} bar`); // DETECT: eval(\`...\${VAR}...\`)
+eval("console.log('safe eval')"); // SAFE: eval("literal")
+
+// Rule: settimeout-string-injection-dynamic (testing in TS context)
+let tsTimeoutCmd = "console.log('ts timeout')";
+setTimeout(tsTimeoutCmd, 100); // DETECT
+setTimeout('logTS("' + tsVar + '")', 1000); // DETECT
+setTimeout(`logger.logTS("${tsVar}")`, 100); // DETECT
+setInterval(tsTimeoutCmd, 200); // DETECT
+setInterval('logIntervalTS("' + tsVar + '")', 2000); // DETECT
+setInterval(`logger.intervalTS("${tsVar}")`, 200); // DETECT
+
+setTimeout("console.log('Safe TS timeout')", 100); // SAFE
+setInterval("console.log('Safe TS interval')", 100); // SAFE
+
 
 // TypeScript-specific template injection
 const templateString: string = `Hello ${userInput}`;
