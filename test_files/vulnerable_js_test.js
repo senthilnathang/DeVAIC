@@ -29,10 +29,33 @@ function merge(target, source) {
 const userData = JSON.parse(req.body.data);
 
 // Eval patterns
-eval('console.log("' + userInput + '")');
-new Function('return ' + userInput)();
-setTimeout('alert("' + userInput + '")', 1000);
-const worker = new Worker('data:application/javascript,' + userScript);
+// Rule: eval-dangerous-call
+var someVar = "dangerous code";
+eval(someVar); // DETECT: eval(variable)
+eval('foo' + userInput + 'bar'); // DETECT: eval('...' + var + '...')
+eval(`foo ${userInput} bar`); // DETECT: eval(`...${VAR}...`)
+eval("console.log('safe')"); // SAFE: eval("literal")
+
+// Rule: eval-injection (original rule, should still catch this)
+eval('console.log("' + userInput + '")'); // DETECT
+
+// Rule: function-constructor-injection (original rule)
+new Function('return ' + userInput)(); // DETECT
+
+// Rule: settimeout-string-injection-dynamic
+var timeoutCmd = "console.log('hello from var')";
+setTimeout(timeoutCmd, 100); // DETECT: setTimeout(variable, ...)
+setTimeout('log("' + userInput + '")', 1000); // DETECT: setTimeout('...' + variable, ...)
+setTimeout(`logger.log("${userInput}")`, 100); // DETECT: setTimeout(`...${variable}...`, ...)
+setInterval(timeoutCmd, 200); // DETECT: setInterval(variable, ...)
+setInterval('logInterval("' + userInput + '")', 2000); // DETECT: setInterval('...' + variable, ...)
+setInterval(`logger.interval("${userInput}")`, 200); // DETECT: setInterval(`...${variable}...`, ...)
+
+setTimeout("console.log('Safe timeout')", 100); // SAFE: setTimeout("literal", ...)
+setInterval("console.log('Safe interval')", 100); // SAFE: setInterval("literal", ...)
+
+
+const worker = new Worker('data:application/javascript,' + userScript); // This is not eval/setTimeout family
 
 // DOM manipulation
 window.location = 'https://evil.com/' + userInput;

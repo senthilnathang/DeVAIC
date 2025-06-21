@@ -80,14 +80,19 @@ rules:
         - "code-injection"
         - "type-safety"
 
-  - id: unsafe-object-access
-    message: "Unsafe object property access that could lead to prototype pollution"
+  - id: unsafe-object-property-assignment # Was unsafe-object-access
+    message: "Unsafe dynamic property assignment could lead to prototype pollution if the property name is user-controlled."
     severity: warning
     languages:
       - TypeScript
     patterns:
-      - pattern: $OBJ[$USER_INPUT]
-      - pattern: $OBJ[req.$PARAM]
+      # $OBJ[key] = value;
+      - pattern: $OBJ[$KEY] = $VALUE
+        metavariable-regex:
+          metavariable: $KEY
+          regex: '^(?![`''"]).*$' # $KEY is not a string literal
+      # $OBJ[req.param] = value;
+      - pattern: $OBJ[req.$PARAM] = $VALUE
     metadata:
       cwe: "CWE-1321"
       category: "security"

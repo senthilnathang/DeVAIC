@@ -34,7 +34,16 @@ rules:
     languages:
       - Javascript
       - TypeScript
-    pattern: eval(...)
+    patterns:
+      # Catches eval(variable)
+      - pattern: eval($X)
+        metavariable-regex:
+          metavariable: $X
+          regex: '^(?![`''"]).*$' # $X is not a string literal
+      # Catches eval('...' + var + '...')
+      - pattern: eval(... + $VAR + ...)
+      # Catches eval(`...${VAR}...`)
+      - pattern: eval(`...${...}...`)
     metadata:
       cwe: "CWE-94"
       category: "security"
@@ -59,17 +68,45 @@ rules:
       category: "security"
       confidence: high
 
-  - id: settimeout-string-injection
-    message: "setTimeout() with string argument can lead to code injection"
-    severity: error
+  - id: settimeout-string-injection-dynamic # Was settimeout-string-injection
+    message: "setTimeout() or setInterval() with a dynamically constructed string argument can lead to code injection if any part of the string is user-controlled."
+    severity: error # Keep as error because dynamic strings here are very risky
     languages:
       - Javascript
       - TypeScript
-    pattern: setTimeout($STRING, ...)
-    metavariable-pattern:
-      metavariable: $STRING
-      pattern-regex: '^".*"$|^''.*''$|^`.*`$'
+    patterns:
+      - pattern-either:
+          # Case 1: setTimeout(variable, ...) where variable is not a literal string
+          - pattern: |
+              setTimeout($ARG, ...)
+            metavariable-regex:
+              metavariable: $ARG
+              regex: '^(?![`''"]).*$' # $ARG is not a string literal (does not start with quote or backtick)
+          # Case 2: setTimeout("..."+var+"...", ...)
+          - pattern: setTimeout("..." + ... + "...", ...)
+          - pattern: setTimeout('...' + ... + '...', ...)
+          - pattern: setTimeout("..." + ..., ...)
+          - pattern: setTimeout('...' + ..., ...)
+          - pattern: setTimeout(... + "...", ...)
+          - pattern: setTimeout(... + '...', ...)
+          # Case 3: setTimeout(`...${...}...`, ...)
+          - pattern: setTimeout(`...${...}...`, ...)
+
+          # Same for setInterval
+          - pattern: |
+              setInterval($ARG, ...)
+            metavariable-regex:
+              metavariable: $ARG
+              regex: '^(?![`''"]).*$' # $ARG is not a string literal
+          - pattern: setInterval("..." + ... + "...", ...)
+          - pattern: setInterval('...' + ... + '...', ...)
+          - pattern: setInterval("..." + ..., ...)
+          - pattern: setInterval('...' + ..., ...)
+          - pattern: setInterval(... + "...", ...)
+          - pattern: setInterval(... + '...', ...)
+          - pattern: setInterval(`...${...}...`, ...)
     metadata:
       cwe: "CWE-94"
       category: "security"
       confidence: high
+      # references: (ensure these are still relevant or update)
