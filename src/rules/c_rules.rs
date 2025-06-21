@@ -1,7 +1,7 @@
 use super::{create_vulnerability, RuleSet};
 use crate::{
     error::Result,
-    parsers::{ParsedAst, Parser, SourceFile},
+    parsers::{ParsedAst, SourceFile},
     Severity, Vulnerability,
 };
 use regex::Regex;
