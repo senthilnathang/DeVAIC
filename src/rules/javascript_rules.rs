@@ -19,6 +19,9 @@ pub struct JavascriptRules {
     path_traversal_patterns: Vec<Regex>,
     template_injection_patterns: Vec<Regex>,
     weak_random_patterns: Vec<Regex>,
+    xxe_patterns: Vec<Regex>,
+    deserialization_patterns: Vec<Regex>,
+    command_injection_patterns: Vec<Regex>,
 }
 
 impl JavascriptRules {
@@ -63,16 +66,47 @@ impl JavascriptRules {
                 Regex::new(r"new\s+Function\s*\(").unwrap(),
                 Regex::new(r"setTimeout\s*\(\s*[`'\x22]\s*.*\+").unwrap(),
                 Regex::new(r"setInterval\s*\(\s*[`'\x22]\s*.*\+").unwrap(),
+                
                 // Dynamic imports with user input
                 Regex::new(r"import\s*\(\s*.*\+").unwrap(),
                 Regex::new(r"require\s*\(\s*.*\+").unwrap(),
+                
                 // VM module usage
                 Regex::new(r"vm\.runInThisContext\s*\(").unwrap(),
                 Regex::new(r"vm\.runInNewContext\s*\(").unwrap(),
+                Regex::new(r"vm\.runInContext\s*\(").unwrap(),
+                Regex::new(r"vm\.createScript\s*\(").unwrap(),
+                
                 // Web Workers with dynamic scripts
                 Regex::new(r"new\s+Worker\s*\(\s*.*\+").unwrap(),
+                Regex::new(r"new\s+SharedWorker\s*\(\s*.*\+").unwrap(),
+                
                 // Script tag injection
                 Regex::new(r"createElement\s*\(\s*['\x22]script['\x22]").unwrap(),
+                
+                // Additional code execution vectors
+                Regex::new(r"execScript\s*\(").unwrap(), // IE-specific
+                Regex::new(r"msWriteProfilerMark\s*\(").unwrap(), // IE-specific
+                Regex::new(r#"window\[['"`][^'"`]*['"`]\]\s*\("#).unwrap(), // window["func"]()
+                
+                // WebAssembly dynamic compilation
+                Regex::new(r"WebAssembly\.compile\s*\(.*\+").unwrap(),
+                Regex::new(r"WebAssembly\.instantiate\s*\(.*\+").unwrap(),
+                
+                // Service Worker registration with dynamic content
+                Regex::new(r"navigator\.serviceWorker\.register\s*\(.*\+").unwrap(),
+                
+                // Dynamic module loading
+                Regex::new(r"importScripts\s*\(.*\+").unwrap(),
+                
+                // Eval-like functions in libraries
+                Regex::new(r"lodash\.template\s*\(.*\+").unwrap(),
+                Regex::new(r"_.template\s*\(.*\+").unwrap(),
+                Regex::new(r"Handlebars\.compile\s*\(.*\+").unwrap(),
+                
+                // Node.js specific
+                Regex::new(r"child_process\.exec\s*\(.*\+").unwrap(),
+                Regex::new(r"child_process\.spawn\s*\(.*\+").unwrap(),
             ],
             dom_patterns: vec![
                 // Enhanced DOM manipulation patterns
@@ -129,18 +163,56 @@ impl JavascriptRules {
                 Regex::new(r"-----BEGIN\s+(RSA\s+)?PRIVATE\s+KEY-----").unwrap(),
             ],
             redos_patterns: vec![
-                // Regular Expression Denial of Service patterns
+                // Enhanced Regular Expression Denial of Service patterns
+                // Super-linear backtracking patterns - exponential complexity
                 Regex::new(r"\(\.\*\)\+").unwrap(), // (.*)+
                 Regex::new(r"\(\.\+\)\+").unwrap(), // (.+)+
                 Regex::new(r"\(\[\^.\]\*\)\+").unwrap(), // ([^.]*)+
                 Regex::new(r"\(\[\^.\]\+\)\+").unwrap(), // ([^.]+)+
                 Regex::new(r"\(\w\*\)\+").unwrap(), // (\w*)+
                 Regex::new(r"\(\w\+\)\+").unwrap(), // (\w+)+
-                // Nested quantifiers
+                
+                // Additional super-linear backtracking patterns
+                Regex::new(r"\([^)]*\?\)\*").unwrap(), // (x?)*
+                Regex::new(r"\([^)]*\?\)\+").unwrap(), // (x?)+
+                Regex::new(r"\([^)]*\*\?\)\*").unwrap(), // (x*?)*
+                Regex::new(r"\([^)]*\+\?\)\+").unwrap(), // (x+?)+
+                
+                // Nested quantifiers - polynomial complexity
                 Regex::new(r"\([^)]*\*[^)]*\)\*").unwrap(),
                 Regex::new(r"\([^)]*\+[^)]*\)\+").unwrap(),
-                // Alternation with overlapping patterns
+                Regex::new(r"\([^)]*\{[0-9]*,[0-9]*\}[^)]*\)\*").unwrap(), // (x{n,m})*
+                Regex::new(r"\([^)]*\{[0-9]*,[0-9]*\}[^)]*\)\+").unwrap(), // (x{n,m})+
+                
+                // Alternation with overlapping patterns - ambiguous matching
                 Regex::new(r"\([^|]*\|\.\*\)").unwrap(),
+                Regex::new(r"\([^|]*\|\.\+\)").unwrap(),
+                Regex::new(r"\([^|]*\|[^)]*\.\*[^)]*\)").unwrap(),
+                
+                // Character class patterns that can cause issues
+                Regex::new(r"\([\[\^]*\.\*[\]]*\)\+").unwrap(), // ([.*])+
+                Regex::new(r"\([\[\^]*\.\+[\]]*\)\+").unwrap(), // ([.+])+
+                
+                // Common ReDoS patterns from real attacks
+                Regex::new(r"\(a\+\)\+b").unwrap(), // (a+)+b - classic ReDoS pattern
+                Regex::new(r"\(a\*\)\*").unwrap(), // (a*)*
+                Regex::new(r"\(\.\*a\)\*").unwrap(), // (.*a)*
+                Regex::new(r"\(a\|a\)\*").unwrap(), // (a|a)*
+                
+                // Super-linear move patterns - quadratic runtime
+                Regex::new(r"a\+b").unwrap(), // a+b - can cause O(n²) moves
+                Regex::new(r"\w\+@").unwrap(), // \w+@ - email validation ReDoS
+                Regex::new(r"\d\+\.\d\+").unwrap(), // \d+\.\d+ - decimal number ReDoS
+                Regex::new(r"[a-zA-Z]\+[0-9]\+").unwrap(), // [a-zA-Z]+[0-9]+ - alphanumeric ReDoS
+                
+                // Lookahead/lookbehind with quantifiers
+                Regex::new(r"\(\?\=[^)]*\*[^)]*\)").unwrap(), // (?=.**)
+                Regex::new(r"\(\?\=[^)]*\+[^)]*\)").unwrap(), // (?=.*+)
+                Regex::new(r"\(\?\<=[^)]*\*[^)]*\)").unwrap(), // (?<=.**)
+                
+                // Word boundary issues
+                Regex::new(r"\\b[^\\]*\\b\*").unwrap(), // \b...\b*
+                Regex::new(r"\\b[^\\]*\\b\+").unwrap(), // \b...\b+
             ],
             supply_chain_patterns: vec![
                 // Supply chain attack patterns
@@ -194,6 +266,51 @@ impl JavascriptRules {
                 Regex::new(r"Math\.random\(\).*csrf").unwrap(),
                 Regex::new(r"Date\.now\(\).*token").unwrap(),
                 Regex::new(r"Date\.now\(\).*session").unwrap(),
+            ],
+            xxe_patterns: vec![
+                // XML External Entity (XXE) patterns
+                Regex::new(r"new\s+DOMParser\s*\(\s*\)").unwrap(),
+                Regex::new(r"parseFromString\s*\(.*req\.").unwrap(),
+                Regex::new(r"XMLHttpRequest\s*\(\s*\)").unwrap(),
+                Regex::new(r"libxmljs\.parseXml\s*\(").unwrap(),
+                Regex::new(r"xml2js\.parseString\s*\(").unwrap(),
+                Regex::new(r#"new\s+ActiveXObject\s*\(\s*['"]Microsoft\.XMLDOM['"]"#).unwrap(),
+                // XML parsing without disabling external entities
+                Regex::new(r"\.resolveExternals\s*=\s*true").unwrap(),
+                Regex::new(r"\.validateOnParse\s*=\s*true").unwrap(),
+            ],
+            deserialization_patterns: vec![
+                // Unsafe deserialization patterns
+                Regex::new(r"JSON\.parse\s*\(\s*.*req\.").unwrap(),
+                Regex::new(r"eval\s*\(\s*.*JSON\.stringify").unwrap(),
+                Regex::new(r"Function\s*\(\s*.*JSON\.stringify").unwrap(),
+                // Node.js serialization
+                Regex::new(r"serialize-javascript").unwrap(),
+                Regex::new(r"node-serialize").unwrap(),
+                Regex::new(r"serialize\s*\(\s*.*req\.").unwrap(),
+                Regex::new(r"unserialize\s*\(\s*.*req\.").unwrap(),
+                // YAML deserialization
+                Regex::new(r"yaml\.load\s*\(\s*.*req\.").unwrap(),
+                Regex::new(r"yaml\.safeLoad\s*\(\s*.*req\.").unwrap(),
+                // Pickle-like libraries
+                Regex::new(r"v8\.deserialize\s*\(").unwrap(),
+            ],
+            command_injection_patterns: vec![
+                // Command injection patterns
+                Regex::new(r"child_process\.exec\s*\(\s*.*req\.").unwrap(),
+                Regex::new(r"child_process\.execSync\s*\(\s*.*req\.").unwrap(),
+                Regex::new(r"child_process\.spawn\s*\(\s*.*req\.").unwrap(),
+                Regex::new(r"child_process\.spawnSync\s*\(\s*.*req\.").unwrap(),
+                Regex::new(r"child_process\.execFile\s*\(\s*.*req\.").unwrap(),
+                Regex::new(r"child_process\.fork\s*\(\s*.*req\.").unwrap(),
+                // Shell command patterns
+                Regex::new(r"shelljs\.exec\s*\(\s*.*req\.").unwrap(),
+                Regex::new(r"shell\.exec\s*\(\s*.*req\.").unwrap(),
+                // Dangerous shell characters in commands
+                Regex::new(r#"['"][^'"]*\$\{.*req\..*\}[^'"]*['"]"#).unwrap(),
+                Regex::new(r#"['"][^'"]*[;&|`][^'"]*['"]"#).unwrap(),
+                // Process execution with concatenation
+                Regex::new(r"process\.exec\s*\(\s*.*\+").unwrap(),
             ],
         }
     }
@@ -637,6 +754,93 @@ impl JavascriptRules {
         Ok(vulnerabilities)
     }
 
+    fn check_xxe_vulnerabilities(&self, source_file: &SourceFile, ast: &ParsedAst) -> Result<Vec<Vulnerability>> {
+        let mut vulnerabilities = Vec::new();
+        let lines: Vec<&str> = ast.source.lines().collect();
+
+        for (line_num, line) in lines.iter().enumerate() {
+            for pattern in &self.xxe_patterns {
+                if pattern.is_match(line) {
+                    vulnerabilities.push(create_vulnerability(
+                        "JS026",
+                        Some("CWE-611"),
+                        "XML External Entity (XXE)",
+                        Severity::High,
+                        "injection",
+                        "Potential XML External Entity (XXE) vulnerability",
+                        &source_file.path.to_string_lossy(),
+                        line_num + 1,
+                        0,
+                        line,
+                        "Disable external entity processing in XML parsers and use secure XML parsing libraries",
+                    ));
+                }
+            }
+        }
+
+        Ok(vulnerabilities)
+    }
+
+    fn check_deserialization_vulnerabilities(&self, source_file: &SourceFile, ast: &ParsedAst) -> Result<Vec<Vulnerability>> {
+        let mut vulnerabilities = Vec::new();
+        let lines: Vec<&str> = ast.source.lines().collect();
+
+        for (line_num, line) in lines.iter().enumerate() {
+            for pattern in &self.deserialization_patterns {
+                if pattern.is_match(line) {
+                    let severity = if line.contains("node-serialize") || line.contains("serialize-javascript") {
+                        Severity::Critical
+                    } else {
+                        Severity::High
+                    };
+
+                    vulnerabilities.push(create_vulnerability(
+                        "JS027",
+                        Some("CWE-502"),
+                        "Unsafe Deserialization",
+                        severity,
+                        "injection",
+                        "Unsafe deserialization of user input",
+                        &source_file.path.to_string_lossy(),
+                        line_num + 1,
+                        0,
+                        line,
+                        "Validate and sanitize serialized data, use safe parsing methods, avoid deserializing untrusted data",
+                    ));
+                }
+            }
+        }
+
+        Ok(vulnerabilities)
+    }
+
+    fn check_command_injection(&self, source_file: &SourceFile, ast: &ParsedAst) -> Result<Vec<Vulnerability>> {
+        let mut vulnerabilities = Vec::new();
+        let lines: Vec<&str> = ast.source.lines().collect();
+
+        for (line_num, line) in lines.iter().enumerate() {
+            for pattern in &self.command_injection_patterns {
+                if pattern.is_match(line) {
+                    vulnerabilities.push(create_vulnerability(
+                        "JS028",
+                        Some("CWE-78"),
+                        "Command Injection",
+                        Severity::Critical,
+                        "injection",
+                        "Command injection vulnerability through user input",
+                        &source_file.path.to_string_lossy(),
+                        line_num + 1,
+                        0,
+                        line,
+                        "Use parameterized commands, validate input, avoid shell execution with user data",
+                    ));
+                }
+            }
+        }
+
+        Ok(vulnerabilities)
+    }
+
     fn traverse_node<F>(&self, node: &Node, source: &str, mut callback: F)
     where
         F: FnMut(&Node, &str),
@@ -685,6 +889,9 @@ impl RuleSet for JavascriptRules {
         all_vulnerabilities.extend(self.check_security_headers(source_file, ast)?);
         all_vulnerabilities.extend(self.check_unsafe_redirects(source_file, ast)?);
         all_vulnerabilities.extend(self.check_nosql_injection(source_file, ast)?);
+        all_vulnerabilities.extend(self.check_xxe_vulnerabilities(source_file, ast)?);
+        all_vulnerabilities.extend(self.check_deserialization_vulnerabilities(source_file, ast)?);
+        all_vulnerabilities.extend(self.check_command_injection(source_file, ast)?);
 
         Ok(all_vulnerabilities)
     }
@@ -693,7 +900,7 @@ impl RuleSet for JavascriptRules {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{parsers::javascript_parser::JavascriptParser, Language};
+    use crate::{parsers::{javascript_parser::JavascriptParser, Parser}, Language};
     use std::path::PathBuf;
 
     #[test]
