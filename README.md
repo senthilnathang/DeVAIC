@@ -80,6 +80,14 @@ DeVAIC provides comprehensive security analysis specifically designed for indust
 - **Generic Secrets**: Passwords, private keys, database connection strings
 - **Cloud Providers**: AWS, Azure, GCP credential patterns
 
+### Regular Expression Denial of Service (ReDoS)
+- **Exponential Backtracking**: Detection of nested quantifiers like `(a+)+`, `(a*)*` that cause exponential time complexity
+- **Polynomial Backtracking**: Patterns that may cause polynomial time complexity with multiple consecutive quantified groups
+- **Catastrophic Backtracking**: Known vulnerable patterns prone to catastrophic backtracking
+- **User Input Vulnerabilities**: Critical detection when user input is used in potentially vulnerable regex patterns
+- **Language-Specific Patterns**: Specialized detection for regex libraries across all supported languages (Python re, JavaScript RegExp, Java Pattern, C POSIX regex, C++ std::regex, Rust regex crate)
+- **Industrial Control Systems**: SCADA-specific regex vulnerabilities in PLC data validation, HMI input processing, and protocol parsing
+
 ## Installation
 
 ### Prerequisites

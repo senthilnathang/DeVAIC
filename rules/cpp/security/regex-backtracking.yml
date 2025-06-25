@@ -1,0 +1,170 @@
+rules:
+  - id: regex-exponential-backtracking-std-regex
+    message: "ReDoS vulnerability: std::regex with nested quantifiers can cause exponential backtracking"
+    severity: error
+    languages:
+      - C++
+    patterns:
+      # std::regex with nested quantifiers
+      - pattern-regex: 'std::regex\s*\([^)]*"[^"]*\([^)]*[\*\+][^)]*\)[\*\+][^"]*"[^)]*\)'
+      # regex_constants with vulnerable patterns
+      - pattern-regex: 'std::regex\s*\([^)]*"[^"]*\(.*\*\)\*[^"]*"[^)]*\)'
+      - pattern-regex: 'std::regex\s*\([^)]*"[^"]*\(.*\+\)\+[^"]*"[^)]*\)'
+    metadata:
+      cwe: "CWE-1333"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "regex-denial-of-service"
+      impact: high
+      likelihood: medium
+      technology:
+        - "cpp"
+        - "std-regex"
+      references:
+        - "https://owasp.org/www-community/attacks/Regular_expression_Denial_of_Service_-_ReDoS"
+        - "https://cwe.mitre.org/data/definitions/1333.html"
+    fix: |
+      // Avoid nested quantifiers in std::regex patterns
+      // Use specific bounds instead of unlimited quantifiers
+      // Consider using std::string methods like find(), substr()
+      // Use std::regex with timeout mechanisms or async execution
+
+  - id: regex-catastrophic-backtracking-patterns
+    message: "ReDoS vulnerability: std::regex pattern prone to catastrophic backtracking"
+    severity: error
+    languages:
+      - C++
+    patterns:
+      # Classic catastrophic patterns
+      - pattern: std::regex("(a*)*")
+      - pattern: std::regex("(a+)+")
+      - pattern: std::regex("(.*)*")
+      - pattern: std::regex("(a?)+")
+      # With regex flags
+      - pattern: std::regex("(a*)*", std::regex_constants::$FLAGS)
+      - pattern: std::regex("(a+)+", std::regex_constants::$FLAGS)
+    metadata:
+      cwe: "CWE-1333"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "regex-denial-of-service"
+
+  - id: regex-backtracking-with-user-input
+    message: "Critical ReDoS vulnerability: User input used in std::regex construction"
+    severity: error
+    languages:
+      - C++
+    patterns:
+      - pattern: std::regex($USER_INPUT)
+      - pattern: std::regex($USER_INPUT, std::regex_constants::$FLAGS)
+      - patterns:
+          - pattern: std::regex($PATTERN)
+          - pattern-inside: |
+              $TYPE $FUNC(..., std::string $PATTERN, ...) {
+                ...
+              }
+      - patterns:
+          - pattern: std::regex_match($STRING, $REGEX)
+          - pattern-inside: |
+              $TYPE $FUNC(..., std::string $STRING, ...) {
+                ...
+              }
+    metadata:
+      cwe: "CWE-1333"
+      category: "security"
+      confidence: critical
+      subcategory:
+        - "regex-denial-of-service"
+      fix: |
+        // Validate and sanitize user input before using in std::regex
+        // Implement timeout mechanisms using std::future and std::async
+        // Use input length limits and pattern complexity checks
+        // Consider using simpler string methods for basic patterns
+
+  - id: regex-polynomial-backtracking-std
+    message: "ReDoS vulnerability: std::regex pattern may cause polynomial time complexity"
+    severity: warning
+    languages:
+      - C++
+    patterns:
+      # Multiple consecutive quantified groups
+      - pattern-regex: 'std::regex\s*\([^)]*"[^"]*[\*\+\?][^"]*[\*\+\?][^"]*"[^)]*\)'
+      # Complex patterns with many quantifiers
+      - pattern-regex: 'std::regex\s*\([^)]*"[^"]*([*+?][^"]*){3,}[^"]*"[^)]*\)'
+    metadata:
+      cwe: "CWE-1333"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "regex-denial-of-service"
+
+  - id: regex-vulnerable-email-validation-cpp
+    message: "ReDoS vulnerability: Vulnerable email validation regex in C++"
+    severity: error
+    languages:
+      - C++
+    patterns:
+      # Common vulnerable email patterns
+      - pattern: std::regex("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$")
+      - pattern-regex: 'std::regex\s*\([^)]*"[^"]*\([^\s@]+@[^\s@]+\\.[^\s@]+\)\+[^"]*"[^)]*\)'
+      # Email validation with std::regex_match
+      - pattern: std::regex_match($EMAIL, std::regex("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"))
+    metadata:
+      cwe: "CWE-1333"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "regex-denial-of-service"
+      fix: |
+        // Use a simple email validation or a well-tested library
+        // Consider using boost::regex with proper validation
+        // Or implement a simple check for @ symbol and basic format
+
+  - id: regex-no-timeout-async
+    message: "ReDoS vulnerability: std::regex without timeout mechanism"
+    severity: warning
+    languages:
+      - C++
+    patterns:
+      - patterns:
+          - pattern: std::regex_match($STRING, $REGEX)
+          - pattern-not-inside: |
+              auto future = std::async(std::launch::async, ...);
+              ...
+              future.wait_for(std::chrono::$TIME) == std::future_status::timeout
+          - pattern-not-inside: |
+              std::future<$TYPE> $FUTURE = ...;
+              ...
+              $FUTURE.wait_for(...) == std::future_status::timeout
+    metadata:
+      cwe: "CWE-1333"
+      category: "security"
+      confidence: low
+      subcategory:
+        - "regex-denial-of-service"
+      fix: |
+        // Implement timeout mechanism using std::async and std::future:
+        // auto future = std::async(std::launch::async, [&]() {
+        //     return std::regex_match(string, regex);
+        // });
+        // if (future.wait_for(std::chrono::seconds(5)) == std::future_status::timeout) {
+        //     // Handle timeout
+        // }
+
+  - id: regex-boost-regex-vulnerability
+    message: "ReDoS vulnerability: boost::regex with potential backtracking issues"
+    severity: warning
+    languages:
+      - C++
+    patterns:
+      - pattern-regex: 'boost::regex\s*\([^)]*"[^"]*\([^)]*[\*\+][^)]*\)[\*\+][^"]*"[^)]*\)'
+      - pattern: boost::regex("(a*)*")
+      - pattern: boost::regex("(a+)+")
+    metadata:
+      cwe: "CWE-1333"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "regex-denial-of-service"

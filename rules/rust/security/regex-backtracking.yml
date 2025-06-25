@@ -1,0 +1,161 @@
+rules:
+  - id: regex-exponential-backtracking-rust
+    message: "ReDoS vulnerability: Regex with nested quantifiers can cause exponential backtracking"
+    severity: error
+    languages:
+      - Rust
+    patterns:
+      # Regex::new() with nested quantifiers
+      - pattern-regex: 'Regex::new\(r?"[^"]*\([^)]*[\*\+][^)]*\)[\*\+][^"]*"\)'
+      # Common catastrophic patterns
+      - pattern: Regex::new("(a*)*")
+      - pattern: Regex::new("(a+)+")
+      - pattern: Regex::new("(.*)*")
+      - pattern: Regex::new(r"(a*)*")
+      - pattern: Regex::new(r"(a+)+")
+    metadata:
+      cwe: "CWE-1333"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "regex-denial-of-service"
+      impact: high
+      likelihood: medium
+      technology:
+        - "rust"
+        - "regex-crate"
+      references:
+        - "https://owasp.org/www-community/attacks/Regular_expression_Denial_of_Service_-_ReDoS"
+        - "https://cwe.mitre.org/data/definitions/1333.html"
+        - "https://docs.rs/regex/latest/regex/"
+    fix: |
+      // Avoid nested quantifiers in regex patterns
+      // Use specific bounds instead of unlimited quantifiers
+      // The Rust regex crate has some protections, but complex patterns can still be slow
+      // Consider using simpler string methods like contains(), starts_with()
+
+  - id: regex-backtracking-with-user-input
+    message: "ReDoS vulnerability: User input used in Regex construction"
+    severity: error
+    languages:
+      - Rust
+    patterns:
+      - pattern: Regex::new($USER_INPUT)
+      - pattern: Regex::new(&$USER_INPUT)
+      - patterns:
+          - pattern: Regex::new($PATTERN)
+          - pattern-inside: |
+              fn $FUNC(..., $PATTERN: &str, ...) -> $RETURN {
+                ...
+              }
+      - patterns:
+          - pattern: Regex::new($PATTERN)
+          - pattern-inside: |
+              fn $FUNC(..., $PATTERN: String, ...) -> $RETURN {
+                ...
+              }
+    metadata:
+      cwe: "CWE-1333"
+      category: "security"
+      confidence: critical
+      subcategory:
+        - "regex-denial-of-service"
+      fix: |
+        // Validate and sanitize user input before using in Regex::new()
+        // Use timeout mechanisms with std::time::Duration
+        // Implement input length limits and pattern complexity checks
+        // Consider using regex with timeout or async execution
+
+  - id: regex-polynomial-backtracking-rust
+    message: "ReDoS vulnerability: Regex pattern may cause polynomial time complexity"
+    severity: warning
+    languages:
+      - Rust
+    patterns:
+      # Multiple consecutive quantified groups
+      - pattern-regex: 'Regex::new\(r?"[^"]*[\*\+\?][^"]*[\*\+\?][^"]*"\)'
+      # Complex patterns with many quantifiers
+      - pattern-regex: 'Regex::new\(r?"[^"]*([*+?][^"]*){3,}[^"]*"\)'
+    metadata:
+      cwe: "CWE-1333"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "regex-denial-of-service"
+
+  - id: regex-vulnerable-patterns-rust
+    message: "ReDoS vulnerability: Known vulnerable regex patterns in Rust"
+    severity: error
+    languages:
+      - Rust
+    patterns:
+      # Email validation patterns that can be vulnerable
+      - pattern: Regex::new(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
+      - pattern: Regex::new("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$")
+      # URL validation patterns
+      - pattern-regex: 'Regex::new\(r?"[^"]*\([^@\\s]+@[^@\\s]+\\.[^@\\s]+\)\+[^"]*"\)'
+      # Common vulnerable patterns
+      - pattern: Regex::new(r"(https?://)?([\da-z\.-]+)\.([a-z\.]{2,6})([/\w \.-]*)*/?")
+    metadata:
+      cwe: "CWE-1333"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "regex-denial-of-service"
+
+  - id: regex-lazy-static-vulnerability
+    message: "ReDoS vulnerability: Potentially vulnerable regex in lazy_static"
+    severity: warning
+    languages:
+      - Rust
+    patterns:
+      - patterns:
+          - pattern: |
+              lazy_static! {
+                static ref $NAME: Regex = Regex::new($PATTERN).unwrap();
+              }
+          - pattern-regex:
+              metavariable: $PATTERN
+              regex: '.*[\(\[\*\+\?].*'
+    metadata:
+      cwe: "CWE-1333"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "regex-denial-of-service"
+      fix: |
+        // Review regex patterns in lazy_static for potential ReDoS
+        // Test patterns with long inputs that could cause backtracking
+        // Consider using once_cell crate for better error handling
+
+  - id: regex-macro-vulnerability
+    message: "ReDoS vulnerability: Potentially vulnerable regex in regex! macro"
+    severity: warning
+    languages:
+      - Rust
+    patterns:
+      - pattern-regex: 'regex!\("[^"]*\([^)]*[\*\+][^)]*\)[\*\+][^"]*"\)'
+      - pattern: regex!("(a*)*")
+      - pattern: regex!("(a+)+")
+    metadata:
+      cwe: "CWE-1333"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "regex-denial-of-service"
+
+  - id: regex-bytes-vulnerability
+    message: "ReDoS vulnerability: Potentially vulnerable pattern in regex::bytes"
+    severity: warning
+    languages:
+      - Rust
+    patterns:
+      - pattern-regex: 'regex::bytes::Regex::new\(r?"[^"]*\([^)]*[\*\+][^)]*\)[\*\+][^"]*"\)'
+      - pattern: regex::bytes::Regex::new("(a*)*")
+      - pattern: regex::bytes::Regex::new(r"(a+)+")
+    metadata:
+      cwe: "CWE-1333"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "regex-denial-of-service"

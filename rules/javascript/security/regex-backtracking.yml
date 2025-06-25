@@ -1,0 +1,143 @@
+rules:
+  - id: regex-exponential-backtracking-nested-quantifiers
+    message: "ReDoS vulnerability: Nested quantifiers in regex can cause exponential backtracking"
+    severity: error
+    languages:
+      - Javascript
+      - TypeScript
+    patterns:
+      # new RegExp() patterns
+      - pattern-regex: 'new RegExp\(.*\([^)]*[\*\+][^)]*\)[\*\+].*\)'
+      # Regex literal patterns (a+)+, (a*)*, etc.
+      - pattern-regex: '/.*\([^)]*[\*\+][^)]*\)[\*\+].*/'
+      # Nested quantifiers with curly braces
+      - pattern-regex: '/.*\([^)]*\{[0-9]+,[0-9]*\}[^)]*\)[\*\+].*/'
+      - pattern-regex: 'new RegExp\(.*\([^)]*\{[0-9]+,[0-9]*\}[^)]*\)[\*\+].*\)'
+    metadata:
+      cwe: "CWE-1333"
+      owasp: "A06:2021 – Vulnerable and Outdated Components"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "regex-denial-of-service"
+      impact: high
+      likelihood: medium
+      technology:
+        - "javascript"
+        - "typescript"
+      references:
+        - "https://owasp.org/www-community/attacks/Regular_expression_Denial_of_Service_-_ReDoS"
+        - "https://cwe.mitre.org/data/definitions/1333.html"
+    fix: |
+      // Avoid nested quantifiers. Instead of (a+)+, use a+
+      // Instead of (a*)*, use a*
+      // Use specific bounds: {1,10} instead of +
+      // Consider using alternative string methods for simple patterns
+
+  - id: regex-alternation-overlap-backtracking
+    message: "ReDoS vulnerability: Overlapping alternation patterns can cause exponential backtracking"
+    severity: error
+    languages:
+      - Javascript
+      - TypeScript
+    patterns:
+      # Overlapping alternation with quantifiers
+      - pattern-regex: '/.*\([^|)]*\|[^|)]*\)[\*\+\?].*/'
+      - pattern-regex: 'new RegExp\(.*\([^|)]*\|[^|)]*\)[\*\+\?].*\)'
+      # Common vulnerable patterns like (a|a)*
+      - pattern-regex: '/.*\(([^|)]+)\|\1\)[\*\+].*/'
+    metadata:
+      cwe: "CWE-1333"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "regex-denial-of-service"
+
+  - id: regex-catastrophic-backtracking-patterns
+    message: "ReDoS vulnerability: Pattern prone to catastrophic backtracking detected"
+    severity: error
+    languages:
+      - Javascript
+      - TypeScript
+    patterns:
+      # Classic catastrophic patterns
+      - pattern-regex: '/.*\(a\*\)\*.*/'
+      - pattern-regex: '/.*\(a\+\)\+.*/'
+      - pattern-regex: '/.*\(\.\*\)\*.*/'
+      - pattern-regex: 'new RegExp\(.*\(a\*\)\*.*\)'
+      - pattern-regex: 'new RegExp\(.*\(a\+\)\+.*\)'
+      # Email validation patterns known to be vulnerable
+      - pattern-regex: '/.*\([^@\\s]+@[^@\\s]+\)\+.*/'
+      # Patterns with optional repeated groups
+      - pattern-regex: '/.*\([^)]*\?\)\+.*/'
+    metadata:
+      cwe: "CWE-1333"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "regex-denial-of-service"
+
+  - id: regex-polynomial-backtracking
+    message: "ReDoS vulnerability: Pattern may cause polynomial time complexity"
+    severity: warning
+    languages:
+      - Javascript
+      - TypeScript
+    patterns:
+      # Multiple consecutive quantified groups
+      - pattern-regex: '/.*[\*\+\?]\.\*[\*\+\?].*/'
+      - pattern-regex: '/.*[\*\+\?][^\*\+\?]*[\*\+\?].*/'
+      # Complex patterns with many quantifiers
+      - pattern-regex: '/.*([*+?].*){3,}.*/'
+    metadata:
+      cwe: "CWE-1333"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "regex-denial-of-service"
+
+  - id: regex-backtracking-with-user-input
+    message: "Critical ReDoS vulnerability: User input used in potentially vulnerable regex"
+    severity: error
+    languages:
+      - Javascript
+      - TypeScript
+    patterns:
+      - pattern: new RegExp($USER_INPUT)
+      - pattern: $USER_INPUT.match($PATTERN)
+      - pattern: $USER_INPUT.replace($PATTERN, ...)
+      - pattern: $USER_INPUT.search($PATTERN)
+      - pattern: $PATTERN.test($USER_INPUT)
+    metadata:
+      cwe: "CWE-1333"
+      category: "security"
+      confidence: critical
+      subcategory:
+        - "regex-denial-of-service"
+      fix: |
+        // Validate and sanitize user input before using in regex
+        // Use timeout mechanisms or worker threads for regex operations
+        // Consider using simple string methods instead of complex regex
+        // Implement input length limits and pattern complexity checks
+
+  - id: regex-vulnerable-email-validation
+    message: "ReDoS vulnerability: Vulnerable email validation regex detected"
+    severity: error
+    languages:
+      - Javascript
+      - TypeScript
+    patterns:
+      - pattern-regex: '/.*\([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+\)\*.*/'
+      - pattern-regex: '/.*\([^\s@]+@[^\s@]+\.[^\s@]+\)\+.*/'
+      # Common vulnerable email patterns
+      - pattern-regex: '/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/'
+    metadata:
+      cwe: "CWE-1333"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "regex-denial-of-service"
+      fix: |
+        // Use a simple email validation or a well-tested library
+        // Consider using HTML5 input type="email" for basic validation
+        // Or use a dedicated email validation library like validator.js

@@ -1,0 +1,113 @@
+rules:
+  - id: regex-exponential-backtracking-nested-quantifiers
+    message: "ReDoS vulnerability: Nested quantifiers in regex can cause exponential backtracking"
+    severity: error
+    languages:
+      - TypeScript
+    patterns:
+      # new RegExp() patterns
+      - pattern-regex: 'new RegExp\(.*\([^)]*[\*\+][^)]*\)[\*\+].*\)'
+      # Regex literal patterns (a+)+, (a*)*, etc.
+      - pattern-regex: '/.*\([^)]*[\*\+][^)]*\)[\*\+].*/'
+      # Nested quantifiers with curly braces
+      - pattern-regex: '/.*\([^)]*\{[0-9]+,[0-9]*\}[^)]*\)[\*\+].*/'
+      - pattern-regex: 'new RegExp\(.*\([^)]*\{[0-9]+,[0-9]*\}[^)]*\)[\*\+].*\)'
+    metadata:
+      cwe: "CWE-1333"
+      owasp: "A06:2021 – Vulnerable and Outdated Components"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "regex-denial-of-service"
+      impact: high
+      likelihood: medium
+      technology:
+        - "typescript"
+      references:
+        - "https://owasp.org/www-community/attacks/Regular_expression_Denial_of_Service_-_ReDoS"
+        - "https://cwe.mitre.org/data/definitions/1333.html"
+    fix: |
+      // Avoid nested quantifiers. Instead of (a+)+, use a+
+      // Instead of (a*)*, use a*
+      // Use specific bounds: {1,10} instead of +
+      // Consider using alternative string methods for simple patterns
+
+  - id: regex-backtracking-with-typed-input
+    message: "Critical ReDoS vulnerability: Potentially unsafe regex with user input in TypeScript"
+    severity: error
+    languages:
+      - TypeScript
+    patterns:
+      - pattern: |
+          function $FUNC($PARAM: string): $RETURN {
+            ...
+            new RegExp($PARAM)
+            ...
+          }
+      - pattern: |
+          const $VAR: RegExp = new RegExp($USER_INPUT)
+      - pattern: |
+          function $FUNC($INPUT: string, $PATTERN: string): $RETURN {
+            ...
+            $INPUT.match($PATTERN)
+            ...
+          }
+    metadata:
+      cwe: "CWE-1333"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "regex-denial-of-service"
+      fix: |
+        // Add input validation and sanitization
+        // Use typed interfaces to constrain regex patterns
+        // Implement timeout mechanisms for regex operations
+        // Consider using string literal types for known patterns
+
+  - id: regex-type-unsafe-pattern
+    message: "ReDoS vulnerability: Regex pattern from unsafe type source"
+    severity: warning
+    languages:
+      - TypeScript
+    patterns:
+      - pattern: |
+          $PATTERN as RegExp
+      - pattern: |
+          ($PATTERN as any).match(...)
+      - pattern: |
+          new RegExp($PARAM as string)
+    metadata:
+      cwe: "CWE-1333"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "regex-denial-of-service"
+
+  - id: regex-interface-vulnerability
+    message: "ReDoS vulnerability: Interface allowing unsafe regex patterns"
+    severity: warning
+    languages:
+      - TypeScript
+    patterns:
+      - pattern: |
+          interface $NAME {
+            ...
+            pattern: string;
+            ...
+          }
+      - pattern: |
+          type $NAME = {
+            ...
+            regex: string;
+            ...
+          }
+    metadata:
+      cwe: "CWE-1333"
+      category: "security"
+      confidence: low
+      subcategory:
+        - "regex-denial-of-service"
+      fix: |
+        // Consider using string literal types for known safe patterns
+        // Add validation methods to the interface
+        // Use branded types for validated regex patterns

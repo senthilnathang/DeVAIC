@@ -1,0 +1,159 @@
+rules:
+  - id: scada-regex-exponential-backtracking
+    message: "ReDoS vulnerability in SCADA system: Nested quantifiers in regex can cause exponential backtracking"
+    severity: error
+    languages:
+      - Python
+      - Javascript
+      - C
+      - C++
+      - Java
+    patterns:
+      # Pattern matching in SCADA data validation
+      - pattern-regex: 'validate_tag_pattern\([^)]*"[^"]*\([^)]*[\*\+][^)]*\)[\*\+][^"]*"[^)]*\)'
+      - pattern-regex: 'parse_plc_data\([^)]*"[^"]*\([^)]*[\*\+][^)]*\)[\*\+][^"]*"[^)]*\)'
+      # HMI input validation with vulnerable patterns
+      - pattern-regex: 'hmi_input_validate\([^)]*"[^"]*\([^)]*[\*\+][^)]*\)[\*\+][^"]*"[^)]*\)'
+    metadata:
+      cwe: "CWE-1333"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "regex-denial-of-service"
+        - "industrial-control-systems"
+      impact: critical
+      likelihood: medium
+      technology:
+        - "scada"
+        - "industrial-control"
+        - "hmi"
+      references:
+        - "https://owasp.org/www-community/attacks/Regular_expression_Denial_of_Service_-_ReDoS"
+        - "https://www.cisa.gov/uscert/ics/alerts"
+        - "https://cwe.mitre.org/data/definitions/1333.html"
+    fix: |
+      // Critical for SCADA systems: Use simple validation patterns
+      // Implement strict input length limits for industrial data
+      // Use allowlist-based validation instead of complex regex
+      // Ensure real-time system performance is not degraded
+
+  - id: scada-plc-data-regex-vulnerability
+    message: "Critical ReDoS vulnerability: PLC data validation using vulnerable regex patterns"
+    severity: error
+    languages:
+      - Python
+      - C
+      - C++
+    patterns:
+      # PLC tag validation patterns
+      - pattern: validate_plc_tag($TAG_NAME, "(\\w+\\.)*\\w+")
+      - pattern: parse_modbus_data($DATA, "([0-9]+\\.)*[0-9]+")
+      # DNP3 data validation
+      - pattern: validate_dnp3_point($POINT, "([A-Z]+[0-9]*)+")
+      # Ethernet/IP tag patterns
+      - pattern: validate_ethernet_ip_tag($TAG, "([a-zA-Z_][a-zA-Z0-9_]*\\.)*[a-zA-Z_][a-zA-Z0-9_]*")
+    metadata:
+      cwe: "CWE-1333"
+      category: "security"
+      confidence: critical
+      subcategory:
+        - "regex-denial-of-service"
+        - "plc-security"
+      impact: critical
+      likelihood: high
+      fix: |
+        // Use simple string validation for PLC tags
+        // Implement fixed-length checks and character allowlists
+        // Avoid regex for real-time industrial data validation
+
+  - id: scada-hmi-input-regex-vulnerability
+    message: "ReDoS vulnerability: HMI user input validation using vulnerable regex"
+    severity: error
+    languages:
+      - Javascript
+      - Python
+      - C++
+    patterns:
+      # HMI form validation
+      - pattern-regex: 'validate_operator_input\([^)]*"[^"]*\([^)]*[\*\+][^)]*\)[\*\+][^"]*"[^)]*\)'
+      # Alarm message validation
+      - pattern-regex: 'validate_alarm_message\([^)]*"[^"]*\([^)]*[\*\+][^)]*\)[\*\+][^"]*"[^)]*\)'
+      # Recipe parameter validation
+      - pattern-regex: 'validate_recipe_param\([^)]*"[^"]*\([^)]*[\*\+][^)]*\)[\*\+][^"]*"[^)]*\)'
+    metadata:
+      cwe: "CWE-1333"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "regex-denial-of-service"
+        - "hmi-security"
+      impact: high
+      likelihood: medium
+
+  - id: scada-historian-data-regex-vulnerability
+    message: "ReDoS vulnerability: Historian data query using vulnerable regex patterns"
+    severity: warning
+    languages:
+      - Python
+      - Java
+      - C++
+    patterns:
+      # Historian tag queries
+      - pattern-regex: 'query_historian_tags\([^)]*"[^"]*\([^)]*[\*\+][^)]*\)[\*\+][^"]*"[^)]*\)'
+      # Time series data validation
+      - pattern-regex: 'validate_timeseries_query\([^)]*"[^"]*\([^)]*[\*\+][^)]*\)[\*\+][^"]*"[^)]*\)'
+    metadata:
+      cwe: "CWE-1333"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "regex-denial-of-service"
+        - "historian-security"
+
+  - id: scada-protocol-parsing-regex-vulnerability
+    message: "Critical ReDoS vulnerability: Industrial protocol parsing using vulnerable regex"
+    severity: error
+    languages:
+      - C
+      - C++
+      - Python
+    patterns:
+      # Modbus protocol parsing
+      - pattern: parse_modbus_frame($FRAME, "([0-9A-F]{2})+")
+      # DNP3 protocol parsing
+      - pattern: parse_dnp3_frame($FRAME, "(0x[0-9A-F]+\\s*)+")
+      # EtherNet/IP parsing
+      - pattern: parse_ethernet_ip($DATA, "([0-9]+\\.){3}[0-9]+")
+    metadata:
+      cwe: "CWE-1333"
+      category: "security"
+      confidence: critical
+      subcategory:
+        - "regex-denial-of-service"
+        - "protocol-security"
+      impact: critical
+      likelihood: high
+      fix: |
+        // Use fixed-format parsing for industrial protocols
+        // Implement state machines instead of regex for protocol parsing
+        // Use binary parsing methods for performance-critical applications
+
+  - id: scada-configuration-regex-vulnerability
+    message: "ReDoS vulnerability: SCADA configuration validation using vulnerable regex"
+    severity: warning
+    languages:
+      - Python
+      - Javascript
+      - Java
+    patterns:
+      # Configuration file parsing
+      - pattern-regex: 'validate_config_value\([^)]*"[^"]*\([^)]*[\*\+][^)]*\)[\*\+][^"]*"[^)]*\)'
+      # Device configuration validation
+      - pattern-regex: 'validate_device_config\([^)]*"[^"]*\([^)]*[\*\+][^)]*\)[\*\+][^"]*"[^)]*\)'
+    metadata:
+      cwe: "CWE-1333"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "regex-denial-of-service"
+        - "configuration-security"

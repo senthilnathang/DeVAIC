@@ -1,0 +1,122 @@
+rules:
+  - id: regex-exponential-backtracking-nested-quantifiers
+    message: "ReDoS vulnerability: Nested quantifiers in regex can cause exponential backtracking"
+    severity: error
+    languages:
+      - Python
+    patterns:
+      # (a+)+ pattern
+      - pattern-regex: 're\.compile\(.*\([^)]*\+[^)]*\)\+.*\)'
+      # (a*)* pattern
+      - pattern-regex: 're\.compile\(.*\([^)]*\*[^)]*\)\*.*\)'
+      # (a*)+, (a+)* patterns
+      - pattern-regex: 're\.compile\(.*\([^)]*\*[^)]*\)\+.*\)'
+      - pattern-regex: 're\.compile\(.*\([^)]*\+[^)]*\)\*.*\)'
+      # Nested groups with quantifiers
+      - pattern-regex: 're\.compile\(.*\([^)]*\{[0-9]+,[0-9]*\}[^)]*\)\+.*\)'
+      - pattern-regex: 're\.compile\(.*\([^)]*\{[0-9]+,[0-9]*\}[^)]*\)\*.*\)'
+    metadata:
+      cwe: "CWE-1333"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "regex-denial-of-service"
+      impact: high
+      likelihood: medium
+      references:
+        - "https://owasp.org/www-community/attacks/Regular_expression_Denial_of_Service_-_ReDoS"
+        - "https://cwe.mitre.org/data/definitions/1333.html"
+    fix: |
+      # Avoid nested quantifiers. Instead of (a+)+, use a+
+      # Instead of (a*)*, use a*
+      # Use possessive quantifiers if supported: (?>a+)+
+      # Or use atomic groups to prevent backtracking
+
+  - id: regex-alternation-overlap-backtracking
+    message: "ReDoS vulnerability: Overlapping alternation patterns can cause exponential backtracking"
+    severity: error
+    languages:
+      - Python
+    patterns:
+      # Patterns like (a|a)*, (x|x+)*, etc.
+      - pattern-regex: 're\.compile\(.*\([^|)]*\|[^|)]*\)[*+].*\)'
+      # Patterns with overlapping character classes
+      - pattern-regex: 're\.compile\(.*\([a-zA-Z0-9_\[\]\\-]*\|[a-zA-Z0-9_\[\]\\-]*\)[*+?].*\)'
+    metadata:
+      cwe: "CWE-1333"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "regex-denial-of-service"
+
+  - id: regex-catastrophic-backtracking-patterns
+    message: "ReDoS vulnerability: Pattern prone to catastrophic backtracking detected"
+    severity: error
+    languages:
+      - Python
+    patterns:
+      # Common catastrophic patterns
+      - pattern-regex: 're\.compile\(.*\(a\*\)\*.*\)'
+      - pattern-regex: 're\.compile\(.*\(a\+\)\+.*\)'
+      - pattern-regex: 're\.compile\(.*\(a\?\)\+.*\)'
+      # Email regex patterns known to be vulnerable
+      - pattern-regex: 're\.compile\(.*\([^@\s]+@[^@\s]+\)\+.*\)'
+      # Patterns with optional repeated groups
+      - pattern-regex: 're\.compile\(.*\([^)]*\?\)\+.*\)'
+    metadata:
+      cwe: "CWE-1333"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "regex-denial-of-service"
+
+  - id: regex-polynomial-backtracking
+    message: "ReDoS vulnerability: Pattern may cause polynomial time complexity"
+    severity: warning
+    languages:
+      - Python
+    patterns:
+      # Multiple consecutive quantified groups
+      - pattern-regex: 're\.compile\(.*[*+?]\.\*[*+?].*\)'
+      - pattern-regex: 're\.compile\(.*[*+?][^*+?]*[*+?].*\)'
+      # Patterns with many quantifiers
+      - pattern-regex: 're\.compile\(.*([*+?].*){3,}.*\)'
+    metadata:
+      cwe: "CWE-1333"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "regex-denial-of-service"
+
+  - id: regex-backtracking-with-user-input
+    message: "Critical ReDoS vulnerability: User input used in potentially vulnerable regex"
+    severity: error
+    languages:
+      - Python
+    patterns:
+      - patterns:
+          - pattern: re.compile($USER_INPUT)
+          - pattern-inside: |
+              def $FUNC(..., $USER_INPUT, ...):
+                ...
+      - patterns:
+          - pattern: re.search($PATTERN, $USER_INPUT)
+          - pattern-regex: 
+              metavariable: $PATTERN
+              regex: '.*[\(\[\*\+\?].*'
+      - patterns:
+          - pattern: re.match($PATTERN, $USER_INPUT)
+          - pattern-regex:
+              metavariable: $PATTERN
+              regex: '.*[\(\[\*\+\?].*'
+    metadata:
+      cwe: "CWE-1333"
+      category: "security"
+      confidence: critical
+      subcategory:
+        - "regex-denial-of-service"
+      fix: |
+        # Validate and sanitize user input before using in regex
+        # Use timeout mechanisms: signal.alarm() or multiprocessing with timeout
+        # Consider using re2 library which guarantees linear time execution
+        # Avoid complex patterns with user-controlled input

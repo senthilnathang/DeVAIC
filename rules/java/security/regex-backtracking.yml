@@ -1,0 +1,136 @@
+rules:
+  - id: regex-exponential-backtracking-nested-quantifiers
+    message: "ReDoS vulnerability: Nested quantifiers in regex can cause exponential backtracking"
+    severity: error
+    languages:
+      - Java
+    patterns:
+      # Pattern.compile() with nested quantifiers
+      - pattern-regex: 'Pattern\.compile\(.*\([^)]*[\*\+][^)]*\)[\*\+].*\)'
+      # String.matches() with vulnerable patterns
+      - pattern-regex: '\.matches\(.*\([^)]*[\*\+][^)]*\)[\*\+].*\)'
+      # replaceAll() with vulnerable patterns
+      - pattern-regex: '\.replaceAll\(.*\([^)]*[\*\+][^)]*\)[\*\+].*\)'
+    metadata:
+      cwe: "CWE-1333"
+      owasp: "A06:2021 – Vulnerable and Outdated Components"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "regex-denial-of-service"
+      impact: high
+      likelihood: medium
+      technology:
+        - "java"
+      references:
+        - "https://owasp.org/www-community/attacks/Regular_expression_Denial_of_Service_-_ReDoS"
+        - "https://cwe.mitre.org/data/definitions/1333.html"
+    fix: |
+      // Avoid nested quantifiers. Instead of (a+)+, use a+
+      // Instead of (a*)*, use a*
+      // Use specific bounds: {1,10} instead of +
+      // Consider using alternative string methods for simple patterns
+
+  - id: regex-catastrophic-backtracking-patterns
+    message: "ReDoS vulnerability: Pattern prone to catastrophic backtracking detected"
+    severity: error
+    languages:
+      - Java
+    patterns:
+      # Classic catastrophic patterns in Java
+      - pattern: Pattern.compile("(a*)*")
+      - pattern: Pattern.compile("(a+)+")
+      - pattern: Pattern.compile("(a?)+")
+      - pattern: $STR.matches("(.*)*")
+      - pattern: $STR.replaceAll("(a*)*", $REPLACEMENT)
+      # Email validation patterns known to be vulnerable
+      - pattern-regex: 'Pattern\.compile\(.*\([^@\\s]+@[^@\\s]+\)\+.*\)'
+    metadata:
+      cwe: "CWE-1333"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "regex-denial-of-service"
+
+  - id: regex-backtracking-with-user-input
+    message: "Critical ReDoS vulnerability: User input used in potentially vulnerable regex"
+    severity: error
+    languages:
+      - Java
+    patterns:
+      - pattern: Pattern.compile($USER_INPUT)
+      - pattern: $USER_INPUT.matches($PATTERN)
+      - pattern: $USER_INPUT.replaceAll($PATTERN, ...)
+      - patterns:
+          - pattern: Pattern.compile($PATTERN).matcher($USER_INPUT)
+          - pattern-regex:
+              metavariable: $PATTERN
+              regex: '.*[\(\[\*\+\?].*'
+    metadata:
+      cwe: "CWE-1333"
+      category: "security"
+      confidence: critical
+      subcategory:
+        - "regex-denial-of-service"
+      fix: |
+        // Validate and sanitize user input before using in regex
+        // Use timeout mechanisms with Future and ExecutorService
+        // Consider using simple string methods instead of complex regex
+        // Implement input length limits and pattern complexity checks
+
+  - id: regex-polynomial-backtracking
+    message: "ReDoS vulnerability: Pattern may cause polynomial time complexity"
+    severity: warning
+    languages:
+      - Java
+    patterns:
+      # Multiple consecutive quantified groups
+      - pattern-regex: 'Pattern\.compile\(.*[\*\+\?]\.\*[\*\+\?].*\)'
+      # Complex patterns with many quantifiers
+      - pattern-regex: '\.matches\(.*([*+?].*){3,}.*\)'
+    metadata:
+      cwe: "CWE-1333"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "regex-denial-of-service"
+
+  - id: regex-vulnerable-email-validation
+    message: "ReDoS vulnerability: Vulnerable email validation regex detected"
+    severity: error
+    languages:
+      - Java
+    patterns:
+      # Common vulnerable email patterns in Java
+      - pattern: Pattern.compile("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$")
+      - pattern-regex: 'Pattern\.compile\(.*\([^\s@]+@[^\s@]+\\.[^\s@]+\)\+.*\)'
+      # String.matches with email patterns
+      - pattern: $EMAIL.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$")
+    metadata:
+      cwe: "CWE-1333"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "regex-denial-of-service"
+      fix: |
+        // Use a simple email validation or a well-tested library
+        // Consider using Apache Commons Validator or Hibernate Validator
+        // Or implement a simple check for @ symbol and basic format
+
+  - id: regex-input-validation-vulnerability
+    message: "ReDoS vulnerability: Input validation using vulnerable regex patterns"
+    severity: error
+    languages:
+      - Java
+    patterns:
+      # Common validation patterns that can be vulnerable
+      - pattern: Pattern.compile("^(https?://)?([\da-z\.-]+)\.([a-z\.]{2,6})([/\w \.-]*)*/?$")
+      - pattern: $URL.matches("^(https?://)?([\da-z\.-]+)\.([a-z\.]{2,6})([/\w \.-]*)*/?$")
+      # Phone number validation that can be vulnerable
+      - pattern-regex: 'Pattern\.compile\(.*\([0-9\(\)\-\s]+\)\+.*\)'
+    metadata:
+      cwe: "CWE-1333"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "regex-denial-of-service"

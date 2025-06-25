@@ -1,0 +1,124 @@
+rules:
+  - id: regex-exponential-backtracking-posix
+    message: "ReDoS vulnerability: POSIX regex with nested quantifiers can cause exponential backtracking"
+    severity: error
+    languages:
+      - C
+    patterns:
+      # regcomp() with nested quantifiers
+      - pattern-regex: 'regcomp\([^,]+,\s*"[^"]*\([^)]*[\*\+][^)]*\)[\*\+][^"]*"'
+      # Common catastrophic patterns
+      - pattern: regcomp(&$REGEX, "(a*)*", $FLAGS)
+      - pattern: regcomp(&$REGEX, "(a+)+", $FLAGS)
+      - pattern: regcomp(&$REGEX, "(.*)*", $FLAGS)
+    metadata:
+      cwe: "CWE-1333"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "regex-denial-of-service"
+      impact: high
+      likelihood: medium
+      technology:
+        - "c"
+        - "posix-regex"
+      references:
+        - "https://owasp.org/www-community/attacks/Regular_expression_Denial_of_Service_-_ReDoS"
+        - "https://cwe.mitre.org/data/definitions/1333.html"
+    fix: |
+      // Avoid nested quantifiers in POSIX regex patterns
+      // Use specific bounds instead of unlimited quantifiers
+      // Consider using simpler string functions like strstr(), strchr()
+      // Implement timeout mechanisms using signal handlers
+
+  - id: regex-backtracking-with-user-input
+    message: "Critical ReDoS vulnerability: User input used in POSIX regex compilation"
+    severity: error
+    languages:
+      - C
+    patterns:
+      - pattern: regcomp(&$REGEX, $USER_INPUT, $FLAGS)
+      - patterns:
+          - pattern: regcomp(&$REGEX, $PATTERN, $FLAGS)
+          - pattern-inside: |
+              $TYPE $FUNC(..., char* $PATTERN, ...) {
+                ...
+              }
+    metadata:
+      cwe: "CWE-1333"
+      category: "security"
+      confidence: critical
+      subcategory:
+        - "regex-denial-of-service"
+      fix: |
+        // Validate and sanitize user input before using in regcomp()
+        // Implement input length limits and pattern complexity checks
+        // Use alarm() or timer mechanisms to implement timeouts
+        // Consider using simpler string matching functions
+
+  - id: regex-polynomial-backtracking-posix
+    message: "ReDoS vulnerability: POSIX regex pattern may cause polynomial time complexity"
+    severity: warning
+    languages:
+      - C
+    patterns:
+      # Multiple consecutive quantified groups
+      - pattern-regex: 'regcomp\([^,]+,\s*"[^"]*[\*\+\?][^"]*[\*\+\?][^"]*"'
+      # Complex patterns with many quantifiers
+      - pattern-regex: 'regcomp\([^,]+,\s*"[^"]*([*+?][^"]*){3,}[^"]*"'
+    metadata:
+      cwe: "CWE-1333"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "regex-denial-of-service"
+
+  - id: regex-vulnerable-patterns-posix
+    message: "ReDoS vulnerability: Known vulnerable regex patterns in POSIX regex"
+    severity: error
+    languages:
+      - C
+    patterns:
+      # Email validation patterns that can be vulnerable
+      - pattern: regcomp(&$REGEX, "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$", $FLAGS)
+      # URL validation patterns
+      - pattern-regex: 'regcomp\([^,]+,\s*"[^"]*\([^@\\s]+@[^@\\s]+\\.[^@\\s]+\)\+[^"]*"'
+      # Phone number patterns
+      - pattern-regex: 'regcomp\([^,]+,\s*"[^"]*\([0-9\(\)\-\s]+\)\+[^"]*"'
+    metadata:
+      cwe: "CWE-1333"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "regex-denial-of-service"
+
+  - id: regex-no-timeout-mechanism
+    message: "ReDoS vulnerability: POSIX regex without timeout mechanism"
+    severity: warning
+    languages:
+      - C
+    patterns:
+      - patterns:
+          - pattern: regexec(&$REGEX, $STRING, $NMATCH, $PMATCH, $EFLAGS)
+          - pattern-not-inside: |
+              signal(SIGALRM, $HANDLER);
+              alarm($TIMEOUT);
+              ...
+              alarm(0);
+          - pattern-not-inside: |
+              $TIMER_TYPE $TIMER;
+              ...
+              timer_create(...);
+              ...
+    metadata:
+      cwe: "CWE-1333"
+      category: "security"
+      confidence: low
+      subcategory:
+        - "regex-denial-of-service"
+      fix: |
+        // Implement timeout mechanism using signal handlers:
+        // signal(SIGALRM, timeout_handler);
+        // alarm(timeout_seconds);
+        // regexec(...);
+        // alarm(0); // Cancel alarm
