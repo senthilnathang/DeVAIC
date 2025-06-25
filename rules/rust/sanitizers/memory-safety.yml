@@ -1,0 +1,148 @@
+rules:
+  - id: rust-unsafe-block-asan
+    message: "Unsafe block detected - AddressSanitizer recommended for testing"
+    severity: warning
+    languages:
+      - Rust
+    patterns:
+      - pattern-regex: 'unsafe\s*\{'
+    metadata:
+      cwe: "CWE-119"
+      category: "sanitizer"
+      confidence: medium
+      subcategory:
+        - "addresssanitizer"
+      sanitizer: "AddressSanitizer"
+    fix: |
+      # Test unsafe code with AddressSanitizer:
+      # RUSTFLAGS="-Z sanitizer=address" cargo run --target x86_64-unknown-linux-gnu
+      # Or: cargo +nightly run -Z build-std --target x86_64-unknown-linux-gnu
+
+  - id: rust-raw-pointer-deref
+    message: "Raw pointer dereference - potential memory safety issue"
+    severity: error
+    languages:
+      - Rust
+    patterns:
+      - pattern-regex: '\*\s*(const|mut)\s+\w+'
+      - pattern-regex: 'ptr::(read|write|copy)'
+    metadata:
+      cwe: "CWE-476"
+      category: "sanitizer"
+      confidence: high
+      subcategory:
+        - "addresssanitizer"
+      sanitizer: "AddressSanitizer + MemorySanitizer"
+
+  - id: rust-ffi-boundary
+    message: "FFI function call - ensure C libraries use AddressSanitizer"
+    severity: warning
+    languages:
+      - Rust
+    patterns:
+      - pattern-regex: 'extern\s+"C"\s*\{'
+      - pattern-regex: '#\[link\(name\s*=\s*"[^"]+"\)\]'
+    metadata:
+      cwe: "CWE-119"
+      category: "sanitizer"
+      confidence: medium
+      subcategory:
+        - "addresssanitizer"
+      sanitizer: "AddressSanitizer (for linked C libraries)"
+    fix: |
+      # Compile linked C libraries with sanitizers:
+      # gcc -fsanitize=address -shared -fPIC library.c -o liblibrary.so
+      # Link in Rust: #[link(name = "library")]
+
+  - id: rust-transmute-usage
+    message: "mem::transmute usage - potential type confusion and memory corruption"
+    severity: error
+    languages:
+      - Rust
+    patterns:
+      - pattern-regex: 'mem::transmute|transmute!'
+    metadata:
+      cwe: "CWE-843"
+      category: "sanitizer"
+      confidence: high
+      subcategory:
+        - "memorysanitizer"
+      sanitizer: "MemorySanitizer + Manual Review"
+
+  - id: rust-uninitialized-memory
+    message: "Uninitialized memory usage - MemorySanitizer recommended"
+    severity: error
+    languages:
+      - Rust
+    patterns:
+      - pattern-regex: 'mem::(uninitialized|zeroed|MaybeUninit)'
+    metadata:
+      cwe: "CWE-457"
+      category: "sanitizer"
+      confidence: high
+      subcategory:
+        - "memorysanitizer"
+      sanitizer: "MemorySanitizer"
+    fix: |
+      # Use MaybeUninit properly:
+      let mut uninit = MaybeUninit::<T>::uninit();
+      // Initialize before use:
+      let value = uninit.write(initial_value);
+      # Test with MemorySanitizer:
+      # RUSTFLAGS="-Z sanitizer=memory" cargo run
+
+  - id: rust-thread-unsafe-static
+    message: "Mutable static variable - potential data race"
+    severity: warning
+    languages:
+      - Rust
+    patterns:
+      - pattern-regex: 'static\s+mut\s+\w+'
+    metadata:
+      cwe: "CWE-362"
+      category: "sanitizer"
+      confidence: medium
+      subcategory:
+        - "threadsanitizer"
+      sanitizer: "ThreadSanitizer"
+    fix: |
+      # Use atomic types or proper synchronization:
+      use std::sync::atomic::{AtomicU32, Ordering};
+      static COUNTER: AtomicU32 = AtomicU32::new(0);
+      # Test with ThreadSanitizer:
+      # RUSTFLAGS="-Z sanitizer=thread" cargo run
+
+  - id: rust-slice-unchecked-access
+    message: "Unchecked slice access - bounds checking bypassed"
+    severity: warning
+    languages:
+      - Rust
+    patterns:
+      - pattern-regex: 'get_unchecked|get_unchecked_mut'
+    metadata:
+      cwe: "CWE-125"
+      category: "sanitizer"
+      confidence: medium
+      subcategory:
+        - "addresssanitizer"
+      sanitizer: "AddressSanitizer"
+
+  - id: rust-vec-set-len
+    message: "Vec::set_len usage - potential buffer overflow"
+    severity: error
+    languages:
+      - Rust
+    patterns:
+      - pattern-regex: '\.set_len\s*\('
+    metadata:
+      cwe: "CWE-120"
+      category: "sanitizer"
+      confidence: high
+      subcategory:
+        - "addresssanitizer"
+      sanitizer: "AddressSanitizer"
+    fix: |
+      // Ensure capacity and initialization before set_len:
+      vec.reserve(new_len);
+      // Initialize elements...
+      unsafe { vec.set_len(new_len); }

@@ -1,0 +1,106 @@
+rules:
+  - id: python-ctypes-buffer-overflow
+    message: "ctypes usage with potential buffer overflow - consider AddressSanitizer for C extensions"
+    severity: warning
+    languages:
+      - Python
+    patterns:
+      - pattern-regex: 'ctypes\.(c_char_p|c_void_p|pointer|POINTER)'
+    metadata:
+      cwe: "CWE-120"
+      category: "sanitizer"
+      confidence: medium
+      subcategory:
+        - "addresssanitizer"
+      sanitizer: "AddressSanitizer (for C extensions)"
+    fix: |
+      # For C extensions, compile with AddressSanitizer:
+      # gcc -fsanitize=address -shared -fPIC extension.c -o extension.so
+      # Use bounds checking with ctypes
+
+  - id: python-unsafe-eval-exec
+    message: "Dynamic code execution - potential memory corruption in native code"
+    severity: warning
+    languages:
+      - Python
+    patterns:
+      - pattern-regex: '(eval|exec|compile)\s*\('
+    metadata:
+      cwe: "CWE-94"
+      category: "sanitizer"
+      confidence: medium
+      subcategory:
+        - "memory-safety"
+      sanitizer: "Code Review + Sandboxing"
+
+  - id: python-multiprocessing-shared-memory
+    message: "Shared memory usage - potential race conditions"
+    severity: info
+    languages:
+      - Python
+    patterns:
+      - pattern-regex: 'multiprocessing\.(shared_memory|Value|Array)'
+    metadata:
+      cwe: "CWE-362"
+      category: "sanitizer"
+      confidence: low
+      subcategory:
+        - "threadsanitizer-equivalent"
+      sanitizer: "ThreadSanitizer (conceptual - use thread-safe practices)"
+
+  - id: python-c-extension-loading
+    message: "C extension loading - ensure extensions are compiled with sanitizers"
+    severity: info
+    languages:
+      - Python
+    patterns:
+      - pattern-regex: '(ctypes\.CDLL|ctypes\.cdll|import.*\.so)'
+    metadata:
+      cwe: "CWE-415"
+      category: "sanitizer"
+      confidence: low
+      subcategory:
+        - "addresssanitizer"
+      sanitizer: "AddressSanitizer (for loaded C libraries)"
+    fix: |
+      # Compile C extensions with sanitizers:
+      # gcc -fsanitize=address,undefined -shared -fPIC lib.c -o lib.so
+      # Use LD_PRELOAD for existing libraries:
+      # LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libasan.so.5 python script.py
+
+  - id: python-numpy-buffer-interface
+    message: "NumPy buffer interface usage - ensure underlying C code is safe"
+    severity: info
+    languages:
+      - Python
+    patterns:
+      - pattern-regex: 'numpy\.(frombuffer|getbuffer)'
+    metadata:
+      cwe: "CWE-125"
+      category: "sanitizer"
+      confidence: low
+      subcategory:
+        - "addresssanitizer"
+      sanitizer: "AddressSanitizer (for NumPy C backend)"
+
+  - id: python-threading-shared-state
+    message: "Threading with shared state - potential race conditions"
+    severity: warning
+    languages:
+      - Python
+    patterns:
+      - pattern-regex: 'threading\.(Thread|Lock|RLock|Condition)'
+    metadata:
+      cwe: "CWE-362"
+      category: "sanitizer"
+      confidence: medium
+      subcategory:
+        - "threadsanitizer-equivalent"
+      sanitizer: "ThreadSanitizer (conceptual - use proper synchronization)"
+    fix: |
+      # Use proper synchronization:
+      import threading
+      lock = threading.Lock()
+      with lock:
+          # Critical section
+          pass

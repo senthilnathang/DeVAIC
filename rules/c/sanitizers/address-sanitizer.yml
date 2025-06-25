@@ -1,0 +1,110 @@
+rules:
+  - id: c-asan-buffer-overflow-risk
+    message: "Buffer overflow-prone function detected - AddressSanitizer recommended"
+    severity: error
+    languages:
+      - C
+    patterns:
+      - pattern-regex: '(?i)(strcpy|strcat|sprintf|gets|scanf)\s*\('
+    metadata:
+      cwe: "CWE-120"
+      category: "sanitizer"
+      confidence: high
+      subcategory:
+        - "addresssanitizer"
+      sanitizer: "AddressSanitizer"
+    fix: |
+      // Enable AddressSanitizer in your build:
+      // gcc -fsanitize=address -g -O1 program.c
+      // Use safe alternatives:
+      strncpy(dest, src, sizeof(dest) - 1);
+      strncat(dest, src, sizeof(dest) - strlen(dest) - 1);
+
+  - id: c-asan-use-after-free-risk
+    message: "Potential use-after-free vulnerability - AddressSanitizer recommended"
+    severity: error
+    languages:
+      - C
+    patterns:
+      - pattern-regex: 'free\s*\(\s*\w+\s*\)\s*;.*\*\s*\w+'
+    metadata:
+      cwe: "CWE-416"
+      category: "sanitizer"
+      confidence: medium
+      subcategory:
+        - "addresssanitizer"
+      sanitizer: "AddressSanitizer"
+    fix: |
+      // Enable AddressSanitizer to detect use-after-free:
+      // gcc -fsanitize=address -g program.c
+      // Set pointer to NULL after free:
+      free(ptr);
+      ptr = NULL;
+
+  - id: c-asan-double-free-risk
+    message: "Potential double-free vulnerability - AddressSanitizer recommended"
+    severity: error
+    languages:
+      - C
+    patterns:
+      - pattern-regex: 'free\s*\([^)]+\).*free\s*\([^)]+\)'
+    metadata:
+      cwe: "CWE-415"
+      category: "sanitizer"
+      confidence: medium
+      subcategory:
+        - "addresssanitizer"
+      sanitizer: "AddressSanitizer"
+
+  - id: c-asan-stack-buffer-overflow
+    message: "Stack buffer with potential overflow - AddressSanitizer recommended"
+    severity: warning
+    languages:
+      - C
+    patterns:
+      - pattern-regex: 'char\s+\w+\[\s*\d+\s*\]'
+    metadata:
+      cwe: "CWE-121"
+      category: "sanitizer"
+      confidence: low
+      subcategory:
+        - "addresssanitizer"
+      sanitizer: "AddressSanitizer"
+    fix: |
+      // Enable AddressSanitizer for stack overflow detection:
+      // gcc -fsanitize=address -fstack-protector-all program.c
+
+  - id: c-asan-heap-buffer-overflow
+    message: "Dynamic memory allocation with overflow risk - AddressSanitizer recommended"
+    severity: warning
+    languages:
+      - C
+    patterns:
+      - pattern-regex: '(malloc|calloc|realloc)\s*\([^)]+\)'
+    metadata:
+      cwe: "CWE-122"
+      category: "sanitizer"
+      confidence: low
+      subcategory:
+        - "addresssanitizer"
+      sanitizer: "AddressSanitizer"
+
+  - id: c-asan-format-string-vulnerability
+    message: "Format string vulnerability - AddressSanitizer with additional tools recommended"
+    severity: error
+    languages:
+      - C
+    patterns:
+      - pattern-regex: '(printf|sprintf|fprintf)\s*\(\s*\w+\s*\)'
+    metadata:
+      cwe: "CWE-134"
+      category: "sanitizer"
+      confidence: medium
+      subcategory:
+        - "addresssanitizer"
+      sanitizer: "AddressSanitizer"
+    fix: |
+      // Use format specifiers:
+      printf("%s", user_input);
+      // Enable AddressSanitizer:
+      // gcc -fsanitize=address -Wformat-security program.c

@@ -1,0 +1,105 @@
+rules:
+  - id: cpp-asan-vector-bounds
+    message: "Vector access without bounds checking - AddressSanitizer recommended"
+    severity: warning
+    languages:
+      - CPP
+    patterns:
+      - pattern-regex: '\w+\[\s*\w+\s*\]'
+      - pattern-regex: 'vector.*\[\s*\w+\s*\]'
+    metadata:
+      cwe: "CWE-125"
+      category: "sanitizer"
+      confidence: medium
+      subcategory:
+        - "addresssanitizer"
+      sanitizer: "AddressSanitizer"
+    fix: |
+      // Use .at() for bounds checking:
+      vec.at(index);
+      // Or enable AddressSanitizer:
+      // g++ -fsanitize=address -g program.cpp
+
+  - id: cpp-asan-smart-pointer-misuse
+    message: "Raw pointer operations alongside smart pointers - potential memory issues"
+    severity: warning
+    languages:
+      - CPP
+    patterns:
+      - pattern-regex: '(unique_ptr|shared_ptr).*\.get\(\)'
+    metadata:
+      cwe: "CWE-416"
+      category: "sanitizer"
+      confidence: medium
+      subcategory:
+        - "addresssanitizer"
+      sanitizer: "AddressSanitizer"
+
+  - id: cpp-asan-iterator-invalidation
+    message: "Container modification during iteration - potential iterator invalidation"
+    severity: warning
+    languages:
+      - CPP
+    patterns:
+      - pattern-regex: 'for\s*\(.*iterator.*\).*\.(erase|insert|push_back|pop_back)'
+    metadata:
+      cwe: "CWE-416"
+      category: "sanitizer"
+      confidence: medium
+      subcategory:
+        - "addresssanitizer"
+      sanitizer: "AddressSanitizer"
+
+  - id: cpp-asan-delete-array-mismatch
+    message: "Potential new[]/delete mismatch - AddressSanitizer recommended"
+    severity: error
+    languages:
+      - CPP
+    patterns:
+      - pattern-regex: 'new\s+\w+\[.*\].*delete\s+\w+'
+    metadata:
+      cwe: "CWE-762"
+      category: "sanitizer"
+      confidence: high
+      subcategory:
+        - "addresssanitizer"
+      sanitizer: "AddressSanitizer"
+    fix: |
+      // Use delete[] for array allocation:
+      int* arr = new int[10];
+      delete[] arr;  // Not delete arr;
+      // Enable AddressSanitizer: g++ -fsanitize=address
+
+  - id: cpp-asan-string-buffer-overflow
+    message: "C-style string operations in C++ - buffer overflow risk"
+    severity: warning
+    languages:
+      - CPP
+    patterns:
+      - pattern-regex: '(strcpy|strcat|sprintf)\s*\('
+    metadata:
+      cwe: "CWE-120"
+      category: "sanitizer"
+      confidence: high
+      subcategory:
+        - "addresssanitizer"
+      sanitizer: "AddressSanitizer"
+    fix: |
+      // Use std::string instead of C-style strings:
+      std::string str = source;
+      // Or enable AddressSanitizer: g++ -fsanitize=address
+
+  - id: cpp-asan-placement-new-misuse
+    message: "Placement new without proper destruction - memory corruption risk"
+    severity: warning
+    languages:
+      - CPP
+    patterns:
+      - pattern-regex: 'new\s*\(\s*\w+\s*\)\s*\w+'
+    metadata:
+      cwe: "CWE-404"
+      category: "sanitizer"
+      confidence: medium
+      subcategory:
+        - "addresssanitizer"
+      sanitizer: "AddressSanitizer"

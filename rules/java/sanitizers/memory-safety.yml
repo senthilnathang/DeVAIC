@@ -1,0 +1,119 @@
+rules:
+  - id: java-jni-native-memory
+    message: "JNI native method calls - ensure native code uses AddressSanitizer"
+    severity: warning
+    languages:
+      - Java
+    patterns:
+      - pattern-regex: 'native\s+(public|private|protected)?\s*\w+.*\('
+    metadata:
+      cwe: "CWE-120"
+      category: "sanitizer"
+      confidence: medium
+      subcategory:
+        - "addresssanitizer"
+      sanitizer: "AddressSanitizer (for JNI native code)"
+    fix: |
+      // Compile JNI libraries with AddressSanitizer:
+      // gcc -fsanitize=address -shared -fPIC -I$JAVA_HOME/include native.c -o libnative.so
+      // Load with: System.loadLibrary("native");
+
+  - id: java-unsafe-memory-operations
+    message: "sun.misc.Unsafe usage - direct memory manipulation bypasses Java safety"
+    severity: error
+    languages:
+      - Java
+    patterns:
+      - pattern-regex: 'sun\.misc\.Unsafe'
+      - pattern-regex: 'Unsafe\.(allocateMemory|freeMemory|putAddress|getAddress)'
+    metadata:
+      cwe: "CWE-763"
+      category: "sanitizer"
+      confidence: high
+      subcategory:
+        - "memory-corruption"
+      sanitizer: "Manual Review + Native Tools"
+
+  - id: java-nio-direct-buffers
+    message: "Direct ByteBuffer usage - off-heap memory not managed by GC"
+    severity: info
+    languages:
+      - Java
+    patterns:
+      - pattern-regex: 'ByteBuffer\.allocateDirect'
+    metadata:
+      cwe: "CWE-401"
+      category: "sanitizer"
+      confidence: low
+      subcategory:
+        - "memory-leak"
+      sanitizer: "Memory Profiling Tools"
+    fix: |
+      // Explicitly free direct buffers:
+      ((DirectBuffer) buffer).cleaner().clean();
+      // Or use try-with-resources for automatic cleanup
+
+  - id: java-concurrent-data-races
+    message: "Concurrent access to shared fields - potential data race"
+    severity: warning
+    languages:
+      - Java
+    patterns:
+      - pattern-regex: '(volatile|synchronized|AtomicInteger|AtomicReference|ConcurrentHashMap)'
+    metadata:
+      cwe: "CWE-362"
+      category: "sanitizer"
+      confidence: low
+      subcategory:
+        - "threadsanitizer-equivalent"
+      sanitizer: "ThreadSanitizer (conceptual - use proper synchronization)"
+
+  - id: java-reflection-type-confusion
+    message: "Reflection usage - potential type confusion vulnerabilities"
+    severity: warning
+    languages:
+      - Java
+    patterns:
+      - pattern-regex: '(Class\.forName|Method\.invoke|Field\.set|Constructor\.newInstance)'
+    metadata:
+      cwe: "CWE-843"
+      category: "sanitizer"
+      confidence: medium
+      subcategory:
+        - "type-safety"
+      sanitizer: "Static Analysis + Runtime Validation"
+
+  - id: java-serialization-memory
+    message: "Object serialization - potential memory exhaustion attacks"
+    severity: warning
+    languages:
+      - Java
+    patterns:
+      - pattern-regex: '(ObjectInputStream|ObjectOutputStream|Serializable)'
+    metadata:
+      cwe: "CWE-502"
+      category: "sanitizer"
+      confidence: medium
+      subcategory:
+        - "memory-exhaustion"
+      sanitizer: "Input Validation + Resource Limits"
+
+  - id: java-finalize-memory-leak
+    message: "finalize() method usage - potential memory leak source"
+    severity: warning
+    languages:
+      - Java
+    patterns:
+      - pattern-regex: 'protected\s+void\s+finalize\s*\(\s*\)'
+    metadata:
+      cwe: "CWE-401"
+      category: "sanitizer"
+      confidence: medium
+      subcategory:
+        - "memory-leak"
+      sanitizer: "Use try-with-resources instead"
+    fix: |
+      // Avoid finalize(), use try-with-resources:
+      try (Resource resource = new Resource()) {
+          // Use resource
+      } // Automatically closed

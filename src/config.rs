@@ -47,6 +47,7 @@ impl Default for Config {
                     "privacy".to_string(),
                     "security".to_string(),
                     "vulnerability".to_string(),
+                    "sanitizer".to_string(),
                 ],
                 severity_threshold: "LOW".to_string(),
                 custom_rules: HashMap::new(),

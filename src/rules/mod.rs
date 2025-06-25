@@ -10,6 +10,7 @@ pub mod owasp_web_rules;
 pub mod privacy_rules;
 pub mod security_risk_rules;
 pub mod vulnerability_scanner_rules;
+pub mod sanitizer_rules;
 
 use crate::{
     config::RulesConfig,
@@ -32,6 +33,7 @@ pub struct RuleEngine {
     privacy_rules: privacy_rules::PrivacyRules,
     security_risk_rules: security_risk_rules::SecurityRiskRules,
     vulnerability_scanner_rules: vulnerability_scanner_rules::VulnerabilityScannerRules,
+    sanitizer_rules: sanitizer_rules::SanitizerRules,
 }
 
 impl RuleEngine {
@@ -50,6 +52,7 @@ impl RuleEngine {
             privacy_rules: privacy_rules::PrivacyRules::new(),
             security_risk_rules: security_risk_rules::SecurityRiskRules::new(),
             vulnerability_scanner_rules: vulnerability_scanner_rules::VulnerabilityScannerRules::new(),
+            sanitizer_rules: sanitizer_rules::SanitizerRules::new(),
         }
     }
 
@@ -88,6 +91,9 @@ impl RuleEngine {
         vulnerabilities.extend(self.privacy_rules.analyze(source_file, ast)?);
         vulnerabilities.extend(self.security_risk_rules.analyze(source_file, ast)?);
         vulnerabilities.extend(self.vulnerability_scanner_rules.analyze(source_file, ast)?);
+
+        // Run Google Sanitizers-inspired memory safety and concurrency rules
+        vulnerabilities.extend(self.sanitizer_rules.analyze(source_file, ast)?);
 
         // Filter by severity threshold
         let threshold_severity = self.parse_severity(&self.config.severity_threshold);

@@ -1,0 +1,83 @@
+rules:
+  - id: c-tsan-pthread-data-race
+    message: "pthread usage detected - ThreadSanitizer recommended for data race detection"
+    severity: warning
+    languages:
+      - C
+    patterns:
+      - pattern-regex: 'pthread_(create|join|mutex|cond)'
+    metadata:
+      cwe: "CWE-362"
+      category: "sanitizer"
+      confidence: medium
+      subcategory:
+        - "threadsanitizer"
+      sanitizer: "ThreadSanitizer"
+    fix: |
+      // Enable ThreadSanitizer for data race detection:
+      // gcc -fsanitize=thread -g program.c
+      // Note: Cannot use with AddressSanitizer simultaneously
+
+  - id: c-tsan-shared-variable-access
+    message: "Global/static variable in threaded context - potential data race"
+    severity: warning
+    languages:
+      - C
+    patterns:
+      - pattern-regex: '(static|extern)\s+(int|char|float|double|struct)\s+\w+'
+    metadata:
+      cwe: "CWE-362"
+      category: "sanitizer"
+      confidence: low
+      subcategory:
+        - "threadsanitizer"
+      sanitizer: "ThreadSanitizer"
+
+  - id: c-tsan-atomic-operations
+    message: "Atomic operations detected - ensure proper usage with ThreadSanitizer"
+    severity: info
+    languages:
+      - C
+    patterns:
+      - pattern-regex: '(__atomic_|atomic_|__sync_)'
+    metadata:
+      cwe: "CWE-362"
+      category: "sanitizer"
+      confidence: low
+      subcategory:
+        - "threadsanitizer"
+      sanitizer: "ThreadSanitizer"
+
+  - id: c-tsan-mutex-deadlock-risk
+    message: "Multiple mutex operations - potential deadlock risk"
+    severity: warning
+    languages:
+      - C
+    patterns:
+      - pattern-regex: 'pthread_mutex_lock.*pthread_mutex_lock'
+    metadata:
+      cwe: "CWE-833"
+      category: "sanitizer"
+      confidence: medium
+      subcategory:
+        - "threadsanitizer"
+      sanitizer: "ThreadSanitizer"
+    fix: |
+      // Enable ThreadSanitizer to detect deadlocks:
+      // gcc -fsanitize=thread program.c
+      // Always acquire locks in consistent order
+
+  - id: c-tsan-signal-handler-race
+    message: "Signal handler with shared data access - race condition risk"
+    severity: warning
+    languages:
+      - C
+    patterns:
+      - pattern-regex: 'signal\s*\(\s*\w+\s*,\s*\w+\s*\)'
+    metadata:
+      cwe: "CWE-362"
+      category: "sanitizer"
+      confidence: medium
+      subcategory:
+        - "threadsanitizer"
+      sanitizer: "ThreadSanitizer"

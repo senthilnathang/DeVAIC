@@ -1,0 +1,92 @@
+rules:
+  - id: c-msan-uninitialized-variable
+    message: "Variable declared without initialization - MemorySanitizer recommended"
+    severity: warning
+    languages:
+      - C
+    patterns:
+      - pattern-regex: '(int|char|float|double|long|short)\s+\w+\s*;'
+    metadata:
+      cwe: "CWE-457"
+      category: "sanitizer"
+      confidence: medium
+      subcategory:
+        - "memorysanitizer"
+      sanitizer: "MemorySanitizer"
+    fix: |
+      // Enable MemorySanitizer to detect uninitialized reads:
+      // clang -fsanitize=memory -g program.c
+      // Initialize variables at declaration:
+      int var = 0;
+
+  - id: c-msan-malloc-without-init
+    message: "malloc() without initialization - potential uninitialized memory read"
+    severity: warning
+    languages:
+      - C
+    patterns:
+      - pattern-regex: 'malloc\s*\([^)]+\)'
+    metadata:
+      cwe: "CWE-457"
+      category: "sanitizer"
+      confidence: medium
+      subcategory:
+        - "memorysanitizer"
+      sanitizer: "MemorySanitizer"
+    fix: |
+      // Use calloc() for zero-initialized memory:
+      ptr = calloc(count, size);
+      // Or explicitly initialize after malloc:
+      ptr = malloc(size);
+      memset(ptr, 0, size);
+      // Enable MemorySanitizer: clang -fsanitize=memory
+
+  - id: c-msan-stack-uninitialized
+    message: "Stack array without initialization - MemorySanitizer recommended"
+    severity: warning
+    languages:
+      - C
+    patterns:
+      - pattern-regex: '(char|int|float|double)\s+\w+\[\s*\d+\s*\]\s*;'
+    metadata:
+      cwe: "CWE-457"
+      category: "sanitizer"
+      confidence: medium
+      subcategory:
+        - "memorysanitizer"
+      sanitizer: "MemorySanitizer"
+
+  - id: c-msan-struct-partial-init
+    message: "Struct declaration without full initialization"
+    severity: info
+    languages:
+      - C
+    patterns:
+      - pattern-regex: 'struct\s+\w+\s+\w+\s*;'
+    metadata:
+      cwe: "CWE-457"
+      category: "sanitizer"
+      confidence: low
+      subcategory:
+        - "memorysanitizer"
+      sanitizer: "MemorySanitizer"
+    fix: |
+      // Initialize struct members:
+      struct MyStruct s = {0};
+      // Or use memset:
+      memset(&s, 0, sizeof(s));
+
+  - id: c-msan-conditional-on-uninit
+    message: "Conditional statement with potentially uninitialized variable"
+    severity: warning
+    languages:
+      - C
+    patterns:
+      - pattern-regex: 'if\s*\(\s*\w+\s*[><=!]\s*\w+\s*\)'
+    metadata:
+      cwe: "CWE-457"
+      category: "sanitizer"
+      confidence: low
+      subcategory:
+        - "memorysanitizer"
+      sanitizer: "MemorySanitizer"

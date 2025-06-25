@@ -1,0 +1,131 @@
+rules:
+  - id: javascript-buffer-overflow-nodejs
+    message: "Node.js Buffer operations - potential buffer overflow"
+    severity: warning
+    languages:
+      - JavaScript
+    patterns:
+      - pattern-regex: 'Buffer\.(alloc|allocUnsafe|from)'
+      - pattern-regex: 'buffer\.(write|copy|fill)'
+    metadata:
+      cwe: "CWE-120"
+      category: "sanitizer"
+      confidence: medium
+      subcategory:
+        - "memory-safety"
+      sanitizer: "AddressSanitizer (for Node.js native addons)"
+    fix: |
+      // Use safe Buffer methods:
+      const buf = Buffer.alloc(size); // Zero-filled
+      // Instead of: Buffer.allocUnsafe(size);
+      // For native addons: compile with -fsanitize=address
+
+  - id: javascript-native-addon-memory
+    message: "Native addon usage - ensure C++ code uses AddressSanitizer"
+    severity: info
+    languages:
+      - JavaScript
+    patterns:
+      - pattern-regex: 'require\s*\(\s*["\'][^"\']*\.node["\']'
+      - pattern-regex: 'process\.dlopen'
+    metadata:
+      cwe: "CWE-415"
+      category: "sanitizer"
+      confidence: low
+      subcategory:
+        - "addresssanitizer"
+      sanitizer: "AddressSanitizer (for native addons)"
+    fix: |
+      // Compile native addons with sanitizers:
+      // node-gyp configure -- -Dasan=true
+      // Or: export CC="clang -fsanitize=address"
+
+  - id: javascript-wasm-memory-access
+    message: "WebAssembly memory access - potential buffer overflow in WASM"
+    severity: warning
+    languages:
+      - JavaScript
+    patterns:
+      - pattern-regex: 'WebAssembly\.(instantiate|Memory|Table)'
+      - pattern-regex: '\.memory\.(buffer|grow)'
+    metadata:
+      cwe: "CWE-125"
+      category: "sanitizer"
+      confidence: medium
+      subcategory:
+        - "memory-safety"
+      sanitizer: "WASM Runtime Protection + Source Language Sanitizers"
+
+  - id: javascript-typed-array-bounds
+    message: "Typed array access without bounds checking"
+    severity: warning
+    languages:
+      - JavaScript
+    patterns:
+      - pattern-regex: '(Int8Array|Uint8Array|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array|Float64Array)\s*\['
+    metadata:
+      cwe: "CWE-125"
+      category: "sanitizer"
+      confidence: medium
+      subcategory:
+        - "bounds-checking"
+      sanitizer: "Runtime Bounds Checking"
+    fix: |
+      // Check bounds before access:
+      if (index >= 0 && index < typedArray.length) {
+          value = typedArray[index];
+      }
+
+  - id: javascript-shared-array-buffer
+    message: "SharedArrayBuffer usage - potential race conditions"
+    severity: warning
+    languages:
+      - JavaScript
+    patterns:
+      - pattern-regex: 'SharedArrayBuffer|Atomics\.(load|store|add|sub|and|or|xor|exchange|compareExchange)'
+    metadata:
+      cwe: "CWE-362"
+      category: "sanitizer"
+      confidence: medium
+      subcategory:
+        - "threadsanitizer-equivalent"
+      sanitizer: "ThreadSanitizer (conceptual - use Atomics properly)"
+    fix: |
+      // Use Atomics for thread-safe operations:
+      Atomics.store(sharedArray, index, value);
+      const val = Atomics.load(sharedArray, index);
+
+  - id: javascript-worker-shared-state
+    message: "Web Workers with shared state - potential race conditions"
+    severity: info
+    languages:
+      - JavaScript
+    patterns:
+      - pattern-regex: 'new\s+Worker\s*\('
+      - pattern-regex: 'postMessage|onmessage'
+    metadata:
+      cwe: "CWE-362"
+      category: "sanitizer"
+      confidence: low
+      subcategory:
+        - "concurrency"
+      sanitizer: "Message Passing Best Practices"
+
+  - id: javascript-memory-leak-closures
+    message: "Potential memory leak through closures - monitor memory usage"
+    severity: info
+    languages:
+      - JavaScript
+    patterns:
+      - pattern-regex: 'function.*\{.*function.*\{'
+    metadata:
+      cwe: "CWE-401"
+      category: "sanitizer"
+      confidence: low
+      subcategory:
+        - "memory-leak"
+      sanitizer: "Memory Profiling Tools"
+    fix: |
+      // Avoid unnecessary closures and circular references:
+      // Use WeakMap for object associations
+      // Explicitly null references when done
