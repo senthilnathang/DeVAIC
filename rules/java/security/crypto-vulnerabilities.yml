@@ -1,0 +1,257 @@
+rules:
+  - id: weak-hash-algorithms
+    message: "Weak cryptographic hash algorithm detected"
+    severity: error
+    languages:
+      - Java
+    patterns:
+      - pattern: MessageDigest.getInstance("MD5")
+      - pattern: MessageDigest.getInstance("SHA1")
+      - pattern: MessageDigest.getInstance("SHA-1")
+      - pattern: MessageDigest.getInstance("MD2")
+      - pattern: MessageDigest.getInstance("MD4")
+    metadata:
+      cwe: "CWE-327"
+      owasp: "A02:2021 – Cryptographic Failures"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "weak-crypto"
+    fix: |
+      // Use stronger hash algorithms:
+      MessageDigest digest = MessageDigest.getInstance("SHA-256");
+      // Or for passwords, use bcrypt, scrypt, or Argon2
+
+  - id: insecure-random
+    message: "Insecure random number generation for cryptographic purposes"
+    severity: error
+    languages:
+      - Java
+    patterns:
+      - pattern: new Random()
+      - pattern: new Random($SEED)
+      - pattern: Math.random()
+      - pattern: Random $R = new Random();
+    metadata:
+      cwe: "CWE-338"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "weak-random"
+    fix: |
+      // Use cryptographically secure random generation:
+      SecureRandom secureRandom = new SecureRandom();
+      byte[] randomBytes = new byte[32];
+      secureRandom.nextBytes(randomBytes);
+
+  - id: hardcoded-crypto-key
+    message: "Hardcoded cryptographic key detected"
+    severity: error
+    languages:
+      - Java
+    patterns:
+      - pattern: |
+          SecretKeySpec $KEY = new SecretKeySpec("$HARDCODED_KEY".getBytes(), "AES");
+      - pattern: |
+          String $KEY = "$HARDCODED_VALUE";
+          Cipher.getInstance("AES").init(Cipher.ENCRYPT_MODE, new SecretKeySpec($KEY.getBytes(), "AES"));
+    metadata:
+      cwe: "CWE-798"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "hardcoded-crypto-key"
+    fix: |
+      // Use secure key management:
+      KeyGenerator keyGen = KeyGenerator.getInstance("AES");
+      keyGen.init(256);
+      SecretKey secretKey = keyGen.generateKey();
+      // Or load from secure configuration/environment
+
+  - id: weak-cipher-algorithms
+    message: "Weak cipher algorithm detected"
+    severity: error
+    languages:
+      - Java
+    patterns:
+      - pattern: Cipher.getInstance("DES")
+      - pattern: Cipher.getInstance("DESede")
+      - pattern: Cipher.getInstance("RC2")
+      - pattern: Cipher.getInstance("RC4")
+      - pattern: Cipher.getInstance("Blowfish")
+    metadata:
+      cwe: "CWE-327"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "weak-cipher"
+    fix: |
+      // Use strong cipher algorithms:
+      Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+      // Or AES/CBC/PKCS5Padding with proper IV
+
+  - id: ecb-cipher-mode
+    message: "ECB cipher mode is insecure and should not be used"
+    severity: error
+    languages:
+      - Java
+    patterns:
+      - pattern: Cipher.getInstance("AES/ECB/PKCS5Padding")
+      - pattern: Cipher.getInstance("DES/ECB/PKCS5Padding")
+      - pattern: Cipher.getInstance("AES/ECB/NoPadding")
+    metadata:
+      cwe: "CWE-327"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "weak-cipher-mode"
+    fix: |
+      // Use secure cipher modes:
+      Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+      // Or use GCM mode for authenticated encryption:
+      Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+
+  - id: weak-ssl-context
+    message: "Weak SSL/TLS protocol version detected"
+    severity: error
+    languages:
+      - Java
+    patterns:
+      - pattern: SSLContext.getInstance("SSL")
+      - pattern: SSLContext.getInstance("SSLv2")
+      - pattern: SSLContext.getInstance("SSLv3")
+      - pattern: SSLContext.getInstance("TLS")
+      - pattern: SSLContext.getInstance("TLSv1")
+      - pattern: SSLContext.getInstance("TLSv1.1")
+    metadata:
+      cwe: "CWE-327"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "weak-ssl"
+    fix: |
+      // Use secure TLS versions:
+      SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
+      // Or for Java 11+:
+      SSLContext sslContext = SSLContext.getInstance("TLSv1.3");
+
+  - id: trust-all-certificates
+    message: "TrustManager that accepts all certificates"
+    severity: error
+    languages:
+      - Java
+    patterns:
+      - pattern: |
+          new X509TrustManager() {
+              public void checkClientTrusted(...) {}
+              public void checkServerTrusted(...) {}
+              public X509Certificate[] getAcceptedIssuers() { return null; }
+          }
+      - pattern: |
+          TrustManager[] trustAllCerts = new TrustManager[] {
+              new X509TrustManager() {
+                  public void checkClientTrusted(...) {}
+                  public void checkServerTrusted(...) {}
+              }
+          };
+    metadata:
+      cwe: "CWE-295"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "ssl-verification"
+    fix: |
+      // Use proper certificate validation:
+      // Let the default TrustManager handle certificate validation
+      SSLContext sslContext = SSLContext.getInstance("TLS");
+      sslContext.init(null, null, null); // Use default trust store
+
+  - id: hostname-verification-disabled
+    message: "Hostname verification disabled"
+    severity: error
+    languages:
+      - Java
+    patterns:
+      - pattern: |
+          $CONNECTION.setHostnameVerifier(new HostnameVerifier() {
+              public boolean verify(String hostname, SSLSession session) {
+                  return true;
+              }
+          });
+      - pattern: HttpsURLConnection.setDefaultHostnameVerifier((hostname, session) -> true)
+    metadata:
+      cwe: "CWE-295"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "hostname-verification"
+    fix: |
+      // Use proper hostname verification:
+      // Don't set custom hostname verifier, use default
+      // Or implement proper hostname validation logic
+
+  - id: weak-key-size
+    message: "Weak cryptographic key size detected"
+    severity: warning
+    languages:
+      - Java
+    patterns:
+      - pattern: KeyPairGenerator.getInstance("RSA").initialize(1024)
+      - pattern: KeyPairGenerator.getInstance("RSA").initialize(512)
+      - pattern: KeyGenerator.getInstance("AES").init(128)
+    metadata:
+      cwe: "CWE-326"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "weak-key-size"
+    fix: |
+      // Use secure key sizes:
+      KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
+      keyGen.initialize(2048); // or 4096 for higher security
+      
+      KeyGenerator aesKeyGen = KeyGenerator.getInstance("AES");
+      aesKeyGen.init(256); // Use 256-bit AES keys
+
+  - id: constant-iv
+    message: "Constant initialization vector (IV) used in encryption"
+    severity: error
+    languages:
+      - Java
+    patterns:
+      - pattern: |
+          IvParameterSpec $IV = new IvParameterSpec("1234567890123456".getBytes());
+      - pattern: |
+          byte[] $IV = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
+          IvParameterSpec ivSpec = new IvParameterSpec($IV);
+    metadata:
+      cwe: "CWE-330"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "constant-iv"
+    fix: |
+      // Generate random IV for each encryption:
+      SecureRandom random = new SecureRandom();
+      byte[] iv = new byte[16]; // 16 bytes for AES
+      random.nextBytes(iv);
+      IvParameterSpec ivSpec = new IvParameterSpec(iv);
+
+  - id: weak-pbkdf2-iterations
+    message: "PBKDF2 with insufficient iteration count"
+    severity: warning
+    languages:
+      - Java
+    patterns:
+      - pattern-regex: 'SecretKeyFactory\.getInstance\("PBKDF2.*"\)\.generateSecret\(new PBEKeySpec\([^,]+,\s*[^,]+,\s*([1-9][0-9]{0,4})'
+    metadata:
+      cwe: "CWE-327"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "weak-pbkdf2"
+    fix: |
+      // Use sufficient iterations for PBKDF2 (100,000+):
+      SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
+      PBEKeySpec spec = new PBEKeySpec(password, salt, 100000, 256);
+      SecretKey key = factory.generateSecret(spec);

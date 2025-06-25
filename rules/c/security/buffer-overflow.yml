@@ -1,0 +1,201 @@
+rules:
+  - id: unsafe-strcpy
+    message: "Unsafe strcpy() function can cause buffer overflow"
+    severity: error
+    languages:
+      - C
+    patterns:
+      - pattern: strcpy($DEST, $SRC)
+      - pattern: wcscpy($DEST, $SRC)
+    metadata:
+      cwe: "CWE-120"
+      owasp: "A06:2021 – Vulnerable and Outdated Components"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "buffer-overflow"
+    fix: |
+      // Use safe string copy functions:
+      strncpy(dest, src, sizeof(dest) - 1);
+      dest[sizeof(dest) - 1] = '\0';
+      // Or use strcpy_s() if available:
+      strcpy_s(dest, sizeof(dest), src);
+
+  - id: unsafe-strcat
+    message: "Unsafe strcat() function can cause buffer overflow"
+    severity: error
+    languages:
+      - C
+    patterns:
+      - pattern: strcat($DEST, $SRC)
+      - pattern: wcscat($DEST, $SRC)
+    metadata:
+      cwe: "CWE-120"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "buffer-overflow"
+    fix: |
+      // Use safe string concatenation:
+      strncat(dest, src, sizeof(dest) - strlen(dest) - 1);
+      // Or use strcat_s() if available:
+      strcat_s(dest, sizeof(dest), src);
+
+  - id: unsafe-sprintf
+    message: "Unsafe sprintf() function can cause buffer overflow"
+    severity: error
+    languages:
+      - C
+    patterns:
+      - pattern: sprintf($BUFFER, $FORMAT, ...)
+      - pattern: swprintf($BUFFER, $FORMAT, ...)
+    metadata:
+      cwe: "CWE-120"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "buffer-overflow"
+    fix: |
+      // Use safe formatted string functions:
+      snprintf(buffer, sizeof(buffer), format, ...);
+      // Or use sprintf_s() if available:
+      sprintf_s(buffer, sizeof(buffer), format, ...);
+
+  - id: unsafe-gets
+    message: "gets() function is inherently unsafe and should never be used"
+    severity: error
+    languages:
+      - C
+    pattern: gets($BUFFER)
+    metadata:
+      cwe: "CWE-120"
+      category: "security"
+      confidence: critical
+      subcategory:
+        - "buffer-overflow"
+    fix: |
+      // Use fgets() instead:
+      fgets(buffer, sizeof(buffer), stdin);
+      // Remove trailing newline if needed:
+      buffer[strcspn(buffer, "\n")] = '\0';
+
+  - id: unsafe-scanf
+    message: "Unsafe scanf() with %s can cause buffer overflow"
+    severity: error
+    languages:
+      - C
+    patterns:
+      - pattern: scanf("%s", $BUFFER)
+      - pattern: fscanf($FILE, "%s", $BUFFER)
+      - pattern: sscanf($INPUT, "%s", $BUFFER)
+    metadata:
+      cwe: "CWE-120"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "buffer-overflow"
+    fix: |
+      // Use width specifier to limit input:
+      char buffer[100];
+      scanf("%99s", buffer);  // Leave space for null terminator
+      // Or use fgets() for safer input:
+      fgets(buffer, sizeof(buffer), stdin);
+
+  - id: unsafe-strncpy-missing-null
+    message: "strncpy() may not null-terminate the string"
+    severity: warning
+    languages:
+      - C
+    pattern: strncpy($DEST, $SRC, $SIZE)
+    metadata:
+      cwe: "CWE-120"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "string-termination"
+    fix: |
+      // Ensure null termination:
+      strncpy(dest, src, size - 1);
+      dest[size - 1] = '\0';
+      // Or use strlcpy() if available:
+      strlcpy(dest, src, size);
+
+  - id: array-bounds-check-missing
+    message: "Array access without bounds checking"
+    severity: warning
+    languages:
+      - C
+    patterns:
+      - pattern: $ARRAY[$INDEX]
+    metadata:
+      cwe: "CWE-125"
+      category: "security"
+      confidence: low
+      subcategory:
+        - "buffer-overflow"
+    fix: |
+      // Add bounds checking:
+      if (index >= 0 && index < array_size) {
+          value = array[index];
+      }
+
+  - id: unsafe-memcpy
+    message: "memcpy() without size validation can cause buffer overflow"
+    severity: warning
+    languages:
+      - C
+    patterns:
+      - pattern: memcpy($DEST, $SRC, $SIZE)
+      - pattern: memmove($DEST, $SRC, $SIZE)
+    metadata:
+      cwe: "CWE-120"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "buffer-overflow"
+    fix: |
+      // Validate size before copying:
+      if (size <= sizeof(dest)) {
+          memcpy(dest, src, size);
+      }
+
+  - id: stack-buffer-too-large
+    message: "Large stack buffer may cause stack overflow"
+    severity: warning
+    languages:
+      - C
+    pattern-regex: 'char\s+\w+\[([1-9][0-9]{4,})\]'  # Arrays larger than 10KB
+    metadata:
+      cwe: "CWE-121"
+      category: "security"
+      confidence: low
+      subcategory:
+        - "stack-overflow"
+    fix: |
+      // Use dynamic allocation for large buffers:
+      char *buffer = malloc(large_size);
+      if (buffer) {
+          // Use buffer
+          free(buffer);
+      }
+
+  - id: format-string-vulnerability
+    message: "Format string vulnerability: user input used as format string"
+    severity: error
+    languages:
+      - C
+    patterns:
+      - pattern: printf($USER_INPUT)
+      - pattern: fprintf($FILE, $USER_INPUT)
+      - pattern: sprintf($BUFFER, $USER_INPUT)
+      - pattern: snprintf($BUFFER, $SIZE, $USER_INPUT)
+    metadata:
+      cwe: "CWE-134"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "format-string"
+    fix: |
+      // Use format string literal:
+      printf("%s", user_input);
+      // Never use user input directly as format string

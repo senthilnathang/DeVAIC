@@ -1,0 +1,192 @@
+rules:
+  - id: unsafe-object-deserialization
+    message: "Unsafe object deserialization vulnerability"
+    severity: error
+    languages:
+      - Java
+    patterns:
+      - pattern: |
+          ObjectInputStream $OIS = new ObjectInputStream($INPUT);
+          $OIS.readObject();
+      - pattern: |
+          new ObjectInputStream($STREAM).readObject()
+      - pattern: |
+          (($TYPE) $OIS.readObject())
+    metadata:
+      cwe: "CWE-502"
+      owasp: "A08:2021 – Software and Data Integrity Failures"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "deserialization"
+    fix: |
+      // Use safe deserialization alternatives:
+      // 1. Use JSON/XML instead of Java serialization
+      // 2. Implement custom readObject() with validation
+      // 3. Use ObjectInputFilter for Java 9+
+      ObjectInputStream ois = new ObjectInputStream(input);
+      ois.setObjectInputFilter(ObjectInputFilter.Config.createFilter("java.base/**;!*"));
+
+  - id: xmldecoder-deserialization
+    message: "XMLDecoder deserialization can execute arbitrary code"
+    severity: error
+    languages:
+      - Java
+    patterns:
+      - pattern: |
+          XMLDecoder $DECODER = new XMLDecoder($INPUT);
+          $DECODER.readObject();
+      - pattern: |
+          new XMLDecoder($STREAM).readObject()
+    metadata:
+      cwe: "CWE-502"
+      category: "security"
+      confidence: critical
+      subcategory:
+        - "xml-deserialization"
+    fix: |
+      // Avoid XMLDecoder for untrusted input
+      // Use JSON or secure XML parsing instead:
+      // ObjectMapper mapper = new ObjectMapper();
+      // MyObject obj = mapper.readValue(json, MyObject.class);
+
+  - id: yaml-unsafe-load
+    message: "Unsafe YAML deserialization can execute arbitrary code"
+    severity: error
+    languages:
+      - Java
+    patterns:
+      - pattern: |
+          Yaml $YAML = new Yaml();
+          $YAML.load($INPUT);
+      - pattern: |
+          new Yaml().load($USER_INPUT)
+      - pattern: |
+          Yaml.load($USER_INPUT)
+    metadata:
+      cwe: "CWE-502"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "yaml-deserialization"
+    fix: |
+      // Use safe YAML loading:
+      Yaml yaml = new Yaml(new SafeConstructor());
+      Object data = yaml.load(input);
+      // Or use specific type loading:
+      // MyClass obj = yaml.loadAs(input, MyClass.class);
+
+  - id: jackson-unsafe-polymorphic
+    message: "Jackson polymorphic deserialization without type validation"
+    severity: error
+    languages:
+      - Java
+    patterns:
+      - pattern: |
+          $MAPPER.enableDefaultTyping()
+      - pattern: |
+          $MAPPER.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL)
+      - pattern: |
+          @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
+    metadata:
+      cwe: "CWE-502"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "jackson-deserialization"
+    fix: |
+      // Use safe polymorphic typing:
+      @JsonTypeInfo(use = JsonTypeInfo.Id.NAME)
+      @JsonSubTypes({
+          @JsonSubTypes.Type(value = SafeClass.class, name = "safe")
+      })
+      // Or disable default typing and use explicit type handling
+
+  - id: kryo-unsafe-deserialization
+    message: "Kryo deserialization without registration can be unsafe"
+    severity: warning
+    languages:
+      - Java
+    patterns:
+      - pattern: |
+          Kryo $KRYO = new Kryo();
+          $KRYO.readObject($INPUT, $CLASS);
+      - pattern: |
+          $KRYO.readClassAndObject($INPUT)
+    metadata:
+      cwe: "CWE-502"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "kryo-deserialization"
+    fix: |
+      // Use Kryo with class registration:
+      Kryo kryo = new Kryo();
+      kryo.setRegistrationRequired(true);
+      kryo.register(SafeClass.class);
+
+  - id: xstream-unsafe-deserialization
+    message: "XStream deserialization can execute arbitrary code"
+    severity: error
+    languages:
+      - Java
+    patterns:
+      - pattern: |
+          XStream $XSTREAM = new XStream();
+          $XSTREAM.fromXML($INPUT);
+      - pattern: |
+          new XStream().fromXML($USER_INPUT)
+    metadata:
+      cwe: "CWE-502"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "xstream-deserialization"
+    fix: |
+      // Configure XStream security:
+      XStream xstream = new XStream();
+      xstream.addPermission(NoTypePermission.NONE);
+      xstream.addPermission(NullPermission.NULL);
+      xstream.addPermission(PrimitiveTypePermission.PRIMITIVES);
+      xstream.allowTypesByWildcard(new String[] {"your.safe.package.**"});
+
+  - id: hessian-deserialization
+    message: "Hessian deserialization vulnerability"
+    severity: error
+    languages:
+      - Java
+    patterns:
+      - pattern: |
+          HessianInput $INPUT = new HessianInput($STREAM);
+          $INPUT.readObject();
+      - pattern: |
+          new HessianInput($STREAM).readObject()
+    metadata:
+      cwe: "CWE-502"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "hessian-deserialization"
+
+  - id: fastjson-unsafe-parsing
+    message: "FastJSON autotype can lead to deserialization attacks"
+    severity: error
+    languages:
+      - Java
+    patterns:
+      - pattern: |
+          JSON.parseObject($INPUT, $CLASS)
+      - pattern: |
+          JSON.parse($USER_INPUT)
+      - pattern: |
+          ParserConfig.getGlobalInstance().setAutoTypeSupport(true)
+    metadata:
+      cwe: "CWE-502"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "fastjson-deserialization"
+    fix: |
+      // Disable autotype support:
+      ParserConfig.getGlobalInstance().setAutoTypeSupport(false);
+      // Use safe parsing with explicit types

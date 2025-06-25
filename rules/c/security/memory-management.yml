@@ -1,0 +1,249 @@
+rules:
+  - id: double-free
+    message: "Potential double free vulnerability"
+    severity: error
+    languages:
+      - C
+    patterns:
+      - pattern: |
+          free($PTR);
+          ...
+          free($PTR);
+      - pattern: |
+          $PTR = malloc(...);
+          free($PTR);
+          free($PTR);
+    metadata:
+      cwe: "CWE-415"
+      owasp: "A06:2021 – Vulnerable and Outdated Components"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "memory-management"
+    fix: |
+      // Set pointer to NULL after freeing:
+      free(ptr);
+      ptr = NULL;
+      // Check before freeing:
+      if (ptr) {
+          free(ptr);
+          ptr = NULL;
+      }
+
+  - id: use-after-free
+    message: "Potential use-after-free vulnerability"
+    severity: error
+    languages:
+      - C
+    patterns:
+      - pattern: |
+          free($PTR);
+          ...
+          *$PTR = $VALUE;
+      - pattern: |
+          free($PTR);
+          ...
+          $VALUE = *$PTR;
+    metadata:
+      cwe: "CWE-416"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "memory-management"
+    fix: |
+      // Set pointer to NULL after freeing:
+      free(ptr);
+      ptr = NULL;
+      // Check pointer before use:
+      if (ptr) {
+          *ptr = value;
+      }
+
+  - id: memory-leak-malloc
+    message: "Potential memory leak: malloc() without corresponding free()"
+    severity: warning
+    languages:
+      - C
+    patterns:
+      - pattern: |
+          $PTR = malloc($SIZE);
+          return ...;
+      - pattern: |
+          $PTR = calloc($COUNT, $SIZE);
+          return ...;
+      - pattern: |
+          $PTR = realloc($OLD_PTR, $SIZE);
+          return ...;
+    metadata:
+      cwe: "CWE-401"
+      category: "security"
+      confidence: low
+      subcategory:
+        - "memory-leak"
+    fix: |
+      // Always free allocated memory:
+      ptr = malloc(size);
+      if (ptr) {
+          // Use ptr
+          free(ptr);
+          ptr = NULL;
+      }
+
+  - id: null-pointer-dereference
+    message: "Potential null pointer dereference"
+    severity: error
+    languages:
+      - C
+    patterns:
+      - pattern: |
+          $PTR = malloc($SIZE);
+          *$PTR = $VALUE;
+      - pattern: |
+          $PTR = calloc($COUNT, $SIZE);
+          $PTR->$FIELD = $VALUE;
+    metadata:
+      cwe: "CWE-476"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "null-pointer"
+    fix: |
+      // Check malloc return value:
+      ptr = malloc(size);
+      if (ptr == NULL) {
+          // Handle allocation failure
+          return -1;
+      }
+      *ptr = value;
+
+  - id: integer-overflow-malloc
+    message: "Integer overflow in malloc() size calculation"
+    severity: error
+    languages:
+      - C
+    patterns:
+      - pattern: malloc($SIZE1 * $SIZE2)
+      - pattern: calloc($COUNT * $SIZE1, $SIZE2)
+      - pattern: realloc($PTR, $SIZE1 * $SIZE2)
+    metadata:
+      cwe: "CWE-190"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "integer-overflow"
+    fix: |
+      // Check for overflow before multiplication:
+      if (size1 > SIZE_MAX / size2) {
+          // Handle overflow
+          return NULL;
+      }
+      ptr = malloc(size1 * size2);
+
+  - id: uninitialized-variable
+    message: "Use of uninitialized variable"
+    severity: warning
+    languages:
+      - C
+    patterns:
+      - pattern: |
+          int $VAR;
+          if ($VAR == $VALUE) { ... }
+      - pattern: |
+          char *$PTR;
+          strcpy($PTR, $SRC);
+    metadata:
+      cwe: "CWE-457"
+      category: "security"
+      confidence: low
+      subcategory:
+        - "uninitialized-variable"
+    fix: |
+      // Initialize variables:
+      int var = 0;
+      char *ptr = NULL;
+      // Or initialize at declaration
+
+  - id: buffer-allocation-size-mismatch
+    message: "Buffer allocation size may not match usage"
+    severity: warning
+    languages:
+      - C
+    patterns:
+      - pattern: |
+          $PTR = malloc(sizeof($TYPE1));
+          ($TYPE2 *)$PTR;
+    metadata:
+      cwe: "CWE-131"
+      category: "security"
+      confidence: low
+      subcategory:
+        - "allocation-mismatch"
+
+  - id: stack-overflow-recursion
+    message: "Unbounded recursion may cause stack overflow"
+    severity: warning
+    languages:
+      - C
+    patterns:
+      - pattern: |
+          $TYPE $FUNC(...) {
+              ...
+              $FUNC(...);
+              ...
+          }
+    metadata:
+      cwe: "CWE-674"
+      category: "security"
+      confidence: low
+      subcategory:
+        - "stack-overflow"
+    fix: |
+      // Add recursion depth limit:
+      int func_recursive(int depth, int max_depth, ...) {
+          if (depth >= max_depth) {
+              return -1; // Max depth reached
+          }
+          return func_recursive(depth + 1, max_depth, ...);
+      }
+
+  - id: memory-alignment-issue
+    message: "Potential memory alignment issue"
+    severity: info
+    languages:
+      - C
+    patterns:
+      - pattern: |
+          char $BUFFER[$SIZE];
+          ($TYPE *)$BUFFER;
+    metadata:
+      cwe: "CWE-704"
+      category: "security"
+      confidence: low
+      subcategory:
+        - "memory-alignment"
+    fix: |
+      // Use aligned allocation or proper casting:
+      // For aligned allocation:
+      void *aligned_ptr = aligned_alloc(alignof(type), size);
+      // Or ensure buffer is properly aligned
+
+  - id: dangling-pointer
+    message: "Potential dangling pointer after free"
+    severity: warning
+    languages:
+      - C
+    patterns:
+      - pattern: |
+          free($PTR);
+          $OTHER_PTR = $PTR;
+    metadata:
+      cwe: "CWE-825"
+      category: "security"
+      confidence: low
+      subcategory:
+        - "dangling-pointer"
+    fix: |
+      // Set pointer to NULL after freeing:
+      free(ptr);
+      ptr = NULL;
+      other_ptr = NULL;

@@ -1,0 +1,209 @@
+rules:
+  - id: prototype-pollution-merge
+    message: "Prototype pollution vulnerability in object merge operation"
+    severity: error
+    languages:
+      - Javascript
+      - TypeScript
+    patterns:
+      - pattern: |
+          for (const $KEY in $SOURCE) {
+              $TARGET[$KEY] = $SOURCE[$KEY];
+          }
+      - pattern: |
+          Object.assign($TARGET, $SOURCE)
+      - pattern: |
+          {...$TARGET, ...$SOURCE}
+      - pattern: |
+          $.extend($TARGET, $SOURCE)
+      - pattern: |
+          _.merge($TARGET, $SOURCE)
+      - pattern: |
+          merge($TARGET, $SOURCE)
+    metadata:
+      cwe: "CWE-1321"
+      owasp: "A03:2021 – Injection"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "prototype-pollution"
+    fix: |
+      // Validate keys and avoid __proto__, constructor, prototype
+      function safeMerge(target, source) {
+          const dangerousKeys = ['__proto__', 'constructor', 'prototype'];
+          for (const key in source) {
+              if (dangerousKeys.includes(key)) continue;
+              if (source.hasOwnProperty(key)) {
+                  target[key] = source[key];
+              }
+          }
+          return target;
+      }
+
+  - id: prototype-pollution-recursive
+    message: "Recursive merge operation vulnerable to prototype pollution"
+    severity: error
+    languages:
+      - Javascript
+      - TypeScript
+    patterns:
+      - pattern: |
+          function merge($TARGET, $SOURCE) {
+              for (const $KEY in $SOURCE) {
+                  if (typeof $SOURCE[$KEY] === 'object') {
+                      merge($TARGET[$KEY], $SOURCE[$KEY]);
+                  } else {
+                      $TARGET[$KEY] = $SOURCE[$KEY];
+                  }
+              }
+          }
+    metadata:
+      cwe: "CWE-1321"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "prototype-pollution"
+
+  - id: prototype-pollution-json-parse
+    message: "JSON.parse with unsafe object access may lead to prototype pollution"
+    severity: warning
+    languages:
+      - Javascript
+      - TypeScript
+    patterns:
+      - pattern: |
+          const $OBJ = JSON.parse($USER_INPUT);
+          $TARGET[$OBJ.$KEY] = $OBJ.$VALUE;
+      - pattern: |
+          const $PARSED = JSON.parse($USER_INPUT);
+          Object.assign($TARGET, $PARSED);
+    metadata:
+      cwe: "CWE-1321"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "prototype-pollution"
+
+  - id: lodash-unsafe-merge
+    message: "Unsafe lodash merge operation vulnerable to prototype pollution"
+    severity: error
+    languages:
+      - Javascript
+      - TypeScript
+    patterns:
+      - pattern: _.merge($TARGET, $USER_INPUT)
+      - pattern: _.mergeWith($TARGET, $USER_INPUT, ...)
+      - pattern: lodash.merge($TARGET, $USER_INPUT)
+      - pattern: require('lodash').merge($TARGET, $USER_INPUT)
+    metadata:
+      cwe: "CWE-1321"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "prototype-pollution"
+      technology:
+        - "lodash"
+    fix: |
+      // Use safe merge or validate input
+      const _ = require('lodash');
+      function safeLodashMerge(target, source) {
+          // Remove dangerous keys from source
+          const cleanSource = _.omit(source, ['__proto__', 'constructor', 'prototype']);
+          return _.merge(target, cleanSource);
+      }
+
+  - id: unsafe-property-access
+    message: "Unsafe property access that may be exploited for prototype pollution"
+    severity: warning
+    languages:
+      - Javascript
+      - TypeScript
+    patterns:
+      - pattern: $OBJ[$USER_INPUT] = $VALUE
+      - pattern: $OBJ[$USER_KEY] = $USER_VALUE
+      - pattern: eval(`$OBJ.${$USER_INPUT} = ${$VALUE}`)
+    metadata:
+      cwe: "CWE-1321"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "prototype-pollution"
+    fix: |
+      // Validate property names before assignment
+      const dangerousKeys = ['__proto__', 'constructor', 'prototype'];
+      if (!dangerousKeys.includes(userInput) && typeof userInput === 'string') {
+          obj[userInput] = value;
+      }
+
+  - id: express-body-parser-pollution
+    message: "Express body parser may be vulnerable to prototype pollution"
+    severity: warning
+    languages:
+      - Javascript
+      - TypeScript
+    patterns:
+      - pattern: |
+          app.use(express.json());
+          app.post($ROUTE, ($REQ, $RES) => {
+              Object.assign($TARGET, $REQ.body);
+          });
+      - pattern: |
+          app.use(bodyParser.json());
+          Object.assign($TARGET, $REQ.body);
+    metadata:
+      cwe: "CWE-1321"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "prototype-pollution"
+      technology:
+        - "express"
+    fix: |
+      // Validate and sanitize request body
+      app.post('/api/update', (req, res) => {
+          const allowedKeys = ['name', 'email', 'age']; // whitelist
+          const sanitized = {};
+          for (const key of allowedKeys) {
+              if (req.body.hasOwnProperty(key)) {
+                  sanitized[key] = req.body[key];
+              }
+          }
+          Object.assign(target, sanitized);
+      });
+
+  - id: clonedeep-unsafe
+    message: "Unsafe cloneDeep operation may preserve prototype pollution"
+    severity: warning
+    languages:
+      - Javascript
+      - TypeScript
+    patterns:
+      - pattern: _.cloneDeep($USER_INPUT)
+      - pattern: JSON.parse(JSON.stringify($USER_INPUT))
+      - pattern: structuredClone($USER_INPUT)
+    metadata:
+      cwe: "CWE-1321"
+      category: "security"
+      confidence: low
+      subcategory:
+        - "prototype-pollution"
+
+  - id: mixin-prototype-pollution
+    message: "Mixin pattern vulnerable to prototype pollution"
+    severity: warning
+    languages:
+      - Javascript
+      - TypeScript
+    patterns:
+      - pattern: |
+          function mixin($TARGET, $SOURCE) {
+              for (let $KEY in $SOURCE) {
+                  $TARGET[$KEY] = $SOURCE[$KEY];
+              }
+          }
+    metadata:
+      cwe: "CWE-1321"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "prototype-pollution"

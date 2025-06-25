@@ -1,0 +1,266 @@
+rules:
+  - id: weak-random-generation
+    message: "Use of weak random number generation"
+    severity: error
+    languages:
+      - Rust
+    patterns:
+      - pattern: rand::random()
+      - pattern: thread_rng().gen()
+      - pattern: StdRng::new()
+    metadata:
+      cwe: "CWE-338"
+      owasp: "A02:2021 – Cryptographic Failures"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "weak-random"
+    fix: |
+      // Use cryptographically secure random generation:
+      use rand::rngs::OsRng;
+      use rand::RngCore;
+      
+      let mut rng = OsRng;
+      let mut key = [0u8; 32];
+      rng.fill_bytes(&mut key);
+
+  - id: hardcoded-crypto-key
+    message: "Hardcoded cryptographic key detected"
+    severity: error
+    languages:
+      - Rust
+    patterns:
+      - pattern: |
+          const KEY: [u8; $SIZE] = [$BYTES];
+      - pattern: |
+          let key = b"$HARDCODED_KEY";
+      - pattern: |
+          let secret = "$HARDCODED_SECRET";
+    metadata:
+      cwe: "CWE-798"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "hardcoded-crypto-key"
+    fix: |
+      // Use environment variables or secure key derivation:
+      use std::env;
+      let key = env::var("ENCRYPTION_KEY")
+          .expect("ENCRYPTION_KEY must be set");
+      // Or use key derivation functions
+
+  - id: weak-hash-algorithms
+    message: "Use of weak cryptographic hash algorithm"
+    severity: error
+    languages:
+      - Rust
+    patterns:
+      - pattern: Md5::new()
+      - pattern: Sha1::new()
+      - pattern: md5::Md5::new()
+      - pattern: sha1::Sha1::new()
+    metadata:
+      cwe: "CWE-327"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "weak-crypto"
+    fix: |
+      // Use strong hash algorithms:
+      use sha2::{Sha256, Sha512, Digest};
+      let mut hasher = Sha256::new();
+      hasher.update(data);
+      let result = hasher.finalize();
+
+  - id: insecure-password-hashing
+    message: "Insecure password hashing without salt"
+    severity: error
+    languages:
+      - Rust
+    patterns:
+      - pattern: |
+          Sha256::digest($PASSWORD)
+      - pattern: |
+          blake3::hash($PASSWORD.as_bytes())
+    metadata:
+      cwe: "CWE-759"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "password-hashing"
+    fix: |
+      // Use proper password hashing with salt:
+      use argon2::{Argon2, PasswordHasher, PasswordHash, PasswordVerifier};
+      use argon2::password_hash::{rand_core::OsRng, SaltString};
+      
+      let salt = SaltString::generate(&mut OsRng);
+      let argon2 = Argon2::default();
+      let password_hash = argon2.hash_password(password.as_bytes(), &salt)?;
+
+  - id: constant-time-comparison
+    message: "Non-constant-time comparison for sensitive data"
+    severity: warning
+    languages:
+      - Rust
+    patterns:
+      - pattern: $SECRET1 == $SECRET2
+      - pattern: $PASSWORD.eq($OTHER_PASSWORD)
+      - pattern: $TOKEN == $EXPECTED_TOKEN
+    metadata:
+      cwe: "CWE-208"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "timing-attack"
+    fix: |
+      // Use constant-time comparison:
+      use subtle::ConstantTimeEq;
+      if secret1.ct_eq(&secret2).into() {
+          // Secrets match
+      }
+      // Or use ring::constant_time::verify_slices_are_equal
+
+  - id: tls-certificate-validation-disabled
+    message: "TLS certificate validation disabled"
+    severity: error
+    languages:
+      - Rust
+    patterns:
+      - pattern: |
+          .danger_accept_invalid_certs(true)
+      - pattern: |
+          .danger_accept_invalid_hostnames(true)
+      - pattern: |
+          ClientBuilder::new().danger_accept_invalid_certs(true)
+    metadata:
+      cwe: "CWE-295"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "tls-validation"
+    fix: |
+      // Always validate TLS certificates in production:
+      let client = reqwest::Client::builder()
+          .build()?; // Default validates certificates
+      // Only disable for testing with proper feature flags
+
+  - id: weak-cipher-suite
+    message: "Weak or deprecated cipher suite configuration"
+    severity: warning
+    languages:
+      - Rust
+    patterns:
+      - pattern: |
+          .cipher_suites(&[CipherSuite::TLS13_AES_128_GCM_SHA256])
+      - pattern: |
+          TlsConnector::builder().min_protocol_version(Some(Protocol::Tlsv10))
+    metadata:
+      cwe: "CWE-327"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "weak-cipher"
+    fix: |
+      // Use strong TLS configuration:
+      use native_tls::TlsConnector;
+      let connector = TlsConnector::builder()
+          .min_protocol_version(Some(native_tls::Protocol::Tlsv12))
+          .build()?;
+
+  - id: rng-seed-predictable
+    message: "Predictable seed used for random number generation"
+    severity: error
+    languages:
+      - Rust
+    patterns:
+      - pattern: |
+          StdRng::seed_from_u64($CONSTANT)
+      - pattern: |
+          SeedableRng::seed_from_u64($PREDICTABLE)
+      - pattern: |
+          ChaCha20Rng::seed_from_u64(1234)
+    metadata:
+      cwe: "CWE-338"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "predictable-seed"
+    fix: |
+      // Use unpredictable seed:
+      use rand::SeedableRng;
+      use rand::rngs::{OsRng, ChaCha20Rng};
+      
+      let mut rng = ChaCha20Rng::from_rng(OsRng)?;
+      // Or let the system provide entropy:
+      let mut rng = ChaCha20Rng::from_entropy();
+
+  - id: crypto-key-in-memory
+    message: "Cryptographic key stored in plain memory"
+    severity: warning
+    languages:
+      - Rust
+    patterns:
+      - pattern: |
+          let key: [u8; $SIZE] = $ARRAY;
+      - pattern: |
+          let private_key = $VALUE;
+    metadata:
+      cwe: "CWE-316"
+      category: "security"
+      confidence: low
+      subcategory:
+        - "key-storage"
+    fix: |
+      // Use secure memory for sensitive data:
+      use zeroize::{Zeroize, ZeroizeOnDrop};
+      
+      #[derive(ZeroizeOnDrop)]
+      struct SecretKey([u8; 32]);
+      
+      // Key will be securely zeroed when dropped
+
+  - id: jwt-none-algorithm
+    message: "JWT 'none' algorithm allows token forgery"
+    severity: error
+    languages:
+      - Rust
+    patterns:
+      - pattern: |
+          Algorithm::None
+      - pattern: |
+          .algorithm(Algorithm::None)
+    metadata:
+      cwe: "CWE-347"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "jwt-vulnerability"
+    fix: |
+      // Use secure JWT algorithms:
+      use jsonwebtoken::{Algorithm, DecodingKey, Validation};
+      let mut validation = Validation::new(Algorithm::HS256);
+      // Never use Algorithm::None in production
+
+  - id: crypto-random-for-nonce
+    message: "Non-cryptographic random used for nonce generation"
+    severity: error
+    languages:
+      - Rust
+    patterns:
+      - pattern: |
+          thread_rng().gen::<[u8; $SIZE]>()
+      - pattern: |
+          random::<u64>()
+    metadata:
+      cwe: "CWE-338"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "nonce-generation"
+    fix: |
+      // Use cryptographically secure random for nonces:
+      use rand::rngs::OsRng;
+      use rand::RngCore;
+      
+      let mut nonce = [0u8; 12];
+      OsRng.fill_bytes(&mut nonce);

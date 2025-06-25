@@ -1,0 +1,319 @@
+rules:
+  - id: path-traversal
+    message: "Path traversal vulnerability detected"
+    severity: error
+    languages:
+      - Python
+    patterns:
+      - pattern: open($USER_INPUT)
+      - pattern: open(f"{$BASE_PATH}/{$USER_INPUT}")
+      - pattern: open($BASE_PATH + $USER_INPUT)
+      - pattern: os.path.join($BASE_PATH, $USER_INPUT)
+      - pattern: pathlib.Path($USER_INPUT)
+    metadata:
+      cwe: "CWE-22"
+      owasp: "A01:2021 – Broken Access Control"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "path-traversal"
+    fix: |
+      # Validate and sanitize file paths:
+      import os
+      import os.path
+      
+      def safe_join(directory, filename):
+          filename = os.path.basename(filename)  # Remove directory components
+          return os.path.join(directory, filename)
+      
+      # Or use pathlib with resolve() to check for traversal:
+      from pathlib import Path
+      base_path = Path("/safe/directory")
+      user_path = base_path / user_input
+      if not str(user_path.resolve()).startswith(str(base_path.resolve())):
+          raise ValueError("Path traversal detected")
+
+  - id: unsafe-file-upload
+    message: "Unsafe file upload without validation"
+    severity: error
+    languages:
+      - Python
+    patterns:
+      - pattern: |
+          $FILE.save($FILENAME)
+      - pattern: |
+          with open($UPLOAD_PATH, 'wb') as $F:
+              $F.write($FILE_DATA)
+      - pattern: |
+          shutil.move($TEMP_FILE, $DESTINATION)
+    metadata:
+      cwe: "CWE-434"
+      owasp: "A03:2021 – Injection"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "file-upload"
+    fix: |
+      # Validate file uploads:
+      import mimetypes
+      import os
+      
+      ALLOWED_EXTENSIONS = {'.txt', '.pdf', '.png', '.jpg', '.jpeg', '.gif'}
+      MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
+      
+      def secure_upload(file, upload_folder):
+          if file.content_length > MAX_FILE_SIZE:
+              raise ValueError("File too large")
+          
+          filename = secure_filename(file.filename)
+          file_ext = os.path.splitext(filename)[1].lower()
+          
+          if file_ext not in ALLOWED_EXTENSIONS:
+              raise ValueError("File type not allowed")
+          
+          # Verify MIME type
+          mime_type, _ = mimetypes.guess_type(filename)
+          if not mime_type or not mime_type.startswith(('image/', 'text/', 'application/pdf')):
+              raise ValueError("Invalid file type")
+          
+          file.save(os.path.join(upload_folder, filename))
+
+  - id: insecure-temp-file
+    message: "Insecure temporary file creation"
+    severity: warning
+    languages:
+      - Python
+    patterns:
+      - pattern: open("/tmp/$FILENAME", "w")
+      - pattern: open(f"/tmp/{$FILENAME}", "w")
+      - pattern: tempfile.mktemp()
+      - pattern: tempfile.NamedTemporaryFile(delete=False)
+    metadata:
+      cwe: "CWE-377"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "temp-file"
+    fix: |
+      # Use secure temporary file creation:
+      import tempfile
+      import os
+      
+      # Create secure temporary file
+      with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.tmp') as tmp_file:
+          tmp_file.write(data)
+          temp_filename = tmp_file.name
+      
+      try:
+          # Process the file
+          pass
+      finally:
+          # Clean up
+          os.unlink(temp_filename)
+
+  - id: world-writable-files
+    message: "World-writable file permissions detected"
+    severity: warning
+    languages:
+      - Python
+    patterns:
+      - pattern: os.chmod($PATH, 0o777)
+      - pattern: os.chmod($PATH, 0o666)
+      - pattern: os.chmod($PATH, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
+    metadata:
+      cwe: "CWE-732"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "file-permissions"
+    fix: |
+      # Use secure file permissions:
+      import os
+      import stat
+      
+      # Owner read/write only
+      os.chmod(path, stat.S_IRUSR | stat.S_IWUSR)
+      # Or owner read/write, group read
+      os.chmod(path, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP)
+
+  - id: symlink-following
+    message: "Symlink following vulnerability"
+    severity: warning
+    languages:
+      - Python
+    patterns:
+      - pattern: os.path.exists($USER_PATH)
+      - pattern: os.path.isfile($USER_PATH)
+      - pattern: os.path.isdir($USER_PATH)
+      - pattern: os.stat($USER_PATH)
+    metadata:
+      cwe: "CWE-59"
+      category: "security"
+      confidence: low
+      subcategory:
+        - "symlink-following"
+    fix: |
+      # Use lstat() to avoid following symlinks:
+      import os
+      
+      try:
+          stat_info = os.lstat(user_path)  # Don't follow symlinks
+          if stat.S_ISLNK(stat_info.st_mode):
+              raise ValueError("Symlinks not allowed")
+      except OSError:
+          pass
+
+  - id: unsafe-archive-extraction
+    message: "Unsafe archive extraction (zip slip vulnerability)"
+    severity: error
+    languages:
+      - Python
+    patterns:
+      - pattern: |
+          $ZIP.extractall($PATH)
+      - pattern: |
+          $TAR.extractall($PATH)
+      - pattern: |
+          $ARCHIVE.extract($MEMBER, $PATH)
+    metadata:
+      cwe: "CWE-22"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "zip-slip"
+    fix: |
+      # Safe archive extraction:
+      import zipfile
+      import os
+      
+      def safe_extract(zip_file, extract_to):
+          for member in zip_file.namelist():
+              # Validate the member path
+              if os.path.isabs(member) or ".." in member:
+                  raise ValueError(f"Unsafe path: {member}")
+              
+              # Ensure the path stays within extract_to
+              full_path = os.path.join(extract_to, member)
+              if not full_path.startswith(os.path.abspath(extract_to)):
+                  raise ValueError(f"Path traversal detected: {member}")
+          
+          zip_file.extractall(extract_to)
+
+  - id: directory-traversal-delete
+    message: "Directory traversal in file deletion"
+    severity: error
+    languages:
+      - Python
+    patterns:
+      - pattern: os.remove($USER_INPUT)
+      - pattern: os.unlink($USER_INPUT)
+      - pattern: shutil.rmtree($USER_INPUT)
+      - pattern: pathlib.Path($USER_INPUT).unlink()
+    metadata:
+      cwe: "CWE-22"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "file-deletion"
+    fix: |
+      # Validate file paths before deletion:
+      import os
+      from pathlib import Path
+      
+      def safe_delete(filename, allowed_directory):
+          # Normalize the path
+          file_path = Path(allowed_directory) / filename
+          resolved_path = file_path.resolve()
+          allowed_path = Path(allowed_directory).resolve()
+          
+          # Check if the file is within allowed directory
+          if not str(resolved_path).startswith(str(allowed_path)):
+              raise ValueError("Path traversal detected")
+          
+          if resolved_path.exists():
+              resolved_path.unlink()
+
+  - id: insecure-file-creation
+    message: "Insecure file creation with predictable names"
+    severity: warning
+    languages:
+      - Python
+    patterns:
+      - pattern: open(f"/tmp/file_{$COUNTER}", "w")
+      - pattern: open(f"/tmp/{$USERNAME}.tmp", "w")
+      - pattern: open(f"/tmp/upload_{time.time()}", "w")
+    metadata:
+      cwe: "CWE-377"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "predictable-filename"
+    fix: |
+      # Use secure random filenames:
+      import tempfile
+      import secrets
+      
+      # Generate secure random filename
+      random_name = secrets.token_hex(16)
+      with tempfile.NamedTemporaryFile(prefix=f"secure_{random_name}_", suffix=".tmp") as tmp_file:
+          tmp_file.write(data)
+
+  - id: race-condition-file-check
+    message: "Race condition between file check and usage (TOCTOU)"
+    severity: warning
+    languages:
+      - Python
+    patterns:
+      - pattern: |
+          if os.path.exists($FILE):
+              open($FILE, "r")
+      - pattern: |
+          if os.path.isfile($FILE):
+              with open($FILE) as $F:
+                  ...
+    metadata:
+      cwe: "CWE-367"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "toctou"
+    fix: |
+      # Use try/except instead of check-then-use:
+      try:
+          with open(filename, 'r') as f:
+              content = f.read()
+      except FileNotFoundError:
+          # Handle missing file
+          pass
+      except PermissionError:
+          # Handle permission error
+          pass
+
+  - id: unsafe-deserialization-file
+    message: "Unsafe deserialization from file"
+    severity: error
+    languages:
+      - Python
+    patterns:
+      - pattern: pickle.load($FILE)
+      - pattern: pickle.loads($FILE.read())
+      - pattern: yaml.load($FILE)
+      - pattern: yaml.load($FILE.read())
+    metadata:
+      cwe: "CWE-502"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "unsafe-deserialization"
+    fix: |
+      # Use safe deserialization methods:
+      import json
+      import yaml
+      
+      # For JSON (always safe)
+      with open(filename) as f:
+          data = json.load(f)
+      
+      # For YAML (use safe_load)
+      with open(filename) as f:
+          data = yaml.safe_load(f)

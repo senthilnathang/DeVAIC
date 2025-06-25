@@ -1,0 +1,269 @@
+rules:
+  - id: weak-hash-algorithms
+    message: "Weak cryptographic hash algorithm detected"
+    severity: error
+    languages:
+      - Python
+    patterns:
+      - pattern: hashlib.md5()
+      - pattern: hashlib.sha1()
+      - pattern: hashlib.md4()
+      - pattern: Crypto.Hash.MD5.new()
+      - pattern: Crypto.Hash.SHA1.new()
+      - pattern: Crypto.Hash.MD4.new()
+    metadata:
+      cwe: "CWE-327"
+      owasp: "A02:2021 – Cryptographic Failures"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "weak-crypto"
+    fix: |
+      # Use stronger hash algorithms:
+      import hashlib
+      hash_value = hashlib.sha256(data.encode()).hexdigest()
+      # Or for passwords, use bcrypt or scrypt
+
+  - id: insecure-random
+    message: "Insecure random number generation for cryptographic purposes"
+    severity: error
+    languages:
+      - Python
+    patterns:
+      - pattern: random.random()
+      - pattern: random.randint($MIN, $MAX)
+      - pattern: random.choice($LIST)
+      - pattern: random.shuffle($LIST)
+      - pattern: numpy.random.rand()
+      - pattern: np.random.rand()
+    metadata:
+      cwe: "CWE-338"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "weak-random"
+    fix: |
+      # Use cryptographically secure random generation:
+      import secrets
+      # For random integers
+      secure_int = secrets.randbelow(100)
+      # For random strings
+      secure_token = secrets.token_hex(16)
+      # For random bytes
+      secure_bytes = secrets.token_bytes(32)
+
+  - id: hardcoded-crypto-key
+    message: "Hardcoded cryptographic key detected"
+    severity: error
+    languages:
+      - Python
+    patterns:
+      - pattern-regex: '(?i)(key|secret)\s*[=:]\s*["\'][a-fA-F0-9]{32,}["\']'
+      - pattern-regex: '(?i)(aes[_\-]?key|crypto[_\-]?key)\s*[=:]\s*["\'].*["\']'
+      - pattern: |
+          $CIPHER = AES.new($HARDCODED_KEY, ...)
+      - pattern: |
+          $CIPHER = DES.new($HARDCODED_KEY, ...)
+    metadata:
+      cwe: "CWE-798"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "hardcoded-crypto-key"
+    fix: |
+      # Use environment variables or secure key management:
+      import os
+      from cryptography.fernet import Fernet
+      key = os.getenv('ENCRYPTION_KEY').encode()
+      # Or generate keys securely:
+      key = Fernet.generate_key()
+
+  - id: weak-cipher-algorithms
+    message: "Weak cipher algorithm detected"
+    severity: error
+    languages:
+      - Python
+    patterns:
+      - pattern: Crypto.Cipher.DES.new($KEY, ...)
+      - pattern: Crypto.Cipher.ARC2.new($KEY, ...)
+      - pattern: Crypto.Cipher.ARC4.new($KEY, ...)
+      - pattern: Crypto.Cipher.Blowfish.new($KEY, ...)
+      - pattern: cryptography.hazmat.primitives.ciphers.algorithms.TripleDES($KEY)
+    metadata:
+      cwe: "CWE-327"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "weak-cipher"
+    fix: |
+      # Use strong cipher algorithms:
+      from cryptography.fernet import Fernet
+      from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+      # Use AES with appropriate key size
+      cipher = Cipher(algorithms.AES(key), modes.CBC(iv))
+
+  - id: weak-ssl-protocols
+    message: "Weak SSL/TLS protocol version detected"
+    severity: error
+    languages:
+      - Python
+    patterns:
+      - pattern: ssl.PROTOCOL_SSLv2
+      - pattern: ssl.PROTOCOL_SSLv3
+      - pattern: ssl.PROTOCOL_TLSv1
+      - pattern: ssl.PROTOCOL_TLSv1_1
+      - pattern: ssl.SSLContext(ssl.PROTOCOL_SSLv2)
+      - pattern: ssl.SSLContext(ssl.PROTOCOL_SSLv3)
+      - pattern: ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+    metadata:
+      cwe: "CWE-327"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "weak-ssl"
+    fix: |
+      # Use secure TLS versions:
+      import ssl
+      context = ssl.create_default_context()
+      # Or explicitly use TLS 1.2+
+      context = ssl.SSLContext(ssl.PROTOCOL_TLS)
+      context.minimum_version = ssl.TLSVersion.TLSv1_2
+
+  - id: ssl-verification-disabled
+    message: "SSL certificate verification disabled"
+    severity: error
+    languages:
+      - Python
+    patterns:
+      - pattern: ssl._create_unverified_context()
+      - pattern: verify=False
+      - pattern: ssl_verify=False
+      - pattern: requests.get($URL, verify=False)
+      - pattern: requests.post($URL, verify=False)
+      - pattern: urllib3.disable_warnings()
+    metadata:
+      cwe: "CWE-295"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "ssl-verification"
+    fix: |
+      # Always verify SSL certificates:
+      import requests
+      response = requests.get(url, verify=True)
+      # Or use custom CA bundle if needed:
+      response = requests.get(url, verify='/path/to/ca-bundle.crt')
+
+  - id: ecb-mode-cipher
+    message: "ECB cipher mode is insecure and should not be used"
+    severity: error
+    languages:
+      - Python
+    patterns:
+      - pattern: Crypto.Cipher.AES.new($KEY, AES.MODE_ECB)
+      - pattern: Crypto.Cipher.DES.new($KEY, DES.MODE_ECB)
+      - pattern: cryptography.hazmat.primitives.ciphers.modes.ECB()
+    metadata:
+      cwe: "CWE-327"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "weak-cipher-mode"
+    fix: |
+      # Use secure cipher modes like CBC or GCM:
+      from Crypto.Cipher import AES
+      cipher = AES.new(key, AES.MODE_CBC, iv)
+      # Or use authenticated encryption:
+      cipher = AES.new(key, AES.MODE_GCM)
+
+  - id: weak-key-size
+    message: "Weak cryptographic key size detected"
+    severity: warning
+    languages:
+      - Python
+    patterns:
+      - pattern-regex: 'RSA\.generate\([1-9][0-9]{0,2}\)'  # Less than 1024 bits
+      - pattern-regex: 'RSA\.generate\(1[0-4][0-9]{2}\)'   # 1000-1499 bits
+      - pattern-regex: 'DSA\.generate\([1-9][0-9]{0,2}\)'  # Less than 1024 bits
+    metadata:
+      cwe: "CWE-326"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "weak-key-size"
+    fix: |
+      # Use secure key sizes (2048+ for RSA, 256+ for ECC):
+      from Crypto.PublicKey import RSA
+      key = RSA.generate(2048)  # or 4096 for higher security
+
+  - id: password-without-salt
+    message: "Password hashing without salt detected"
+    severity: error
+    languages:
+      - Python
+    patterns:
+      - pattern: hashlib.sha256($PASSWORD.encode()).hexdigest()
+      - pattern: hashlib.sha512($PASSWORD.encode()).hexdigest()
+      - pattern: hashlib.md5($PASSWORD.encode()).hexdigest()
+      - pattern: bcrypt.hashpw($PASSWORD, $STATIC_SALT)
+    metadata:
+      cwe: "CWE-759"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "password-hashing"
+    fix: |
+      # Use proper password hashing with salt:
+      import bcrypt
+      # Generate salt and hash password
+      salt = bcrypt.gensalt()
+      hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
+      # Or use scrypt:
+      import hashlib
+      salt = os.urandom(32)
+      key = hashlib.scrypt(password.encode(), salt=salt, n=2**14, r=8, p=1)
+
+  - id: weak-pbkdf2-iterations
+    message: "PBKDF2 with insufficient iteration count"
+    severity: warning
+    languages:
+      - Python
+    patterns:
+      - pattern-regex: 'PBKDF2\([^,]+,\s*[^,]+,\s*([1-9][0-9]{0,4})\)'  # Less than 100000
+      - pattern-regex: 'pbkdf2_hmac\([^,]+,\s*[^,]+,\s*[^,]+,\s*([1-9][0-9]{0,4})\)'
+    metadata:
+      cwe: "CWE-327"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "weak-pbkdf2"
+    fix: |
+      # Use sufficient iterations for PBKDF2 (100,000+):
+      import hashlib
+      key = hashlib.pbkdf2_hmac('sha256', password.encode(), salt, 100000)
+
+  - id: crypto-constant-iv
+    message: "Constant initialization vector (IV) used in encryption"
+    severity: error
+    languages:
+      - Python
+    patterns:
+      - pattern: |
+          $IV = b"1234567890123456"
+          $CIPHER = AES.new($KEY, AES.MODE_CBC, $IV)
+      - pattern: |
+          $IV = "1234567890123456"
+          $CIPHER = AES.new($KEY, AES.MODE_CBC, $IV)
+      - pattern-regex: 'AES\.new\([^,]+,\s*AES\.MODE_CBC,\s*["\'][^"\']*["\']'
+    metadata:
+      cwe: "CWE-330"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "constant-iv"
+    fix: |
+      # Generate random IV for each encryption:
+      import os
+      from Crypto.Cipher import AES
+      iv = os.urandom(16)  # 16 bytes for AES
+      cipher = AES.new(key, AES.MODE_CBC, iv)

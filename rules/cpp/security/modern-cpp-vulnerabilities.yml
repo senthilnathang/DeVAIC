@@ -1,0 +1,259 @@
+rules:
+  - id: raw-pointer-ownership
+    message: "Raw pointer with unclear ownership - use smart pointers"
+    severity: warning
+    languages:
+      - C++
+    patterns:
+      - pattern: |
+          $TYPE* $PTR = new $TYPE(...);
+      - pattern: |
+          delete $PTR;
+    metadata:
+      cwe: "CWE-401"
+      owasp: "A06:2021 – Vulnerable and Outdated Components"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "memory-management"
+    fix: |
+      // Use smart pointers for automatic memory management:
+      std::unique_ptr<Type> ptr = std::make_unique<Type>(...);
+      // Or for shared ownership:
+      std::shared_ptr<Type> shared_ptr = std::make_shared<Type>(...);
+
+  - id: unsafe-cast
+    message: "Unsafe C-style cast - use static_cast or dynamic_cast"
+    severity: warning
+    languages:
+      - C++
+    patterns:
+      - pattern: ($TYPE*)$EXPR
+      - pattern: ($TYPE&)$EXPR
+    metadata:
+      cwe: "CWE-704"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "unsafe-cast"
+    fix: |
+      // Use safe C++ casts:
+      static_cast<Type*>(expr);      // For related types
+      dynamic_cast<Type*>(expr);     // For polymorphic types with runtime check
+      reinterpret_cast<Type*>(expr); // Only when necessary, with caution
+
+  - id: buffer-overflow-array
+    message: "C-style array access without bounds checking"
+    severity: warning
+    languages:
+      - C++
+    patterns:
+      - pattern: $ARRAY[$INDEX]
+    metadata:
+      cwe: "CWE-125"
+      category: "security"
+      confidence: low
+      subcategory:
+        - "buffer-overflow"
+    fix: |
+      // Use std::array or std::vector with at() for bounds checking:
+      std::vector<int> vec;
+      try {
+          int value = vec.at(index);  // Throws exception on out-of-bounds
+      } catch (const std::out_of_range& e) {
+          // Handle error
+      }
+
+  - id: move-after-move
+    message: "Use of moved-from object"
+    severity: error
+    languages:
+      - C++
+    patterns:
+      - pattern: |
+          std::move($OBJ);
+          ...
+          $OBJ.$METHOD(...);
+      - pattern: |
+          $VAR = std::move($OBJ);
+          $OBJ.$FIELD = $VALUE;
+    metadata:
+      cwe: "CWE-416"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "use-after-move"
+    fix: |
+      // Don't use object after moving from it:
+      auto new_obj = std::move(old_obj);
+      // old_obj is now in moved-from state, don't use it
+      // Or reset the moved-from object:
+      old_obj = Type{};  // Reset to valid state
+
+  - id: iterator-invalidation
+    message: "Iterator may be invalidated by container modification"
+    severity: warning
+    languages:
+      - C++
+    patterns:
+      - pattern: |
+          for (auto $IT = $CONTAINER.begin(); $IT != $CONTAINER.end(); ++$IT) {
+              $CONTAINER.erase($IT);
+          }
+      - pattern: |
+          auto $IT = $CONTAINER.begin();
+          $CONTAINER.push_back($VALUE);
+          *$IT;
+    metadata:
+      cwe: "CWE-416"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "iterator-invalidation"
+    fix: |
+      // Use erase() return value or range-based operations:
+      for (auto it = container.begin(); it != container.end();) {
+          if (condition) {
+              it = container.erase(it);  // erase returns next valid iterator
+          } else {
+              ++it;
+          }
+      }
+
+  - id: exception-safety-raii
+    message: "Resource acquisition without RAII pattern"
+    severity: warning
+    languages:
+      - C++
+    patterns:
+      - pattern: |
+          $TYPE* $PTR = new $TYPE(...);
+          // ... some code that might throw
+          delete $PTR;
+    metadata:
+      cwe: "CWE-401"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "exception-safety"
+    fix: |
+      // Use RAII pattern with smart pointers or stack objects:
+      {
+          std::unique_ptr<Type> ptr = std::make_unique<Type>(...);
+          // Resource automatically cleaned up even if exception thrown
+      }
+
+  - id: unsafe-string-operations
+    message: "Unsafe string operations - prefer std::string"
+    severity: warning
+    languages:
+      - C++
+    patterns:
+      - pattern: char $ARRAY[$SIZE]
+      - pattern: strcpy($DEST, $SRC)
+      - pattern: strcat($DEST, $SRC)
+      - pattern: sprintf($BUFFER, $FORMAT, ...)
+    metadata:
+      cwe: "CWE-120"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "string-safety"
+    fix: |
+      // Use std::string for safer string operations:
+      std::string str = source;
+      str += additional;
+      // Or use string_view for non-owning string references
+
+  - id: integer-overflow-arithmetic
+    message: "Integer arithmetic without overflow checking"
+    severity: warning
+    languages:
+      - C++
+    patterns:
+      - pattern: $VAR1 + $VAR2
+      - pattern: $VAR1 * $VAR2
+      - pattern: $VAR1 << $SHIFT
+    metadata:
+      cwe: "CWE-190"
+      category: "security"
+      confidence: low
+      subcategory:
+        - "integer-overflow"
+    fix: |
+      // Use safe arithmetic libraries or check for overflow:
+      #include <limits>
+      if (a > std::numeric_limits<int>::max() - b) {
+          // Handle overflow
+      }
+      int result = a + b;
+
+  - id: thread-unsafe-static
+    message: "Non-thread-safe static initialization"
+    severity: warning
+    languages:
+      - C++
+    patterns:
+      - pattern: |
+          static $TYPE $VAR = $INIT;
+    metadata:
+      cwe: "CWE-362"
+      category: "security"
+      confidence: low
+      subcategory:
+        - "thread-safety"
+    fix: |
+      // Use std::once_flag for thread-safe initialization:
+      std::once_flag flag;
+      std::call_once(flag, [](){
+          // Initialize static data
+      });
+      // Or use std::atomic for simple cases
+
+  - id: unchecked-return-value
+    message: "Unchecked return value from function that can fail"
+    severity: warning
+    languages:
+      - C++
+    patterns:
+      - pattern: malloc($SIZE);
+      - pattern: fopen($FILE, $MODE);
+      - pattern: new($NOTHROW) $TYPE(...);
+    metadata:
+      cwe: "CWE-252"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "error-handling"
+    fix: |
+      // Always check return values:
+      void* ptr = malloc(size);
+      if (!ptr) {
+          // Handle allocation failure
+      }
+      // Or use exceptions and RAII instead of malloc
+
+  - id: virtual-destructor-missing
+    message: "Class with virtual functions should have virtual destructor"
+    severity: warning
+    languages:
+      - C++
+    patterns:
+      - pattern: |
+          class $CLASS {
+              virtual $TYPE $METHOD(...);
+              ~$CLASS();
+          };
+    metadata:
+      cwe: "CWE-1037"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "virtual-destructor"
+    fix: |
+      // Make destructor virtual in base classes:
+      class Base {
+      public:
+          virtual void method();
+          virtual ~Base() = default;  // Virtual destructor
+      };

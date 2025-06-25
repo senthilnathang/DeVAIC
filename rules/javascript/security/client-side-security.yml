@@ -1,0 +1,256 @@
+rules:
+  - id: dom-clobbering
+    message: "DOM clobbering vulnerability detected"
+    severity: warning
+    languages:
+      - Javascript
+      - TypeScript
+    patterns:
+      - pattern: document.getElementById($USER_INPUT)
+      - pattern: document.getElementsByName($USER_INPUT)
+      - pattern: document[$USER_INPUT]
+      - pattern: window[$USER_INPUT]
+    metadata:
+      cwe: "CWE-79"
+      category: "security"
+      confidence: low
+      subcategory:
+        - "dom-clobbering"
+    fix: |
+      // Use querySelector with specific selectors
+      const element = document.querySelector(`#${CSS.escape(userInput)}`);
+      // Or validate input against allowlist
+
+  - id: client-side-url-redirect
+    message: "Client-side URL redirection with user input"
+    severity: warning
+    languages:
+      - Javascript
+      - TypeScript
+    patterns:
+      - pattern: window.location = $USER_INPUT
+      - pattern: window.location.href = $USER_INPUT
+      - pattern: location.replace($USER_INPUT)
+      - pattern: document.location = $USER_INPUT
+    metadata:
+      cwe: "CWE-601"
+      owasp: "A01:2021 – Broken Access Control"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "url-redirection"
+    fix: |
+      // Validate URLs against allowlist
+      const allowedDomains = ['example.com', 'subdomain.example.com'];
+      try {
+          const url = new URL(userInput);
+          if (allowedDomains.includes(url.hostname)) {
+              window.location = userInput;
+          }
+      } catch (e) {
+          // Invalid URL
+      }
+
+  - id: postmessage-origin-wildcard
+    message: "postMessage with wildcard origin is insecure"
+    severity: error
+    languages:
+      - Javascript
+      - TypeScript
+    patterns:
+      - pattern: $TARGET.postMessage($DATA, "*")
+      - pattern: parent.postMessage($DATA, "*")
+      - pattern: window.postMessage($DATA, "*")
+    metadata:
+      cwe: "CWE-346"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "postmessage-security"
+    fix: |
+      // Always specify the target origin
+      targetWindow.postMessage(data, "https://trusted-domain.com");
+
+  - id: unsafe-message-listener
+    message: "Unsafe message event listener without origin validation"
+    severity: warning
+    languages:
+      - Javascript
+      - TypeScript
+    patterns:
+      - pattern: |
+          window.addEventListener("message", function($EVENT) {
+              eval($EVENT.data);
+          });
+      - pattern: |
+          window.addEventListener("message", ($EVENT) => {
+              document.innerHTML = $EVENT.data;
+          });
+    metadata:
+      cwe: "CWE-346"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "message-listener"
+    fix: |
+      // Validate origin and sanitize data
+      window.addEventListener("message", (event) => {
+          const allowedOrigins = ["https://trusted-domain.com"];
+          if (!allowedOrigins.includes(event.origin)) {
+              return;
+          }
+          // Process event.data safely
+      });
+
+  - id: websocket-without-origin-check
+    message: "WebSocket connection without origin validation"
+    severity: warning
+    languages:
+      - Javascript
+      - TypeScript
+    patterns:
+      - pattern: new WebSocket($URL)
+      - pattern: new WebSocket($USER_INPUT)
+    metadata:
+      cwe: "CWE-346"
+      category: "security"
+      confidence: low
+      subcategory:
+        - "websocket-security"
+    fix: |
+      // Validate WebSocket URL and implement origin checks on server
+      const allowedOrigins = ["wss://api.example.com"];
+      if (allowedOrigins.some(origin => url.startsWith(origin))) {
+          const ws = new WebSocket(url);
+      }
+
+  - id: cors-credentials-wildcard
+    message: "CORS with credentials and wildcard origin"
+    severity: error
+    languages:
+      - Javascript
+      - TypeScript
+    patterns:
+      - pattern: |
+          fetch($URL, {
+              credentials: 'include',
+              mode: 'cors'
+          })
+    metadata:
+      cwe: "CWE-346"
+      category: "security"
+      confidence: low
+      subcategory:
+        - "cors-security"
+
+  - id: unsafe-srcdoc
+    message: "Unsafe iframe srcdoc with user content"
+    severity: warning
+    languages:
+      - Javascript
+      - TypeScript
+    patterns:
+      - pattern: |
+          $IFRAME.srcdoc = $USER_INPUT
+      - pattern: |
+          `<iframe srcdoc="${$USER_INPUT}"></iframe>`
+    metadata:
+      cwe: "CWE-79"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "iframe-security"
+    fix: |
+      // Sanitize content before setting srcdoc
+      const sanitizedContent = DOMPurify.sanitize(userInput);
+      iframe.srcdoc = sanitizedContent;
+
+  - id: window-name-injection
+    message: "window.name can be controlled by attackers"
+    severity: info
+    languages:
+      - Javascript
+      - TypeScript
+    patterns:
+      - pattern: eval(window.name)
+      - pattern: Function(window.name)
+      - pattern: document.write(window.name)
+    metadata:
+      cwe: "CWE-79"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "window-name"
+    fix: |
+      // Never trust window.name - validate and sanitize
+      if (typeof window.name === 'string' && window.name.length < 100) {
+          // Process safely
+      }
+
+  - id: javascript-protocol-href
+    message: "javascript: protocol in href attribute"
+    severity: warning
+    languages:
+      - Javascript
+      - TypeScript
+    patterns:
+      - pattern: |
+          $ELEMENT.href = "javascript:" + $USER_INPUT
+      - pattern: |
+          $ELEMENT.href = `javascript:${$USER_INPUT}`
+      - pattern-regex: 'href\s*=\s*["\']javascript:'
+    metadata:
+      cwe: "CWE-79"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "javascript-protocol"
+    fix: |
+      // Avoid javascript: protocol, use event handlers instead
+      element.addEventListener('click', () => {
+          // Safe event handling
+      });
+
+  - id: unsafe-blob-url
+    message: "Unsafe blob URL creation with user content"
+    severity: warning
+    languages:
+      - Javascript
+      - TypeScript
+    patterns:
+      - pattern: URL.createObjectURL(new Blob([$USER_INPUT], {type: "text/html"}))
+      - pattern: URL.createObjectURL(new Blob([$USER_INPUT], {type: "application/javascript"}))
+    metadata:
+      cwe: "CWE-79"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "blob-url"
+    fix: |
+      // Sanitize content before creating blob URLs
+      const sanitizedContent = DOMPurify.sanitize(userInput);
+      const blob = new Blob([sanitizedContent], {type: "text/html"});
+      const url = URL.createObjectURL(blob);
+
+  - id: service-worker-injection
+    message: "Service worker registration with user-controlled URL"
+    severity: error
+    languages:
+      - Javascript
+      - TypeScript
+    patterns:
+      - pattern: navigator.serviceWorker.register($USER_INPUT)
+      - pattern: |
+          navigator.serviceWorker.register($URL + $USER_INPUT)
+    metadata:
+      cwe: "CWE-94"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "service-worker"
+    fix: |
+      // Only register service workers from trusted locations
+      const allowedWorkers = ['/sw.js', '/service-worker.js'];
+      if (allowedWorkers.includes(workerPath)) {
+          navigator.serviceWorker.register(workerPath);
+      }

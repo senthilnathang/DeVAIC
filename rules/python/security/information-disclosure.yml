@@ -1,0 +1,225 @@
+rules:
+  - id: debug-mode-enabled
+    message: "Debug mode enabled in production code"
+    severity: warning
+    languages:
+      - Python
+    patterns:
+      - pattern: DEBUG = True
+      - pattern: debug=True
+      - pattern: app.debug = True
+      - pattern: flask.run(debug=True)
+      - pattern: django.settings.DEBUG = True
+    metadata:
+      cwe: "CWE-489"
+      owasp: "A09:2021 – Security Logging and Monitoring Failures"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "debug-disclosure"
+    fix: |
+      # Use environment variables to control debug mode:
+      import os
+      DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
+
+  - id: stack-trace-exposure
+    message: "Stack trace information exposed in error handling"
+    severity: warning
+    languages:
+      - Python
+    patterns:
+      - pattern: |
+          try:
+              ...
+          except $EXCEPTION:
+              print($TRACEBACK)
+      - pattern: traceback.print_exc()
+      - pattern: traceback.format_exc()
+      - pattern: sys.exc_info()
+    metadata:
+      cwe: "CWE-209"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "error-disclosure"
+    fix: |
+      # Log errors securely instead of exposing stack traces:
+      import logging
+      try:
+          # risky operation
+          pass
+      except Exception as e:
+          logging.error(f"Operation failed: {str(e)}")
+          # Return generic error message to user
+
+  - id: sensitive-info-logging
+    message: "Potentially sensitive information in log statements"
+    severity: warning
+    languages:
+      - Python
+    patterns:
+      - pattern-regex: 'log.*(?i)(password|passwd|pwd|secret|token|key|credential)'
+      - pattern-regex: 'print.*(?i)(password|passwd|pwd|secret|token|key|credential)'
+      - pattern-regex: 'logger.*(?i)(password|passwd|pwd|secret|token|key|credential)'
+    metadata:
+      cwe: "CWE-532"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "sensitive-logging"
+    fix: |
+      # Sanitize sensitive data before logging:
+      password_masked = "*" * len(password)
+      logging.info(f"User login attempt with password: {password_masked}")
+
+  - id: server-info-disclosure
+    message: "Server information disclosure in HTTP headers"
+    severity: warning
+    languages:
+      - Python
+    patterns:
+      - pattern: |
+          $RESPONSE.headers['Server'] = $INFO
+      - pattern: |
+          $RESPONSE.headers['X-Powered-By'] = $INFO
+      - pattern: |
+          response.headers['Server'] = $INFO
+    metadata:
+      cwe: "CWE-200"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "server-disclosure"
+
+  - id: version-disclosure
+    message: "Application version information exposed"
+    severity: info
+    languages:
+      - Python
+    patterns:
+      - pattern-regex: '(?i)(version|ver)\s*[=:]\s*["\'][0-9]+\.[0-9]+.*["\']'
+      - pattern: __version__ = $VERSION
+    metadata:
+      cwe: "CWE-200"
+      category: "security"
+      confidence: low
+      subcategory:
+        - "version-disclosure"
+
+  - id: directory-listing-enabled
+    message: "Directory listing may be enabled"
+    severity: warning
+    languages:
+      - Python
+    patterns:
+      - pattern: autoindex = True
+      - pattern: directory_listing = True
+      - pattern: serve_directory = True
+    metadata:
+      cwe: "CWE-548"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "directory-listing"
+
+  - id: verbose-error-messages
+    message: "Verbose error messages may leak sensitive information"
+    severity: warning
+    languages:
+      - Python
+    patterns:
+      - pattern: |
+          except $EXCEPTION as $E:
+              return f"Error: {$E}"
+      - pattern: |
+          except $EXCEPTION as $E:
+              print(f"Error: {$E}")
+      - pattern: |
+          except $EXCEPTION as $E:
+              raise Exception(f"Database error: {$E}")
+    metadata:
+      cwe: "CWE-209"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "error-disclosure"
+
+  - id: comment-todo-fixme
+    message: "TODO/FIXME comments may contain sensitive information"
+    severity: info
+    languages:
+      - Python
+    pattern-regex: '(?i)#.*(?:todo|fixme|hack|temp|temporary).*(?:password|secret|key|token|credential)'
+    metadata:
+      cwe: "CWE-540"
+      category: "security"
+      confidence: low
+      subcategory:
+        - "comment-disclosure"
+
+  - id: print-sensitive-data
+    message: "Printing potentially sensitive data to console"
+    severity: warning
+    languages:
+      - Python
+    patterns:
+      - pattern: print($PASSWORD)
+      - pattern: print($TOKEN)
+      - pattern: print($SECRET)
+      - pattern: print($API_KEY)
+      - pattern: print($CREDENTIALS)
+    metadata:
+      cwe: "CWE-532"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "console-disclosure"
+
+  - id: sql-error-disclosure
+    message: "SQL error messages may expose database schema"
+    severity: warning
+    languages:
+      - Python
+    patterns:
+      - pattern: |
+          except $SQL_EXCEPTION:
+              return str($SQL_EXCEPTION)
+      - pattern: |
+          except $SQL_EXCEPTION:
+              print($SQL_EXCEPTION)
+    metadata:
+      cwe: "CWE-209"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "sql-error-disclosure"
+
+  - id: backup-files-accessible
+    message: "Backup files may be accessible"
+    severity: warning
+    languages:
+      - Python
+    pattern-regex: '(?i)\.(?:bak|backup|old|orig|save|tmp|temp)$'
+    metadata:
+      cwe: "CWE-200"
+      category: "security"
+      confidence: low
+      subcategory:
+        - "backup-disclosure"
+
+  - id: config-file-exposure
+    message: "Configuration file with sensitive data may be exposed"
+    severity: warning
+    languages:
+      - Python
+    patterns:
+      - pattern-regex: '(?i)\.(?:env|config|cfg|ini|properties)$'
+      - pattern: open(".env")
+      - pattern: open("config.ini")
+      - pattern: configparser.read($CONFIG_FILE)
+    metadata:
+      cwe: "CWE-200"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "config-disclosure"

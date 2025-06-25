@@ -1,0 +1,277 @@
+rules:
+  - id: jwt-none-algorithm
+    message: "JWT 'none' algorithm allows token forgery"
+    severity: error
+    languages:
+      - Python
+    patterns:
+      - pattern: jwt.decode($TOKEN, verify=False)
+      - pattern: jwt.decode($TOKEN, options={"verify_signature": False})
+      - pattern: jwt.encode($PAYLOAD, algorithm="none")
+      - pattern: jwt.decode($TOKEN, algorithms=["none"])
+    metadata:
+      cwe: "CWE-347"
+      owasp: "A07:2021 – Identification and Authentication Failures"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "jwt-vulnerability"
+    fix: |
+      # Always verify JWT signatures:
+      import jwt
+      decoded = jwt.decode(token, secret_key, algorithms=["HS256"])
+      # Never use 'none' algorithm in production
+
+  - id: weak-session-config
+    message: "Weak session configuration detected"
+    severity: warning
+    languages:
+      - Python
+    patterns:
+      - pattern: SESSION_COOKIE_SECURE = False
+      - pattern: SESSION_COOKIE_HTTPONLY = False
+      - pattern: SESSION_COOKIE_SAMESITE = None
+      - pattern: app.config['SESSION_COOKIE_SECURE'] = False
+      - pattern: session.permanent = False
+    metadata:
+      cwe: "CWE-614"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "session-security"
+    fix: |
+      # Configure secure session settings:
+      app.config['SESSION_COOKIE_SECURE'] = True
+      app.config['SESSION_COOKIE_HTTPONLY'] = True
+      app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+
+  - id: missing-csrf-protection
+    message: "CSRF protection may be missing"
+    severity: warning
+    languages:
+      - Python
+    patterns:
+      - pattern: @app.route($PATH, methods=["POST"])
+      - pattern: @app.route($PATH, methods=["PUT"])
+      - pattern: @app.route($PATH, methods=["DELETE"])
+    metadata:
+      cwe: "CWE-352"
+      owasp: "A01:2021 – Broken Access Control"
+      category: "security"
+      confidence: low
+      subcategory:
+        - "csrf"
+    fix: |
+      # Implement CSRF protection:
+      from flask_wtf.csrf import CSRFProtect
+      csrf = CSRFProtect(app)
+      # Or use framework-specific CSRF protection
+
+  - id: insecure-authentication-bypass
+    message: "Authentication bypass vulnerability"
+    severity: error
+    languages:
+      - Python
+    patterns:
+      - pattern: |
+          if $PASSWORD == $STORED_PASSWORD:
+              return True
+      - pattern: |
+          if $USER_INPUT in $ADMIN_USERS:
+              return True
+      - pattern: |
+          if $TOKEN == "admin":
+              return True
+    metadata:
+      cwe: "CWE-287"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "auth-bypass"
+    fix: |
+      # Use secure password comparison:
+      import bcrypt
+      if bcrypt.checkpw(password.encode(), stored_hash):
+          return True
+
+  - id: weak-password-requirements
+    message: "Weak password requirements detected"
+    severity: warning
+    languages:
+      - Python
+    patterns:
+      - pattern-regex: 'len\([^)]*password[^)]*\)\s*[<>=!]+\s*[1-7]'
+      - pattern: |
+          if len($PASSWORD) < 8:
+              return False
+    metadata:
+      cwe: "CWE-521"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "weak-password"
+    fix: |
+      # Implement strong password requirements:
+      import re
+      def validate_password(password):
+          if len(password) < 12:
+              return False
+          if not re.search(r'[A-Z]', password):
+              return False
+          if not re.search(r'[a-z]', password):
+              return False
+          if not re.search(r'[0-9]', password):
+              return False
+          if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
+              return False
+          return True
+
+  - id: hardcoded-admin-credentials
+    message: "Hardcoded administrator credentials detected"
+    severity: error
+    languages:
+      - Python
+    patterns:
+      - pattern: |
+          if $USERNAME == "admin" and $PASSWORD == $HARDCODED_PASS:
+              return True
+      - pattern-regex: '(?i)(admin|administrator|root)\s*[=:]\s*["\'][^"\']{4,}["\']'
+      - pattern: ADMIN_PASSWORD = $HARDCODED_PASS
+    metadata:
+      cwe: "CWE-798"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "hardcoded-admin"
+    fix: |
+      # Use environment variables for admin credentials:
+      import os
+      admin_password_hash = os.getenv('ADMIN_PASSWORD_HASH')
+      if bcrypt.checkpw(password.encode(), admin_password_hash.encode()):
+          return True
+
+  - id: privilege-escalation
+    message: "Potential privilege escalation vulnerability"
+    severity: error
+    languages:
+      - Python
+    patterns:
+      - pattern: |
+          if $USER.is_admin:
+              $USER.role = "admin"
+      - pattern: |
+          $USER.permissions = "all"
+      - pattern: setuid($UID)
+      - pattern: setgid($GID)
+    metadata:
+      cwe: "CWE-269"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "privilege-escalation"
+
+  - id: insecure-direct-object-reference
+    message: "Insecure direct object reference detected"
+    severity: warning
+    languages:
+      - Python
+    patterns:
+      - pattern: |
+          $OBJECT = Model.objects.get(id=$USER_INPUT)
+      - pattern: |
+          open(f"/files/{$USER_INPUT}")
+      - pattern: |
+          os.path.join($BASE_PATH, $USER_INPUT)
+    metadata:
+      cwe: "CWE-639"
+      owasp: "A01:2021 – Broken Access Control"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "idor"
+    fix: |
+      # Implement proper access control:
+      obj = Model.objects.get(id=user_input, owner=current_user)
+      # Or validate user permissions before access
+
+  - id: missing-rate-limiting
+    message: "Missing rate limiting on sensitive endpoints"
+    severity: warning
+    languages:
+      - Python
+    patterns:
+      - pattern: |
+          @app.route("/login", methods=["POST"])
+          def login():
+              ...
+      - pattern: |
+          @app.route("/api/login", methods=["POST"])
+          def api_login():
+              ...
+      - pattern: |
+          @app.route("/reset-password", methods=["POST"])
+          def reset_password():
+              ...
+    metadata:
+      cwe: "CWE-307"
+      category: "security"
+      confidence: low
+      subcategory:
+        - "rate-limiting"
+    fix: |
+      # Implement rate limiting:
+      from flask_limiter import Limiter
+      limiter = Limiter(app, key_func=get_remote_address)
+      
+      @app.route("/login", methods=["POST"])
+      @limiter.limit("5 per minute")
+      def login():
+          pass
+
+  - id: session-fixation
+    message: "Session fixation vulnerability"
+    severity: warning
+    languages:
+      - Python
+    patterns:
+      - pattern: |
+          session[$KEY] = $VALUE
+          # Missing session regeneration after login
+      - pattern: |
+          login_user($USER)
+          # Missing session regeneration
+    metadata:
+      cwe: "CWE-384"
+      category: "security"
+      confidence: low
+      subcategory:
+        - "session-fixation"
+    fix: |
+      # Regenerate session after authentication:
+      from flask import session
+      session.regenerate()  # Framework-specific implementation
+      login_user(user)
+
+  - id: timing-attack-password
+    message: "Password comparison vulnerable to timing attacks"
+    severity: warning
+    languages:
+      - Python
+    patterns:
+      - pattern: |
+          if $PASSWORD == $STORED_PASSWORD:
+              return True
+      - pattern: |
+          if $TOKEN == $EXPECTED_TOKEN:
+              return True
+    metadata:
+      cwe: "CWE-208"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "timing-attack"
+    fix: |
+      # Use constant-time comparison:
+      import secrets
+      if secrets.compare_digest(password, stored_password):
+          return True

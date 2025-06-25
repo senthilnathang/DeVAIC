@@ -1,0 +1,164 @@
+rules:
+  - id: sql-injection-concatenation
+    message: "SQL injection vulnerability: string concatenation in SQL query"
+    severity: error
+    languages:
+      - Java
+    patterns:
+      - pattern: |
+          $STMT.executeQuery("SELECT * FROM users WHERE id = " + $USER_INPUT)
+      - pattern: |
+          $STMT.executeUpdate("UPDATE users SET name = '" + $USER_INPUT + "'")
+      - pattern: |
+          $CONN.createStatement().execute("..." + $USER_INPUT + "...")
+      - pattern: |
+          String $SQL = "SELECT * FROM table WHERE column = " + $USER_INPUT;
+    metadata:
+      cwe: "CWE-89"
+      owasp: "A03:2021 – Injection"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "sql-injection"
+    fix: |
+      // Use PreparedStatement with parameterized queries:
+      String sql = "SELECT * FROM users WHERE id = ?";
+      PreparedStatement pstmt = connection.prepareStatement(sql);
+      pstmt.setInt(1, userId);
+      ResultSet rs = pstmt.executeQuery();
+
+  - id: sql-injection-format
+    message: "SQL injection vulnerability: String.format() in SQL query"
+    severity: error
+    languages:
+      - Java
+    patterns:
+      - pattern: |
+          String.format("SELECT * FROM users WHERE id = %s", $USER_INPUT)
+      - pattern: |
+          $STMT.executeQuery(String.format("...", $USER_INPUT))
+    metadata:
+      cwe: "CWE-89"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "sql-injection"
+
+  - id: command-injection-runtime
+    message: "Command injection vulnerability: Runtime.exec() with user input"
+    severity: error
+    languages:
+      - Java
+    patterns:
+      - pattern: Runtime.getRuntime().exec($USER_INPUT)
+      - pattern: Runtime.getRuntime().exec($CMD + $USER_INPUT)
+      - pattern: Runtime.getRuntime().exec(new String[]{$CMD, $USER_INPUT})
+    metadata:
+      cwe: "CWE-78"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "command-injection"
+    fix: |
+      // Use ProcessBuilder with argument separation:
+      ProcessBuilder pb = new ProcessBuilder("command", userInput);
+      pb.directory(new File("/safe/directory"));
+      Process process = pb.start();
+
+  - id: command-injection-processbuilder
+    message: "Command injection: ProcessBuilder with concatenated user input"
+    severity: error
+    languages:
+      - Java
+    patterns:
+      - pattern: |
+          new ProcessBuilder($CMD + $USER_INPUT)
+      - pattern: |
+          new ProcessBuilder("sh", "-c", $USER_INPUT)
+      - pattern: |
+          new ProcessBuilder("cmd", "/c", $USER_INPUT)
+    metadata:
+      cwe: "CWE-78"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "command-injection"
+
+  - id: ldap-injection
+    message: "LDAP injection vulnerability detected"
+    severity: error
+    languages:
+      - Java
+    patterns:
+      - pattern: |
+          $CTX.search("", "(&(objectClass=user)(cn=" + $USER_INPUT + "))", ...)
+      - pattern: |
+          new SearchControls().setFilter("..." + $USER_INPUT + "...")
+    metadata:
+      cwe: "CWE-90"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "ldap-injection"
+    fix: |
+      // Use parameterized LDAP queries or escape special characters
+      String escapedInput = escapeForLDAP(userInput);
+      String filter = "(&(objectClass=user)(cn=" + escapedInput + "))";
+
+  - id: xpath-injection
+    message: "XPath injection vulnerability detected"
+    severity: error
+    languages:
+      - Java
+    patterns:
+      - pattern: |
+          $XPATH.evaluate("//user[@name='" + $USER_INPUT + "']", ...)
+      - pattern: |
+          $XPATH.compile("//user[@id=" + $USER_INPUT + "]")
+    metadata:
+      cwe: "CWE-643"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "xpath-injection"
+
+  - id: script-injection
+    message: "Script injection through ScriptEngine"
+    severity: error
+    languages:
+      - Java
+    patterns:
+      - pattern: |
+          $ENGINE.eval($USER_INPUT)
+      - pattern: |
+          new ScriptEngineManager().getEngineByName("javascript").eval($USER_INPUT)
+    metadata:
+      cwe: "CWE-94"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "script-injection"
+    fix: |
+      // Avoid evaluating user input as script
+      // Use safe alternatives or validate input strictly
+
+  - id: nosql-injection-mongodb
+    message: "NoSQL injection vulnerability in MongoDB query"
+    severity: error
+    languages:
+      - Java
+    patterns:
+      - pattern: |
+          $COLLECTION.find("{\"username\": \"" + $USER_INPUT + "\"}")
+      - pattern: |
+          BasicDBObject query = new BasicDBObject("field", $USER_INPUT);
+    metadata:
+      cwe: "CWE-943"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "nosql-injection"
+    fix: |
+      // Use parameterized queries for MongoDB:
+      BasicDBObject query = new BasicDBObject("username", username);
+      // Or use MongoDB driver's built-in sanitization

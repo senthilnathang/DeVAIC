@@ -1,0 +1,289 @@
+rules:
+  - id: any-type-usage
+    message: "Use of 'any' type bypasses TypeScript type checking"
+    severity: warning
+    languages:
+      - TypeScript
+    patterns:
+      - pattern: |
+          $VAR: any
+      - pattern: |
+          function $FUNC(...): any
+      - pattern: |
+          ($PARAM: any)
+    metadata:
+      cwe: "CWE-704"
+      owasp: "A06:2021 – Vulnerable and Outdated Components"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "type-safety"
+    fix: |
+      // Use specific types instead of 'any':
+      interface UserData {
+          id: number;
+          name: string;
+      }
+      const user: UserData = fetchUser();
+      // Or use union types for multiple possibilities:
+      const value: string | number = getValue();
+
+  - id: unsafe-type-assertion
+    message: "Unsafe type assertion without runtime validation"
+    severity: warning
+    languages:
+      - TypeScript
+    patterns:
+      - pattern: $EXPR as $TYPE
+      - pattern: <$TYPE>$EXPR
+    metadata:
+      cwe: "CWE-704"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "type-assertion"
+    fix: |
+      // Use type guards for runtime validation:
+      function isUserData(obj: unknown): obj is UserData {
+          return typeof obj === 'object' && 
+                 obj !== null && 
+                 'id' in obj && 
+                 'name' in obj;
+      }
+      
+      if (isUserData(data)) {
+          // data is safely typed as UserData
+      }
+
+  - id: non-null-assertion-unsafe
+    message: "Non-null assertion without proper validation"
+    severity: warning
+    languages:
+      - TypeScript
+    patterns:
+      - pattern: $EXPR!
+      - pattern: $VAR!.$PROPERTY
+      - pattern: $ARRAY![$INDEX]
+    metadata:
+      cwe: "CWE-476"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "null-assertion"
+    fix: |
+      // Use optional chaining and nullish coalescing:
+      const value = obj?.property ?? defaultValue;
+      // Or proper null checking:
+      if (obj && obj.property) {
+          // Safe to use obj.property
+      }
+
+  - id: prototype-pollution-object-spread
+    message: "Object spread with unvalidated input can lead to prototype pollution"
+    severity: warning
+    languages:
+      - TypeScript
+    patterns:
+      - pattern: |
+          {...$USER_INPUT}
+      - pattern: |
+          Object.assign($TARGET, $USER_INPUT)
+    metadata:
+      cwe: "CWE-1321"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "prototype-pollution"
+    fix: |
+      // Validate input before spreading:
+      const safeKeys = ['name', 'email', 'age'] as const;
+      const safeData = Object.fromEntries(
+          Object.entries(userInput).filter(([key]) => 
+              safeKeys.includes(key as any)
+          )
+      );
+      const result = { ...target, ...safeData };
+
+  - id: weak-typing-external-data
+    message: "External data typed without runtime validation"
+    severity: warning
+    languages:
+      - TypeScript
+    patterns:
+      - pattern: |
+          const $VAR: $TYPE = JSON.parse($INPUT);
+      - pattern: |
+          const $VAR: $TYPE = await fetch($URL).then(r => r.json());
+    metadata:
+      cwe: "CWE-20"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "data-validation"
+    fix: |
+      // Use runtime validation libraries:
+      import { z } from 'zod';
+      
+      const UserSchema = z.object({
+          id: z.number(),
+          name: z.string(),
+          email: z.string().email()
+      });
+      
+      const data = JSON.parse(input);
+      const validatedUser = UserSchema.parse(data); // Throws if invalid
+
+  - id: unsafe-property-access
+    message: "Unsafe property access on potentially undefined object"
+    severity: warning
+    languages:
+      - TypeScript
+    patterns:
+      - pattern: $OBJ[$DYNAMIC_KEY]
+      - pattern: $OBJ[($EXPR)]
+    metadata:
+      cwe: "CWE-476"
+      category: "security"
+      confidence: low
+      subcategory:
+        - "property-access"
+    fix: |
+      // Use safe property access:
+      const value = obj?.[dynamicKey];
+      // Or with type checking:
+      if (typeof dynamicKey === 'string' && dynamicKey in obj) {
+          const value = obj[dynamicKey];
+      }
+
+  - id: generic-constraint-bypass
+    message: "Generic constraint that may be bypassed"
+    severity: info
+    languages:
+      - TypeScript
+    patterns:
+      - pattern: |
+          function $FUNC<T>($PARAM: T): T
+      - pattern: |
+          interface $INTERFACE<T> { ... }
+    metadata:
+      cwe: "CWE-704"
+      category: "security"
+      confidence: low
+      subcategory:
+        - "generic-safety"
+    fix: |
+      // Use proper generic constraints:
+      function processUser<T extends UserBase>(user: T): T {
+          // T is constrained to UserBase properties
+          return user;
+      }
+
+  - id: index-signature-permissive
+    message: "Permissive index signature allows arbitrary properties"
+    severity: info
+    languages:
+      - TypeScript
+    patterns:
+      - pattern: |
+          interface $INTERFACE {
+              [key: string]: any;
+          }
+      - pattern: |
+          type $TYPE = {
+              [key: string]: unknown;
+          }
+    metadata:
+      cwe: "CWE-20"
+      category: "security"
+      confidence: low
+      subcategory:
+        - "index-signature"
+    fix: |
+      // Use more specific index signatures:
+      interface Config {
+          [key: string]: string | number | boolean;
+      }
+      // Or use mapped types for better type safety:
+      type StrictConfig = {
+          readonly [K in keyof ConfigKeys]: ConfigValue;
+      }
+
+  - id: function-parameter-any
+    message: "Function parameter typed as 'any' reduces type safety"
+    severity: warning
+    languages:
+      - TypeScript
+    patterns:
+      - pattern: |
+          function $FUNC($PARAM: any, ...)
+      - pattern: |
+          ($PARAM: any) => ...
+    metadata:
+      cwe: "CWE-704"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "parameter-typing"
+    fix: |
+      // Use specific parameter types:
+      function processData(data: UserData): ProcessedData {
+          // Type-safe processing
+      }
+      // Or use generic constraints:
+      function process<T extends Processable>(data: T): T {
+          return data;
+      }
+
+  - id: external-module-declaration
+    message: "Ambient module declaration without type safety"
+    severity: info
+    languages:
+      - TypeScript
+    patterns:
+      - pattern: |
+          declare module "$MODULE_NAME" {
+              const $VAR: any;
+          }
+    metadata:
+      cwe: "CWE-704"
+      category: "security"
+      confidence: low
+      subcategory:
+        - "module-declaration"
+    fix: |
+      // Provide proper type declarations:
+      declare module "unsafe-module" {
+          export interface ModuleAPI {
+              method(param: string): Promise<Result>;
+          }
+          const api: ModuleAPI;
+          export default api;
+      }
+
+  - id: unsafe-json-parse
+    message: "JSON.parse without type validation"
+    severity: warning
+    languages:
+      - TypeScript
+    patterns:
+      - pattern: JSON.parse($INPUT)
+      - pattern: JSON.parse($INPUT) as $TYPE
+    metadata:
+      cwe: "CWE-20"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "json-parsing"
+    fix: |
+      // Use safe JSON parsing with validation:
+      function safeJsonParse<T>(
+          input: string, 
+          validator: (obj: unknown) => obj is T
+      ): T | null {
+          try {
+              const parsed = JSON.parse(input);
+              return validator(parsed) ? parsed : null;
+          } catch {
+              return null;
+          }
+      }

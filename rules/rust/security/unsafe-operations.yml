@@ -1,0 +1,292 @@
+rules:
+  - id: unsafe-block-usage
+    message: "Unsafe block detected - ensure memory safety guarantees"
+    severity: warning
+    languages:
+      - Rust
+    pattern: |
+      unsafe {
+          ...
+      }
+    metadata:
+      cwe: "CWE-119"
+      owasp: "A06:2021 – Vulnerable and Outdated Components"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "unsafe-operations"
+    fix: |
+      // Minimize unsafe blocks and document safety invariants:
+      // SAFETY: This is safe because...
+      unsafe {
+          // Keep unsafe operations minimal
+      }
+      // Consider safe alternatives when possible
+
+  - id: raw-pointer-dereference
+    message: "Raw pointer dereference in unsafe block"
+    severity: error
+    languages:
+      - Rust
+    patterns:
+      - pattern: |
+          unsafe {
+              *$PTR
+          }
+      - pattern: |
+          unsafe {
+              (*$PTR).$FIELD
+          }
+    metadata:
+      cwe: "CWE-476"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "null-pointer"
+    fix: |
+      // Validate pointer before dereferencing:
+      unsafe {
+          if !ptr.is_null() {
+              *ptr
+          }
+      }
+      // Or use safe abstractions like Box, Rc, Arc
+
+  - id: transmute-usage
+    message: "mem::transmute can cause undefined behavior"
+    severity: error
+    languages:
+      - Rust
+    patterns:
+      - pattern: std::mem::transmute($VALUE)
+      - pattern: mem::transmute($VALUE)
+      - pattern: transmute($VALUE)
+    metadata:
+      cwe: "CWE-704"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "unsafe-transmute"
+    fix: |
+      // Use safer alternatives:
+      // For type punning:
+      let bytes: [u8; 4] = value.to_ne_bytes();
+      // For casting:
+      let ptr = value as *const T;
+      // Only use transmute when absolutely necessary with proper safety comments
+
+  - id: uninitialized-memory
+    message: "Use of uninitialized memory"
+    severity: error
+    languages:
+      - Rust
+    patterns:
+      - pattern: std::mem::uninitialized()
+      - pattern: mem::uninitialized()
+      - pattern: MaybeUninit::uninit().assume_init()
+    metadata:
+      cwe: "CWE-457"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "uninitialized-memory"
+    fix: |
+      // Use MaybeUninit properly:
+      let mut uninit = MaybeUninit::<T>::uninit();
+      // Initialize the memory
+      uninit.write(value);
+      let init = unsafe { uninit.assume_init() };
+      // Or use safe initialization methods
+
+  - id: buffer-overflow-slice
+    message: "Potential buffer overflow with slice indexing"
+    severity: warning
+    languages:
+      - Rust
+    patterns:
+      - pattern: $SLICE[$INDEX]
+      - pattern: $ARRAY[$INDEX]
+    metadata:
+      cwe: "CWE-125"
+      category: "security"
+      confidence: low
+      subcategory:
+        - "buffer-overflow"
+    fix: |
+      // Use safe indexing methods:
+      if let Some(value) = slice.get(index) {
+          // Handle value
+      }
+      // Or use checked indexing:
+      match slice.get(index) {
+          Some(value) => // use value,
+          None => // handle out of bounds,
+      }
+
+  - id: integer-overflow-arithmetic
+    message: "Integer arithmetic without overflow checking"
+    severity: warning
+    languages:
+      - Rust
+    patterns:
+      - pattern: $VAR1 + $VAR2
+      - pattern: $VAR1 * $VAR2
+      - pattern: $VAR1 - $VAR2
+      - pattern: $VAR1 << $SHIFT
+    metadata:
+      cwe: "CWE-190"
+      category: "security"
+      confidence: low
+      subcategory:
+        - "integer-overflow"
+    fix: |
+      // Use checked arithmetic:
+      match a.checked_add(b) {
+          Some(result) => result,
+          None => return Err("Overflow occurred"),
+      }
+      // Or use saturating arithmetic:
+      let result = a.saturating_add(b);
+      // Or wrapping arithmetic if overflow is expected:
+      let result = a.wrapping_add(b);
+
+  - id: unsafe-from-raw-parts
+    message: "slice::from_raw_parts can cause undefined behavior"
+    severity: error
+    languages:
+      - Rust
+    patterns:
+      - pattern: slice::from_raw_parts($PTR, $LEN)
+      - pattern: slice::from_raw_parts_mut($PTR, $LEN)
+      - pattern: std::slice::from_raw_parts($PTR, $LEN)
+    metadata:
+      cwe: "CWE-119"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "unsafe-slice"
+    fix: |
+      // Ensure safety invariants:
+      // SAFETY: ptr is valid for len elements, properly aligned, and won't be freed
+      unsafe {
+          if !ptr.is_null() && len > 0 {
+              slice::from_raw_parts(ptr, len)
+          } else {
+              &[]
+          }
+      }
+
+  - id: use-after-free-potential
+    message: "Potential use-after-free with raw pointers"
+    severity: error
+    languages:
+      - Rust
+    patterns:
+      - pattern: |
+          let $PTR = Box::into_raw($BOX);
+          ...
+          drop($BOX);
+          ...
+          unsafe { *$PTR }
+    metadata:
+      cwe: "CWE-416"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "use-after-free"
+    fix: |
+      // Use Box::from_raw to reclaim ownership:
+      let ptr = Box::into_raw(box_value);
+      // Use ptr...
+      let _box_back = unsafe { Box::from_raw(ptr) }; // Automatic cleanup
+
+  - id: data-race-static-mut
+    message: "Static mutable variable can cause data races"
+    severity: error
+    languages:
+      - Rust
+    pattern: |
+      static mut $VAR: $TYPE = $INIT;
+    metadata:
+      cwe: "CWE-362"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "data-race"
+    fix: |
+      // Use safe alternatives:
+      use std::sync::{Mutex, RwLock};
+      use std::sync::atomic::{AtomicUsize, Ordering};
+      
+      static COUNTER: AtomicUsize = AtomicUsize::new(0);
+      // Or use lazy_static/once_cell for complex initialization
+
+  - id: format-string-user-input
+    message: "Format string with user input can be dangerous"
+    severity: warning
+    languages:
+      - Rust
+    patterns:
+      - pattern: format!($USER_INPUT)
+      - pattern: println!($USER_INPUT)
+      - pattern: eprintln!($USER_INPUT)
+    metadata:
+      cwe: "CWE-134"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "format-string"
+    fix: |
+      // Use format string literals:
+      println!("{}", user_input);
+      // Never use user input directly as format string
+
+  - id: unsafe-send-sync
+    message: "Manual implementation of Send/Sync traits"
+    severity: warning
+    languages:
+      - Rust
+    patterns:
+      - pattern: |
+          unsafe impl Send for $TYPE {}
+      - pattern: |
+          unsafe impl Sync for $TYPE {}
+    metadata:
+      cwe: "CWE-362"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "thread-safety"
+    fix: |
+      // Ensure thread safety guarantees are met:
+      // Document why the type is safe to Send/Sync
+      // Consider using standard thread-safe types instead
+
+  - id: panic-in-drop
+    message: "Panic in Drop implementation can cause undefined behavior"
+    severity: warning
+    languages:
+      - Rust
+    patterns:
+      - pattern: |
+          impl Drop for $TYPE {
+              fn drop(&mut self) {
+                  panic!($MSG);
+              }
+          }
+    metadata:
+      cwe: "CWE-248"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "panic-safety"
+    fix: |
+      // Never panic in drop implementations:
+      impl Drop for MyType {
+          fn drop(&mut self) {
+              if let Err(e) = self.cleanup() {
+                  eprintln!("Cleanup failed: {}", e);
+                  // Log error but don't panic
+              }
+          }
+      }
