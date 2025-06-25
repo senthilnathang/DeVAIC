@@ -24,4 +24,22 @@ pub enum DevaicError {
     
     #[error("JSON serialization error: {0}")]
     Json(#[from] serde_json::Error),
+    
+    #[error("Excel export error: {0}")]
+    Excel(String),
+    
+    #[error("PDF export error: {0}")]
+    Pdf(String),
+}
+
+impl From<rust_xlsxwriter::XlsxError> for DevaicError {
+    fn from(err: rust_xlsxwriter::XlsxError) -> Self {
+        DevaicError::Excel(err.to_string())
+    }
+}
+
+impl From<printpdf::Error> for DevaicError {
+    fn from(err: printpdf::Error) -> Self {
+        DevaicError::Pdf(err.to_string())
+    }
 }

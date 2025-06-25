@@ -58,6 +58,8 @@ enum OutputFormat {
     Table,
     Json,
     Sarif,
+    Excel,
+    Pdf,
 }
 
 fn main() -> Result<()> {
@@ -125,12 +127,42 @@ fn main() -> Result<()> {
         OutputFormat::Table => report.to_table(config.output.colors),
         OutputFormat::Json => report.to_json()?,
         OutputFormat::Sarif => report.to_sarif()?,
+        OutputFormat::Excel => {
+            if let Some(output_path) = &cli.output {
+                report.to_excel(output_path)?;
+                format!("Excel report written to: {}", output_path.display())
+            } else {
+                return Err(devaic::DevaicError::Config(
+                    "Excel format requires --output parameter".to_string()
+                ).into());
+            }
+        }
+        OutputFormat::Pdf => {
+            if let Some(output_path) = &cli.output {
+                report.to_pdf(output_path)?;
+                format!("PDF report written to: {}", output_path.display())
+            } else {
+                return Err(devaic::DevaicError::Config(
+                    "PDF format requires --output parameter".to_string()
+                ).into());
+            }
+        }
     };
 
     if let Some(output_path) = &cli.output {
-        std::fs::write(output_path, &output_content)?;
-        if cli.verbose {
-            println!("Report written to: {}", output_path.display());
+        match cli.format {
+            OutputFormat::Excel | OutputFormat::Pdf => {
+                // Already handled above, just print the output content
+                if cli.verbose {
+                    println!("{}", output_content);
+                }
+            }
+            _ => {
+                std::fs::write(output_path, &output_content)?;
+                if cli.verbose {
+                    println!("Report written to: {}", output_path.display());
+                }
+            }
         }
     } else {
         println!("{}", output_content);
