@@ -11,7 +11,7 @@ DeVAIC provides comprehensive security analysis specifically designed for indust
 - **Advanced Pattern Matching**: Integrated Semgrep engine for sophisticated vulnerability detection
 - **AST-based Analysis**: Abstract Syntax Tree parsing for deep code understanding
 - **LLM Security**: Specialized rules for AI/ML application security (OWASP LLM Top 10)
-- **Multiple Output Formats**: Table, JSON, and SARIF formats
+- **Multiple Output Formats**: Table, JSON, SARIF, PDF, and Excel formats
 - **Configurable Rules**: Customizable severity thresholds and rule categories
 - **Fast Analysis**: Built with Rust for high performance
 - **Industrial Focus**: Specialized rules for SCADA and embedded systems security
@@ -140,8 +140,8 @@ Arguments:
   <PATH>  Target directory or file to analyze
 
 Options:
-  -f, --format <FORMAT>           Output format [default: table] [possible values: table, json, sarif]
-  -o, --output <OUTPUT>           Output file (if not specified, prints to stdout)
+  -f, --format <FORMAT>           Output format [default: table] [possible values: table, json, sarif, pdf, excel]
+  -o, --output <OUTPUT>           Output file (if not specified, prints to stdout; required for pdf and excel formats)
   -c, --config <CONFIG>           Configuration file path
   -s, --severity <SEVERITY>       Severity threshold [default: low]
   -v, --verbose                   Enable verbose output
@@ -210,6 +210,34 @@ Static Analysis Results Interchange Format for integration with IDEs and CI/CD:
 devaic --format sarif --output report.sarif path/to/project/
 ```
 
+### PDF Format
+Formatted PDF report with comprehensive vulnerability analysis:
+
+```bash
+devaic --format pdf --output security-report.pdf path/to/project/
+```
+
+Features:
+- Professional formatted report with title and summary
+- Vulnerability breakdown by severity with visual indicators
+- Detailed list of all detected vulnerabilities
+- Automatic page breaks for long reports
+- File path and line number references
+
+### Excel Format
+Comprehensive Excel workbook with detailed analysis:
+
+```bash
+devaic --format excel --output security-analysis.xlsx path/to/project/
+```
+
+Features:
+- **Summary Sheet**: Analysis metrics, severity breakdown, and overview statistics
+- **Vulnerabilities Sheet**: Detailed vulnerability data with filtering capabilities
+- Color-coded severity indicators for easy identification
+- Auto-fitted columns and professional formatting
+- Suitable for sharing with stakeholders and management
+
 ## CI/CD Integration
 
 DeVAIC exits with status code 1 if critical or high severity vulnerabilities are found, making it suitable for CI/CD pipelines:
@@ -248,6 +276,18 @@ devaic --format table --severity medium ./embedded-project/
 
 ```bash
 devaic --format json --categories "injection,deserialization" ./python-app/ --output security-report.json
+```
+
+### Generating PDF Report
+
+```bash
+devaic --format pdf --output comprehensive-security-report.pdf ./enterprise-application/
+```
+
+### Creating Excel Report for Management
+
+```bash
+devaic --format excel --severity medium --output security-analysis.xlsx ./critical-infrastructure/
 ```
 
 ### SCADA Analysis
