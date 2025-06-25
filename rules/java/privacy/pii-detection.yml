@@ -1,0 +1,84 @@
+rules:
+  - id: java-pii-social-security
+    message: "Social Security Number detected in Java code"
+    severity: error
+    languages:
+      - Java
+    patterns:
+      - pattern-regex: '(?i)(ssn|social.?security).{0,20}[:\s=]\s*"?(\d{3}[-\s]?\d{2}[-\s]?\d{4})"?'
+    metadata:
+      cwe: "CWE-200"
+      category: "privacy"
+      confidence: critical
+      subcategory:
+        - "pii-data"
+
+  - id: java-pii-credit-card
+    message: "Credit card number detected in Java code"
+    severity: error
+    languages:
+      - Java
+    patterns:
+      - pattern-regex: '(?i)(credit.?card|cc.?number|card.?num).{0,20}[:\s=]\s*"?(\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4})"?'
+    metadata:
+      cwe: "CWE-200"
+      category: "privacy"
+      confidence: critical
+      subcategory:
+        - "financial-data"
+
+  - id: java-database-pii-query
+    message: "Database query selecting PII data in Java"
+    severity: high
+    languages:
+      - Java
+    patterns:
+      - pattern-regex: '(?i)(prepareStatement|executeQuery|createQuery)\s*\(\s*".*?(ssn|social_security|credit_card|email|phone).*?"'
+    metadata:
+      cwe: "CWE-200"
+      category: "privacy"
+      confidence: high
+      subcategory:
+        - "data-flow"
+
+  - id: java-logger-sensitive-data
+    message: "Sensitive data in Java logging"
+    severity: warning
+    languages:
+      - Java
+    patterns:
+      - pattern-regex: '(?i)(logger\.(info|debug|error|warn)|System\.out\.print)\s*\(\s*.*?(password|ssn|credit_card|email|phone)'
+    metadata:
+      cwe: "CWE-532"
+      category: "privacy"
+      confidence: medium
+      subcategory:
+        - "data-exposure"
+
+  - id: java-serialization-pii
+    message: "PII data in Java serialization"
+    severity: high
+    languages:
+      - Java
+    patterns:
+      - pattern-regex: '(?i)(ObjectOutputStream|writeObject).*?(ssn|credit_card|password)'
+    metadata:
+      cwe: "CWE-200"
+      category: "privacy"
+      confidence: high
+      subcategory:
+        - "serialization-exposure"
+
+  - id: java-annotation-pii-exposure
+    message: "PII data exposed through annotations"
+    severity: medium
+    languages:
+      - Java
+    patterns:
+      - pattern-regex: '(?i)@.*?(ssn|credit_card|password|social_security)'
+    metadata:
+      cwe: "CWE-200"
+      category: "privacy"
+      confidence: medium
+      subcategory:
+        - "annotation-exposure"

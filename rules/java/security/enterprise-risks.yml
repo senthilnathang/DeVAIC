@@ -1,0 +1,123 @@
+rules:
+  - id: java-sql-injection-risk
+    message: "SQL injection vulnerability in Java"
+    severity: critical
+    languages:
+      - Java
+    patterns:
+      - pattern-regex: '(?i)(executeQuery|executeUpdate|execute)\s*\(\s*".*\+.*"'
+      - pattern-regex: '(?i)Statement\s+.*=.*createStatement.*executeQuery.*\+'
+    metadata:
+      cwe: "CWE-89"
+      owasp: "A03:2021 – Injection"
+      category: "security"
+      confidence: critical
+      subcategory:
+        - "sql-injection"
+    fix: |
+      // Use PreparedStatement with parameterized queries:
+      String sql = "SELECT * FROM users WHERE id = ?";
+      PreparedStatement stmt = connection.prepareStatement(sql);
+      stmt.setInt(1, userId);
+
+  - id: java-xxe-vulnerability
+    message: "XML External Entity (XXE) vulnerability"
+    severity: high
+    languages:
+      - Java
+    patterns:
+      - pattern-regex: '(?i)DocumentBuilderFactory\.newInstance\(\)'
+      - pattern-regex: '(?i)SAXParserFactory\.newInstance\(\)'
+      - pattern-regex: '(?i)XMLInputFactory\.newInstance\(\)'
+    metadata:
+      cwe: "CWE-611"
+      owasp: "A05:2021 – Security Misconfiguration"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "xxe-vulnerability"
+    fix: |
+      // Disable external entities in XML parsers:
+      DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+      dbf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+      dbf.setFeature("http://xml.org/sax/features/external-general-entities", false);
+
+  - id: java-deserialization-vulnerability
+    message: "Unsafe Java deserialization"
+    severity: critical
+    languages:
+      - Java
+    patterns:
+      - pattern-regex: '(?i)ObjectInputStream.*readObject'
+      - pattern-regex: '(?i)XMLDecoder.*readObject'
+    metadata:
+      cwe: "CWE-502"
+      owasp: "A08:2021 – Software and Data Integrity Failures"
+      category: "security"
+      confidence: critical
+      subcategory:
+        - "unsafe-deserialization"
+
+  - id: java-command-injection
+    message: "Command injection vulnerability in Java"
+    severity: critical
+    languages:
+      - Java
+    patterns:
+      - pattern-regex: '(?i)Runtime\.getRuntime\(\)\.exec\s*\(\s*.*\+.*\)'
+      - pattern-regex: '(?i)ProcessBuilder\s*\(\s*.*\+.*\)'
+    metadata:
+      cwe: "CWE-78"
+      owasp: "A03:2021 – Injection"
+      category: "security"
+      confidence: critical
+      subcategory:
+        - "command-injection"
+
+  - id: java-path-traversal
+    message: "Path traversal vulnerability in Java"
+    severity: high
+    languages:
+      - Java
+    patterns:
+      - pattern-regex: '(?i)new\s+File\s*\(\s*.*\.\./.*\)'
+      - pattern-regex: '(?i)Files\.read.*\(\s*.*\.\./.*\)'
+    metadata:
+      cwe: "CWE-22"
+      owasp: "A01:2021 – Broken Access Control"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "path-traversal"
+
+  - id: java-weak-cryptography
+    message: "Weak cryptographic algorithm in Java"
+    severity: high
+    languages:
+      - Java
+    patterns:
+      - pattern-regex: '(?i)Cipher\.getInstance\s*\(\s*"(DES|3DES|RC4|MD5|SHA1)"'
+      - pattern-regex: '(?i)MessageDigest\.getInstance\s*\(\s*"(MD5|SHA1)"'
+    metadata:
+      cwe: "CWE-327"
+      owasp: "A02:2021 – Cryptographic Failures"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "weak-cryptography"
+
+  - id: java-ldap-injection
+    message: "LDAP injection vulnerability"
+    severity: high
+    languages:
+      - Java
+    patterns:
+      - pattern-regex: '(?i)search\s*\(\s*".*\+.*".*\)'
+      - pattern-regex: '(?i)SearchControls.*setSearchScope.*\+.*'
+    metadata:
+      cwe: "CWE-90"
+      owasp: "A03:2021 – Injection"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "ldap-injection"

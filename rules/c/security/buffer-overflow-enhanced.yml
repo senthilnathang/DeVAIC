@@ -1,0 +1,107 @@
+rules:
+  - id: c-unsafe-string-functions
+    message: "Unsafe string function usage leading to buffer overflow"
+    severity: critical
+    languages:
+      - C
+      - CPP
+    patterns:
+      - pattern-regex: '(?i)(strcpy|strcat|sprintf|gets|scanf)\s*\('
+    metadata:
+      cwe: "CWE-120"
+      owasp: "A06:2021 – Vulnerable and Outdated Components"
+      category: "vulnerability"
+      confidence: critical
+      subcategory:
+        - "buffer-overflow"
+    fix: |
+      // Use safe alternatives:
+      strncpy(dest, src, sizeof(dest) - 1);
+      strncat(dest, src, sizeof(dest) - strlen(dest) - 1);
+      snprintf(buffer, sizeof(buffer), format, ...);
+      fgets(buffer, sizeof(buffer), stdin);
+
+  - id: c-format-string-vulnerability
+    message: "Format string vulnerability"
+    severity: high
+    languages:
+      - C
+      - CPP
+    patterns:
+      - pattern-regex: '(?i)(printf|sprintf|fprintf)\s*\(\s*[^,]*\s*\)'
+    metadata:
+      cwe: "CWE-134"
+      owasp: "A03:2021 – Injection"
+      category: "vulnerability"
+      confidence: high
+      subcategory:
+        - "format-string"
+    fix: |
+      // Always use format specifiers:
+      printf("%s", user_input);  // Safe
+      // Instead of: printf(user_input);  // Dangerous
+
+  - id: c-integer-overflow
+    message: "Potential integer overflow vulnerability"
+    severity: medium
+    languages:
+      - C
+      - CPP
+    patterns:
+      - pattern-regex: '(?i)(malloc|calloc|realloc)\s*\(\s*.*\*.*\)'
+      - pattern-regex: '(?i)(size_t|int|long)\s+.*=.*\+.*\*.*'
+    metadata:
+      cwe: "CWE-190"
+      owasp: "A06:2021 – Vulnerable and Outdated Components"
+      category: "vulnerability"
+      confidence: medium
+      subcategory:
+        - "integer-overflow"
+
+  - id: c-double-free
+    message: "Potential double free vulnerability"
+    severity: high
+    languages:
+      - C
+      - CPP
+    patterns:
+      - pattern-regex: '(?i)free\s*\(\s*[^)]+\s*\).*free\s*\(\s*[^)]+\s*\)'
+    metadata:
+      cwe: "CWE-415"
+      owasp: "A06:2021 – Vulnerable and Outdated Components"
+      category: "vulnerability"
+      confidence: medium
+      subcategory:
+        - "memory-management"
+
+  - id: c-use-after-free
+    message: "Potential use after free vulnerability"
+    severity: high
+    languages:
+      - C
+      - CPP
+    patterns:
+      - pattern-regex: '(?i)free\s*\(\s*([^)]+)\s*\).*\1'
+    metadata:
+      cwe: "CWE-416"
+      owasp: "A06:2021 – Vulnerable and Outdated Components"
+      category: "vulnerability"
+      confidence: medium
+      subcategory:
+        - "memory-management"
+
+  - id: c-null-pointer-dereference
+    message: "Potential null pointer dereference"
+    severity: medium
+    languages:
+      - C
+      - CPP
+    patterns:
+      - pattern-regex: '(?i)\*\s*\w+\s*(?!.*if.*\w+.*!=.*NULL)'
+    metadata:
+      cwe: "CWE-476"
+      owasp: "A06:2021 – Vulnerable and Outdated Components"
+      category: "vulnerability"
+      confidence: low
+      subcategory:
+        - "null-pointer"

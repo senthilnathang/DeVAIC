@@ -1,0 +1,96 @@
+rules:
+  - id: python-weak-file-permissions
+    message: "Overly permissive file permissions detected"
+    severity: high
+    languages:
+      - Python
+    patterns:
+      - pattern-regex: '(?i)os\.chmod\s*\(\s*.*?,\s*(0o777|0o666|777|666)\s*\)'
+      - pattern-regex: '(?i)os\.umask\s*\(\s*(0o777|0o666|777|666)\s*\)'
+    metadata:
+      cwe: "CWE-732"
+      owasp: "A01:2021 – Broken Access Control"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "file-permissions"
+    fix: |
+      # Use restrictive permissions:
+      os.chmod(file_path, 0o644)  # For files
+      os.chmod(dir_path, 0o755)   # For directories
+
+  - id: python-path-traversal-risk
+    message: "Potential path traversal vulnerability"
+    severity: high
+    languages:
+      - Python
+    patterns:
+      - pattern-regex: '(?i)open\s*\(\s*.*\.\./.*\)'
+      - pattern-regex: '(?i)os\.path\.join\s*\(\s*.*\.\./.*\)'
+    metadata:
+      cwe: "CWE-22"
+      owasp: "A01:2021 – Broken Access Control"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "path-traversal"
+    fix: |
+      # Validate and sanitize file paths:
+      import os
+      safe_path = os.path.abspath(os.path.join(base_dir, user_input))
+      if not safe_path.startswith(base_dir):
+          raise ValueError("Invalid path")
+
+  - id: python-arbitrary-file-write
+    message: "Arbitrary file write vulnerability"
+    severity: critical
+    languages:
+      - Python
+    patterns:
+      - pattern-regex: '(?i)open\s*\(\s*[^,]*user.*input.*,\s*["\']w["\']'
+      - pattern-regex: '(?i)with\s+open\s*\(\s*[^,]*user.*input.*,\s*["\']w["\']'
+    metadata:
+      cwe: "CWE-73"
+      owasp: "A01:2021 – Broken Access Control"
+      category: "security"
+      confidence: critical
+      subcategory:
+        - "arbitrary-file-write"
+
+  - id: python-unsafe-deserialization
+    message: "Unsafe deserialization with user input"
+    severity: critical
+    languages:
+      - Python
+    patterns:
+      - pattern-regex: '(?i)pickle\.loads?\s*\(\s*.*user.*input'
+      - pattern-regex: '(?i)yaml\.load\s*\(\s*.*user.*input'
+      - pattern-regex: '(?i)eval\s*\(\s*.*user.*input'
+    metadata:
+      cwe: "CWE-502"
+      owasp: "A08:2021 – Software and Data Integrity Failures"
+      category: "security"
+      confidence: critical
+      subcategory:
+        - "unsafe-deserialization"
+    fix: |
+      # Use safe deserialization:
+      import yaml
+      yaml.safe_load(user_input)  # Instead of yaml.load()
+      # Or use json.loads() for JSON data
+
+  - id: python-privilege-escalation
+    message: "Potential privilege escalation"
+    severity: high
+    languages:
+      - Python
+    patterns:
+      - pattern-regex: '(?i)(setuid|setgid|seteuid|setegid)\s*\(\s*0\s*\)'
+      - pattern-regex: '(?i)os\.system\s*\(\s*["\']sudo\s+'
+    metadata:
+      cwe: "CWE-269"
+      owasp: "A01:2021 – Broken Access Control"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "privilege-escalation"

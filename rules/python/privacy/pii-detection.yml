@@ -1,0 +1,112 @@
+rules:
+  - id: python-pii-social-security
+    message: "Social Security Number detected in Python code"
+    severity: error
+    languages:
+      - Python
+    patterns:
+      - pattern-regex: '(?i)(ssn|social.?security).{0,20}[:\s=]\s*["\']?(\d{3}[-\s]?\d{2}[-\s]?\d{4})["\']?'
+    metadata:
+      cwe: "CWE-200"
+      owasp: "A03:2021 – Injection"
+      category: "privacy"
+      confidence: critical
+      subcategory:
+        - "pii-data"
+    fix: |
+      # Use environment variables or secure configuration:
+      import os
+      ssn = os.getenv('SSN_MASKED')  # Use masked value
+      # Or implement proper data encryption
+
+  - id: python-pii-credit-card
+    message: "Credit card number detected in Python code"
+    severity: error
+    languages:
+      - Python
+    patterns:
+      - pattern-regex: '(?i)(credit.?card|cc.?number|card.?num).{0,20}[:\s=]\s*["\']?(\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4})["\']?'
+    metadata:
+      cwe: "CWE-200"
+      category: "privacy"
+      confidence: critical
+      subcategory:
+        - "financial-data"
+
+  - id: python-pii-email-hardcoded
+    message: "Email address hardcoded in Python code"
+    severity: warning
+    languages:
+      - Python
+    patterns:
+      - pattern-regex: '(?i)(email|e.?mail).{0,20}[:\s=]\s*["\']?([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})["\']?'
+    metadata:
+      cwe: "CWE-200"
+      category: "privacy"
+      confidence: medium
+      subcategory:
+        - "contact-data"
+
+  - id: python-pii-phone-number
+    message: "Phone number detected in Python code"
+    severity: warning
+    languages:
+      - Python
+    patterns:
+      - pattern-regex: '(?i)(phone|tel|mobile).{0,20}[:\s=]\s*["\']?(\+?1?[-.\s]?\(?[0-9]{3}\)?[-.\s]?[0-9]{3}[-.\s]?[0-9]{4})["\']?'
+    metadata:
+      cwe: "CWE-200"
+      category: "privacy"
+      confidence: medium
+      subcategory:
+        - "contact-data"
+
+  - id: python-phi-medical-record
+    message: "Medical record number detected in Python code"
+    severity: error
+    languages:
+      - Python
+    patterns:
+      - pattern-regex: '(?i)(mrn|medical.?record|patient.?id).{0,20}[:\s=]\s*["\']?([0-9]{6,12})["\']?'
+    metadata:
+      cwe: "CWE-200"
+      category: "privacy"
+      confidence: critical
+      subcategory:
+        - "phi-data"
+    fix: |
+      # Ensure HIPAA compliance for PHI data:
+      # Use proper encryption and access controls
+      # Implement audit logging for PHI access
+
+  - id: python-database-pii-query
+    message: "Database query selecting PII data"
+    severity: high
+    languages:
+      - Python
+    patterns:
+      - pattern-regex: '(?i)select\s+.*?(ssn|social_security|credit_card|email|phone|passport).*?from'
+    metadata:
+      cwe: "CWE-200"
+      category: "privacy"
+      confidence: high
+      subcategory:
+        - "data-flow"
+
+  - id: python-logging-sensitive-data
+    message: "Sensitive data being logged"
+    severity: high
+    languages:
+      - Python
+    patterns:
+      - pattern-regex: '(?i)(print|logging\.(info|debug|error|warning))\s*\(\s*.*?(password|ssn|credit_card|email|phone)'
+    metadata:
+      cwe: "CWE-532"
+      category: "privacy"
+      confidence: high
+      subcategory:
+        - "data-exposure"
+    fix: |
+      # Use data masking for logging:
+      masked_data = "***REDACTED***"
+      logging.info(f"Processing user: {masked_data}")

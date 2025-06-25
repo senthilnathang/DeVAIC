@@ -7,6 +7,9 @@ pub mod typescript_rules;
 pub mod scada_rules;
 pub mod owasp_llm_rules;
 pub mod owasp_web_rules;
+pub mod privacy_rules;
+pub mod security_risk_rules;
+pub mod vulnerability_scanner_rules;
 
 use crate::{
     config::RulesConfig,
@@ -26,6 +29,9 @@ pub struct RuleEngine {
     scada_rules: scada_rules::ScadaRules,
     owasp_llm_rules: owasp_llm_rules::OwaspLlmRules,
     owasp_web_rules: owasp_web_rules::OwaspWebRules,
+    privacy_rules: privacy_rules::PrivacyRules,
+    security_risk_rules: security_risk_rules::SecurityRiskRules,
+    vulnerability_scanner_rules: vulnerability_scanner_rules::VulnerabilityScannerRules,
 }
 
 impl RuleEngine {
@@ -41,6 +47,9 @@ impl RuleEngine {
             scada_rules: scada_rules::ScadaRules::new(),
             owasp_llm_rules: owasp_llm_rules::OwaspLlmRules::new(),
             owasp_web_rules: owasp_web_rules::OwaspWebRules::new(),
+            privacy_rules: privacy_rules::PrivacyRules::new(),
+            security_risk_rules: security_risk_rules::SecurityRiskRules::new(),
+            vulnerability_scanner_rules: vulnerability_scanner_rules::VulnerabilityScannerRules::new(),
         }
     }
 
@@ -74,6 +83,11 @@ impl RuleEngine {
         // Run OWASP rules on all files regardless of language
         vulnerabilities.extend(self.owasp_llm_rules.analyze(source_file, ast)?);
         vulnerabilities.extend(self.owasp_web_rules.analyze(source_file, ast)?);
+
+        // Run Bearer-inspired security, privacy, and vulnerability rules on all files
+        vulnerabilities.extend(self.privacy_rules.analyze(source_file, ast)?);
+        vulnerabilities.extend(self.security_risk_rules.analyze(source_file, ast)?);
+        vulnerabilities.extend(self.vulnerability_scanner_rules.analyze(source_file, ast)?);
 
         // Filter by severity threshold
         let threshold_severity = self.parse_severity(&self.config.severity_threshold);

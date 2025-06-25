@@ -37,6 +37,20 @@ impl Language {
     }
 }
 
+impl std::fmt::Display for Language {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Language::C => write!(f, "c"),
+            Language::Cpp => write!(f, "cpp"),
+            Language::Python => write!(f, "python"),
+            Language::Java => write!(f, "java"),
+            Language::Javascript => write!(f, "javascript"),
+            Language::TypeScript => write!(f, "typescript"),
+            Language::Scada => write!(f, "scada"),
+        }
+    }
+}
+
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct Vulnerability {
     pub id: String,

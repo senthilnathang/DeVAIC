@@ -1,0 +1,93 @@
+rules:
+  - id: javascript-pii-social-security
+    message: "Social Security Number detected in JavaScript code"
+    severity: error
+    languages:
+      - JavaScript
+      - TypeScript
+    patterns:
+      - pattern-regex: '(?i)(ssn|social.?security).{0,20}[:\s=]\s*["\']?(\d{3}[-\s]?\d{2}[-\s]?\d{4})["\']?'
+    metadata:
+      cwe: "CWE-200"
+      category: "privacy"
+      confidence: critical
+      subcategory:
+        - "pii-data"
+
+  - id: javascript-pii-credit-card
+    message: "Credit card number detected in JavaScript code"
+    severity: error
+    languages:
+      - JavaScript
+      - TypeScript
+    patterns:
+      - pattern-regex: '(?i)(credit.?card|cc.?number|card.?num).{0,20}[:\s=]\s*["\']?(\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4})["\']?'
+    metadata:
+      cwe: "CWE-200"
+      category: "privacy"
+      confidence: critical
+      subcategory:
+        - "financial-data"
+
+  - id: javascript-client-side-pii
+    message: "PII data processed on client-side"
+    severity: high
+    languages:
+      - JavaScript
+      - TypeScript
+    patterns:
+      - pattern-regex: '(?i)(localStorage|sessionStorage|document\.cookie).*=(.*ssn|.*credit_card|.*passport)'
+    metadata:
+      cwe: "CWE-200"
+      category: "privacy"
+      confidence: high
+      subcategory:
+        - "client-side-exposure"
+    fix: |
+      // Avoid storing sensitive data in browser storage
+      // Use secure server-side storage instead
+
+  - id: javascript-api-response-pii
+    message: "API response containing PII data"
+    severity: high
+    languages:
+      - JavaScript
+      - TypeScript
+    patterns:
+      - pattern-regex: '(?i)(response|return).*\{.*?(ssn|social_security|credit_card|password).*?\}'
+    metadata:
+      cwe: "CWE-200"
+      category: "privacy"
+      confidence: high
+      subcategory:
+        - "api-exposure"
+
+  - id: javascript-console-log-sensitive
+    message: "Sensitive data in console log"
+    severity: warning
+    languages:
+      - JavaScript
+      - TypeScript
+    patterns:
+      - pattern-regex: '(?i)console\.(log|error|warn|info)\s*\(\s*.*?(password|ssn|credit_card|email|phone)'
+    metadata:
+      cwe: "CWE-532"
+      category: "privacy"
+      confidence: medium
+      subcategory:
+        - "data-exposure"
+
+  - id: javascript-dom-pii-exposure
+    message: "PII data exposed in DOM"
+    severity: high
+    languages:
+      - JavaScript
+      - TypeScript
+    patterns:
+      - pattern-regex: '(?i)(innerHTML|textContent|innerText)\s*=.*?(ssn|credit_card|passport)'
+    metadata:
+      cwe: "CWE-200"
+      category: "privacy"
+      confidence: high
+      subcategory:
+        - "dom-exposure"
