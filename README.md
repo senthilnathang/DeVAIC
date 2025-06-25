@@ -1,13 +1,13 @@
 # DeVAIC - Vulnerability Analysis for Industrial Control Systems
 
-A high-performance static code analyzer for vulnerability detection in C, C++, Java, JavaScript, TypeScript, Python, and SCADA programming languages, built in Rust.
+A high-performance static code analyzer for vulnerability detection in C, C++, Java, JavaScript, TypeScript, Python, Rust, and SCADA programming languages, built in Rust.
 
 DeVAIC provides comprehensive security analysis specifically designed for industrial control systems, embedded devices, and critical infrastructure code. It combines traditional vulnerability detection patterns with specialized rules for SCADA/PLC programming languages.
 
 ## Features
 
-- **Multi-language Support**: Analyzes C, C++, Java, JavaScript, TypeScript, Python, and SCADA (Structured Text) code
-- **Comprehensive Vulnerability Detection**: Covers OWASP Top 10, OWASP LLM Top 10, and industrial control system specific vulnerabilities
+- **Multi-language Support**: Analyzes C, C++, Java, JavaScript, TypeScript, Python, Rust, and SCADA (Structured Text) code
+- **Comprehensive Vulnerability Detection**: Covers OWASP Top 10, OWASP LLM Top 10, secrets detection, and industrial control system specific vulnerabilities
 - **Advanced Pattern Matching**: Integrated Semgrep engine for sophisticated vulnerability detection
 - **AST-based Analysis**: Abstract Syntax Tree parsing for deep code understanding
 - **LLM Security**: Specialized rules for AI/ML application security (OWASP LLM Top 10)
@@ -15,6 +15,7 @@ DeVAIC provides comprehensive security analysis specifically designed for indust
 - **Configurable Rules**: Customizable severity thresholds and rule categories
 - **Fast Analysis**: Built with Rust for high performance
 - **Industrial Focus**: Specialized rules for SCADA and embedded systems security
+- **Secrets Detection**: Advanced patterns for API tokens, credentials, and hardcoded secrets across all languages
 
 ## Supported Vulnerability Categories
 
@@ -49,6 +50,11 @@ DeVAIC provides comprehensive security analysis specifically designed for indust
 - Debug mode detection
 - Insecure random number generation
 
+### Rust Language
+- Unsafe operations and memory safety
+- Cryptographic vulnerabilities
+- Secrets and API token detection
+
 ### OWASP LLM Top 10 (AI/ML Security)
 - **LLM01**: Prompt Injection - Untrusted input manipulation of LLM behavior
 - **LLM03**: Training Data Poisoning - Malicious data compromising model integrity
@@ -66,6 +72,13 @@ DeVAIC provides comprehensive security analysis specifically designed for indust
 - Safety-critical operation validation
 - Timing vulnerabilities
 - Default configuration detection
+
+### Secrets and API Token Detection
+- **API Tokens**: Artifactory, AWS Client ID, Facebook Access Token, Google API Key, GitHub Token, Slack Token, Stripe API Key
+- **Authentication**: Basic Auth credentials, Twitter OAuth tokens
+- **Network**: IPv4 addresses, hardcoded HTTP URLs
+- **Generic Secrets**: Passwords, private keys, database connection strings
+- **Cloud Providers**: AWS, Azure, GCP credential patterns
 
 ## Installation
 
@@ -212,6 +225,7 @@ DeVAIC exits with status code 1 if critical or high severity vulnerabilities are
 - **JavaScript**: `.js`
 - **TypeScript**: `.ts`, `.tsx`
 - **Python**: `.py`
+- **Rust**: `.rs`
 - **SCADA**: `.st`, `.scl`, `.fbd`, `.ld`, `.il`
 
 ## Examples
@@ -286,7 +300,7 @@ DeVAIC leverages Abstract Syntax Tree (AST) parsing for deep code understanding:
 - **Semantic Analysis**: Goes beyond regex patterns to understand code structure and context
 - **Cross-references**: Tracks variable usage, function calls, and data flow
 - **Contextual Rules**: Enables sophisticated vulnerability detection based on code semantics
-- **Language Support**: AST analysis available for C, C++, Java, JavaScript, TypeScript, and Python
+- **Language Support**: AST analysis available for C, C++, Java, JavaScript, TypeScript, Python, and Rust
 
 The AST-based approach enables detection of complex vulnerabilities that traditional pattern matching might miss, such as:
 - Data flow analysis for tracking tainted input
@@ -298,7 +312,7 @@ The AST-based approach enables detection of complex vulnerabilities that traditi
 
 DeVAIC is built with a modular architecture:
 
-- **Parser Layer**: Language-specific parsers using tree-sitter for AST generation (C/C++, Java, JavaScript, TypeScript, Python) and custom regex-based parsing for SCADA
+- **Parser Layer**: Language-specific parsers using tree-sitter for AST generation (C/C++, Java, JavaScript, TypeScript, Python, Rust) and custom regex-based parsing for SCADA
 - **Semgrep Engine**: Advanced pattern matching engine for sophisticated vulnerability detection with metavariable support
 - **Analysis Engine**: Multi-layered vulnerability detection combining regex patterns, AST analysis, and semantic rules
 - **Rule Engine**: Configurable rules supporting OWASP Top 10, OWASP LLM Top 10, and language-specific vulnerabilities
