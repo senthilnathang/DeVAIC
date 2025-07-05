@@ -11,6 +11,11 @@ enabled_categories = [
     "deserialization",
     "logging",
     "validation",
+    "privacy",
+    "security",
+    "vulnerability",
+    "sanitizer",
+    "dependency",
     "configuration",
     "llm_security",
     "web_security"
@@ -18,6 +23,15 @@ enabled_categories = [
 
 # Minimum severity level to report (CRITICAL, HIGH, MEDIUM, LOW, INFO)
 severity_threshold = "LOW"
+
+# Build break thresholds (inspired by sast-scan)
+[rules.build_break_rules]
+max_critical = 0
+max_high = 2
+max_medium = 5
+max_low = 10
+fail_on_timeout = true
+require_all_tests_pass = false
 
 # Custom rules (rule_id = enabled)
 [rules.custom_rules]
@@ -72,6 +86,33 @@ include_patterns = [
     "*.cjs",
     "*.ts",
     "*.tsx",
+    "*.go",
+    "*.php",
+    "*.rb",
+    "*.rs",
+    "*.kt",
+    "*.scala",
+    "*.cs",
+    "*.yaml",
+    "*.yml",
+    "*.json",
+    "*.tf",
+    "*.dockerfile",
+    "Dockerfile",
+    "requirements.txt",
+    "package.json",
+    "package-lock.json",
+    "pom.xml",
+    "build.gradle",
+    "build.gradle.kts",
+    "Gemfile",
+    "Gemfile.lock",
+    "go.mod",
+    "go.sum",
+    "composer.json",
+    "composer.lock",
+    "Cargo.toml",
+    "Cargo.lock",
     "*.st",     # Structured Text
     "*.sl",     # Structured Language (SCADA)
     "*.scl",    # Sequential Control Language

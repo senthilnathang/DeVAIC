@@ -1,4 +1,5 @@
 pub mod analyzer;
+pub mod build_break;
 pub mod parsers;
 pub mod rules;
 pub mod report;
@@ -7,6 +8,7 @@ pub mod error;
 pub mod semgrep;
 
 pub use analyzer::Analyzer;
+pub use build_break::{BuildBreakAnalyzer, BuildBreakResult};
 pub use error::{DevaicError, Result};
 pub use report::Report;
 pub use config::Config;
@@ -66,7 +68,7 @@ pub struct Vulnerability {
     pub recommendation: String,
 }
 
-#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum Severity {
     Critical,
     High,

@@ -14,6 +14,17 @@ pub struct RulesConfig {
     pub enabled_categories: Vec<String>,
     pub severity_threshold: String,
     pub custom_rules: HashMap<String, bool>,
+    pub build_break_rules: BuildBreakRules,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BuildBreakRules {
+    pub max_critical: u32,
+    pub max_high: u32,
+    pub max_medium: u32,
+    pub max_low: u32,
+    pub fail_on_timeout: bool,
+    pub require_all_tests_pass: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -48,9 +59,18 @@ impl Default for Config {
                     "security".to_string(),
                     "vulnerability".to_string(),
                     "sanitizer".to_string(),
+                    "dependency".to_string(),
                 ],
                 severity_threshold: "LOW".to_string(),
                 custom_rules: HashMap::new(),
+                build_break_rules: BuildBreakRules {
+                    max_critical: 0,
+                    max_high: 2,
+                    max_medium: 5,
+                    max_low: 10,
+                    fail_on_timeout: true,
+                    require_all_tests_pass: false,
+                },
             },
             output: OutputConfig {
                 format: "table".to_string(),
@@ -83,6 +103,19 @@ impl Default for Config {
                     "*.cjs".to_string(),
                     "*.ts".to_string(),
                     "*.tsx".to_string(),
+                    "*.go".to_string(),
+                    "*.php".to_string(),
+                    "*.rb".to_string(),
+                    "*.rs".to_string(),
+                    "*.kt".to_string(),
+                    "*.scala".to_string(),
+                    "*.cs".to_string(),
+                    "*.yaml".to_string(),
+                    "*.yml".to_string(),
+                    "*.json".to_string(),
+                    "*.tf".to_string(),
+                    "*.dockerfile".to_string(),
+                    "Dockerfile".to_string(),
                     "*.st".to_string(),
                     "*.sl".to_string(),
                     "*.scl".to_string(),

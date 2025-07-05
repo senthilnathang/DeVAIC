@@ -11,6 +11,7 @@ pub mod privacy_rules;
 pub mod security_risk_rules;
 pub mod vulnerability_scanner_rules;
 pub mod sanitizer_rules;
+pub mod dependency_scanner_rules;
 
 use crate::{
     config::RulesConfig,
@@ -34,6 +35,7 @@ pub struct RuleEngine {
     security_risk_rules: security_risk_rules::SecurityRiskRules,
     vulnerability_scanner_rules: vulnerability_scanner_rules::VulnerabilityScannerRules,
     sanitizer_rules: sanitizer_rules::SanitizerRules,
+    dependency_scanner_rules: dependency_scanner_rules::DependencyScannerRules,
 }
 
 impl RuleEngine {
@@ -53,6 +55,7 @@ impl RuleEngine {
             security_risk_rules: security_risk_rules::SecurityRiskRules::new(),
             vulnerability_scanner_rules: vulnerability_scanner_rules::VulnerabilityScannerRules::new(),
             sanitizer_rules: sanitizer_rules::SanitizerRules::new(),
+            dependency_scanner_rules: dependency_scanner_rules::DependencyScannerRules::new(),
         }
     }
 
@@ -94,6 +97,9 @@ impl RuleEngine {
 
         // Run Google Sanitizers-inspired memory safety and concurrency rules
         vulnerabilities.extend(self.sanitizer_rules.analyze(source_file, ast)?);
+
+        // Run dependency scanning rules inspired by sast-scan
+        vulnerabilities.extend(self.dependency_scanner_rules.analyze(source_file, ast)?);
 
         // Filter by severity threshold
         let threshold_severity = self.parse_severity(&self.config.severity_threshold);
