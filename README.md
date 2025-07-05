@@ -1,6 +1,6 @@
 # DeVAIC - Advanced Vulnerability Analysis with Bearer-Inspired Privacy & Google Sanitizers Memory Safety Detection
 
-A high-performance static code analyzer for comprehensive vulnerability, security risk, privacy detection, and memory safety analysis in C, C++, Java, JavaScript, TypeScript, Python, Rust, and SCADA programming languages, built in Rust.
+A high-performance static code analyzer for comprehensive vulnerability, security risk, privacy detection, and memory safety analysis in 13+ programming languages including C, C++, Java, JavaScript, TypeScript, Python, Go, PHP, Ruby, Kotlin, C#, Bash, and SCADA, built in Rust.
 
 DeVAIC provides enterprise-grade security analysis combining Bearer-inspired privacy risk detection, Google Sanitizers-inspired memory safety analysis, and traditional vulnerability scanning. Originally designed for industrial control systems and embedded devices, it now offers comprehensive security analysis suitable for any codebase, from web applications to critical infrastructure.
 
@@ -20,10 +20,11 @@ DeVAIC provides enterprise-grade security analysis combining Bearer-inspired pri
 - **LeakSanitizer Integration**: Memory and resource leak identification
 
 ### 🛡️ **Comprehensive Vulnerability Detection**
-- **Multi-language Support**: C, C++, Java, JavaScript, TypeScript, Python, Rust, and SCADA
+- **Multi-language Support**: 13+ languages including C, C++, Java, JavaScript, TypeScript, Python, Go, PHP, Ruby, Kotlin, C#, Bash, and SCADA
 - **OWASP Coverage**: Top 10 2021, LLM Top 10, and CWE Top 25 vulnerabilities
-- **Language-Specific Risks**: Tailored detection for each programming language
+- **Language-Specific Risks**: Tailored detection for each programming language and framework
 - **Industrial Security**: Specialized rules for SCADA and embedded systems
+- **Modern Frameworks**: Android (Kotlin), .NET (C#), Rails (Ruby), Laravel (PHP), and more
 
 ### ⚡ **Advanced Analysis Engine**
 - **AST-based Analysis**: Deep code understanding through Abstract Syntax Trees
@@ -44,7 +45,7 @@ DeVAIC provides enterprise-grade security analysis combining Bearer-inspired pri
 | **Privacy Risk Detection** | ✅ Full PII/PHI | ✅ Privacy-focused | ❌ | ⚠️ Limited | ⚠️ Basic |
 | **Memory Safety Analysis** | ✅ Full Sanitizers | ❌ | ✅ Runtime Only | ⚠️ Limited | ⚠️ Basic |
 | **OWASP Top 10 Coverage** | ✅ Complete | ⚠️ Partial | ❌ | ✅ Complete | ✅ Complete |
-| **Multi-language Support** | ✅ 8+ Languages | ⚠️ Limited | ✅ Native Code | ✅ 20+ Languages | ✅ 25+ Languages |
+| **Multi-language Support** | ✅ 13+ Languages | ⚠️ Limited | ✅ Native Code | ✅ 20+ Languages | ✅ 25+ Languages |
 | **SCADA/Industrial** | ✅ Specialized | ❌ | ❌ | ❌ | ❌ |
 | **Performance** | ⚡ High (Rust) | ⚡ High (Go) | ⚡ Runtime | ⚡ High (OCaml) | ⚠️ Medium (Java) |
 | **Report Formats** | ✅ 5 Formats | ⚠️ 3 Formats | ❌ Terminal | ✅ 4 Formats | ✅ 5+ Formats |
@@ -54,7 +55,7 @@ DeVAIC provides enterprise-grade security analysis combining Bearer-inspired pri
 - **Analysis Speed**: ~10,000 lines/second on modern hardware
 - **Memory Usage**: Low memory footprint (~50MB for large codebases)
 - **Accuracy**: >95% precision with <2% false positives
-- **Coverage**: 500+ security patterns across all supported languages
+- **Coverage**: 500+ security patterns across 13+ supported languages
 - **Scalability**: Handles codebases up to 10M+ lines of code
 
 ## Detection Capabilities
@@ -177,6 +178,50 @@ DeVAIC provides enterprise-grade security analysis combining Bearer-inspired pri
 - Debug mode detection
 - Insecure random number generation
 
+### Go Language
+- SQL injection vulnerabilities
+- Command injection and SSRF attacks
+- Weak cryptographic implementations
+- Hardcoded secrets and API tokens
+- Concurrency and goroutine safety issues
+
+### PHP Language
+- SQL injection and file inclusion vulnerabilities
+- Command injection and code execution
+- Cross-site scripting (XSS) vulnerabilities
+- Path traversal and file manipulation
+- Weak cryptographic algorithms
+- Session and authentication issues
+
+### Ruby Language
+- SQL injection in ActiveRecord queries
+- Command injection and code evaluation
+- Deserialization vulnerabilities (Marshal, YAML)
+- Rails-specific security issues
+- Hardcoded credentials and secrets
+
+### Kotlin Language
+- Android Intent injection vulnerabilities
+- WebView security issues
+- SQL injection in Android SQLite
+- Weak cryptographic implementations
+- Hardcoded secrets in mobile apps
+
+### C# Language
+- SQL injection in Entity Framework
+- Command injection and process execution
+- Insecure deserialization vulnerabilities
+- Weak cryptographic algorithms
+- Path traversal and file access issues
+- ASP.NET Core security misconfigurations
+
+### Bash/Shell Language
+- Command injection and code execution
+- Path traversal in file operations
+- Unsafe file permissions and umask
+- SSRF in curl/wget operations
+- Hardcoded credentials in scripts
+
 ### Rust Language
 - Unsafe operations and memory safety
 - Cryptographic vulnerabilities
@@ -250,6 +295,12 @@ DeVAIC provides enterprise-grade security analysis combining Bearer-inspired pri
 - **Java**: Memory management pattern analysis, resource leak detection
 - **JavaScript**: Buffer operations in Node.js, WebAssembly memory safety
 - **Python**: Memory management in C extensions, unsafe operations
+- **Go**: Goroutine leak detection, race condition analysis, memory safety
+- **PHP**: Memory management in extensions, resource leak detection
+- **Ruby**: Memory management in C extensions, garbage collection issues
+- **Kotlin**: Android memory management, JVM memory safety patterns
+- **C#**: .NET memory management, resource disposal patterns
+- **Bash**: Process and file descriptor leak detection
 
 ### Regular Expression Denial of Service (ReDoS)
 - **Exponential Backtracking**: Detection of nested quantifiers like `(a+)+`, `(a*)*` that cause exponential time complexity
@@ -288,14 +339,26 @@ This will install `devaic` to your system PATH.
 
 ### Basic Analysis
 ```bash
-# Analyze a single file for all vulnerability types
+# Analyze any supported language
 devaic path/to/your/file.py
 
-# Comprehensive analysis of a directory
-devaic --severity medium ./my-application/
+# Analyze Go microservices
+devaic --format json --output security-report.json ./go-services/
 
-# Generate detailed report for security review
-devaic --format pdf --output security-report.pdf ./src/
+# Analyze PHP web application
+devaic --severity high ./laravel-app/
+
+# Analyze Kotlin Android app
+devaic --format sarif --output android-security.sarif ./android-app/
+
+# Analyze Ruby on Rails application
+devaic --verbose ./rails-app/
+
+# Analyze C# .NET application
+devaic --format excel --output dotnet-report.xlsx ./dotnet-app/
+
+# Analyze shell scripts
+devaic ./deployment-scripts/
 ```
 
 ### Bearer-Inspired Privacy & Security Analysis
@@ -545,11 +608,17 @@ DeVAIC exits with status code 1 if critical or high severity vulnerabilities are
 
 ## Supported File Extensions
 
-- **C/C++**: `.c`, `.cpp`, `.h`, `.hpp`
+- **C/C++**: `.c`, `.cpp`, `.cc`, `.cxx`, `.c++`, `.h`, `.hpp`, `.hxx`, `.h++`
 - **Java**: `.java`
-- **JavaScript**: `.js`
+- **JavaScript**: `.js`, `.jsx`, `.mjs`, `.cjs`
 - **TypeScript**: `.ts`, `.tsx`
 - **Python**: `.py`
+- **Go**: `.go`
+- **PHP**: `.php`, `.php3`, `.php4`, `.php5`, `.phtml`
+- **Ruby**: `.rb`, `.ruby`, `.rake`, `.gemspec`
+- **Kotlin**: `.kt`, `.kts`
+- **C#**: `.cs`
+- **Bash/Shell**: `.sh`, `.bash`, `.zsh`, `.fish`
 - **Rust**: `.rs`
 - **SCADA**: `.st`, `.scl`, `.fbd`, `.ld`, `.il`
 

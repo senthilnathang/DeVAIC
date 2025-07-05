@@ -1,0 +1,178 @@
+rules:
+  - id: php-sql-injection
+    patterns:
+      - pattern: |
+          mysql_query($QUERY . $_GET[$VAR])
+      - pattern: |
+          mysql_query($QUERY . $_POST[$VAR])
+      - pattern: |
+          mysqli_query($CONNECTION, $QUERY . $_GET[$VAR])
+      - pattern: |
+          mysqli_query($CONNECTION, $QUERY . $_POST[$VAR])
+      - pattern: |
+          $PDO->query($QUERY . $_GET[$VAR])
+      - pattern: |
+          $PDO->query($QUERY . $_POST[$VAR])
+    message: |
+      SQL injection vulnerability detected in PHP.
+      Concatenating user input directly into SQL queries can lead to SQL injection attacks.
+    languages: [php]
+    severity: ERROR
+    metadata:
+      cwe: CWE-89
+      owasp: "A03:2021 – Injection"
+      category: injection
+      confidence: HIGH
+      likelihood: HIGH
+      impact: CRITICAL
+
+  - id: php-command-injection
+    patterns:
+      - pattern: |
+          exec($_GET[$VAR])
+      - pattern: |
+          system($_GET[$VAR])
+      - pattern: |
+          shell_exec($_GET[$VAR])
+      - pattern: |
+          passthru($_GET[$VAR])
+      - pattern: |
+          eval($_GET[$VAR])
+      - pattern: |
+          exec($_POST[$VAR])
+      - pattern: |
+          system($_POST[$VAR])
+      - pattern: |
+          shell_exec($_POST[$VAR])
+      - pattern: |
+          passthru($_POST[$VAR])
+      - pattern: |
+          eval($_POST[$VAR])
+    message: |
+      Command injection vulnerability detected in PHP.
+      Executing system commands with user input can lead to remote code execution.
+    languages: [php]
+    severity: ERROR
+    metadata:
+      cwe: CWE-78
+      owasp: "A03:2021 – Injection"
+      category: injection
+      confidence: HIGH
+      likelihood: HIGH
+      impact: CRITICAL
+
+  - id: php-file-inclusion
+    patterns:
+      - pattern: |
+          include($_GET[$VAR])
+      - pattern: |
+          require($_GET[$VAR])
+      - pattern: |
+          include_once($_GET[$VAR])
+      - pattern: |
+          require_once($_GET[$VAR])
+      - pattern: |
+          include($_POST[$VAR])
+      - pattern: |
+          require($_POST[$VAR])
+      - pattern: |
+          include_once($_POST[$VAR])
+      - pattern: |
+          require_once($_POST[$VAR])
+    message: |
+      File inclusion vulnerability detected in PHP.
+      Including files based on user input can lead to local/remote file inclusion attacks.
+    languages: [php]
+    severity: ERROR
+    metadata:
+      cwe: CWE-98
+      owasp: "A03:2021 – Injection"
+      category: injection
+      confidence: HIGH
+      likelihood: HIGH
+      impact: CRITICAL
+
+  - id: php-reflected-xss
+    patterns:
+      - pattern: |
+          echo $_GET[$VAR]
+      - pattern: |
+          print $_GET[$VAR]
+      - pattern: |
+          printf($_GET[$VAR])
+      - pattern: |
+          echo $_POST[$VAR]
+      - pattern: |
+          print $_POST[$VAR]
+      - pattern: |
+          printf($_POST[$VAR])
+    message: |
+      Reflected XSS vulnerability detected in PHP.
+      Outputting user input without sanitization can lead to cross-site scripting attacks.
+    languages: [php]
+    severity: ERROR
+    metadata:
+      cwe: CWE-79
+      owasp: "A03:2021 – Injection"
+      category: injection
+      confidence: HIGH
+      likelihood: HIGH
+      impact: HIGH
+
+  - id: php-path-traversal
+    patterns:
+      - pattern: |
+          file_get_contents($_GET[$VAR])
+      - pattern: |
+          file_put_contents($_GET[$VAR], ...)
+      - pattern: |
+          fopen($_GET[$VAR], ...)
+      - pattern: |
+          readfile($_GET[$VAR])
+      - pattern: |
+          file_get_contents($_POST[$VAR])
+      - pattern: |
+          file_put_contents($_POST[$VAR], ...)
+      - pattern: |
+          fopen($_POST[$VAR], ...)
+      - pattern: |
+          readfile($_POST[$VAR])
+    message: |
+      Path traversal vulnerability detected in PHP.
+      Using user input in file operations without validation can lead to unauthorized file access.
+    languages: [php]
+    severity: ERROR
+    metadata:
+      cwe: CWE-22
+      owasp: "A01:2021 – Broken Access Control"
+      category: validation
+      confidence: HIGH
+      likelihood: MEDIUM
+      impact: HIGH
+
+  - id: php-code-injection
+    patterns:
+      - pattern: |
+          eval($_GET[$VAR])
+      - pattern: |
+          eval($_POST[$VAR])
+      - pattern: |
+          assert($_GET[$VAR])
+      - pattern: |
+          assert($_POST[$VAR])
+      - pattern: |
+          preg_replace("/.../.../e", $REPLACEMENT, $_GET[$VAR])
+      - pattern: |
+          preg_replace("/.../.../e", $REPLACEMENT, $_POST[$VAR])
+    message: |
+      Code injection vulnerability detected in PHP.
+      Evaluating user input as code can lead to remote code execution.
+    languages: [php]
+    severity: ERROR
+    metadata:
+      cwe: CWE-94
+      owasp: "A03:2021 – Injection"
+      category: injection
+      confidence: HIGH
+      likelihood: HIGH
+      impact: CRITICAL

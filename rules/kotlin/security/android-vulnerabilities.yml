@@ -1,0 +1,91 @@
+rules:
+  - id: kotlin-intent-injection
+    patterns:
+      - pattern: |
+          Intent($ACTION)
+      - pattern: |
+          intent.setAction($ACTION)
+      - pattern-inside: |
+          fun $FUNC(...) {
+            ...
+            val $ACTION = intent.getStringExtra(...)
+            ...
+          }
+    message: |
+      Intent injection vulnerability detected in Kotlin Android code.
+      Using user-controlled data in Intent actions can lead to privilege escalation.
+    languages: [kotlin]
+    severity: ERROR
+    metadata:
+      cwe: CWE-926
+      category: injection
+      confidence: HIGH
+      likelihood: MEDIUM
+      impact: HIGH
+
+  - id: kotlin-webview-injection
+    patterns:
+      - pattern: |
+          webView.loadUrl($URL)
+      - pattern: |
+          webView.evaluateJavascript($JS, ...)
+      - pattern-inside: |
+          fun $FUNC(...) {
+            ...
+            val $URL = intent.getStringExtra(...)
+            ...
+            webView.loadUrl($URL)
+            ...
+          }
+    message: |
+      WebView injection vulnerability detected in Kotlin.
+      Loading user-controlled URLs in WebView can lead to XSS and data theft.
+    languages: [kotlin]
+    severity: ERROR
+    metadata:
+      cwe: CWE-79
+      owasp: "A03:2021 – Injection"
+      category: injection
+      confidence: HIGH
+      likelihood: MEDIUM
+      impact: HIGH
+
+  - id: kotlin-sql-injection
+    patterns:
+      - pattern: |
+          db.execSQL("$QUERY" + $VAR)
+      - pattern: |
+          db.rawQuery("$QUERY" + $VAR, ...)
+    message: |
+      SQL injection vulnerability detected in Kotlin Android SQLite code.
+      String concatenation in SQL queries can lead to SQL injection.
+    languages: [kotlin]
+    severity: ERROR
+    metadata:
+      cwe: CWE-89
+      owasp: "A03:2021 – Injection"
+      category: injection
+      confidence: HIGH
+      likelihood: HIGH
+      impact: HIGH
+
+  - id: kotlin-weak-crypto
+    patterns:
+      - pattern: |
+          MessageDigest.getInstance("MD5")
+      - pattern: |
+          MessageDigest.getInstance("SHA1")
+      - pattern: |
+          Cipher.getInstance("DES")
+    message: |
+      Weak cryptographic algorithm detected in Kotlin.
+      MD5, SHA1, and DES are cryptographically weak and should not be used.
+    languages: [kotlin]
+    severity: WARNING
+    metadata:
+      cwe: CWE-327
+      owasp: "A02:2021 – Cryptographic Failures"
+      category: cryptography
+      confidence: HIGH
+      likelihood: LOW
+      impact: MEDIUM

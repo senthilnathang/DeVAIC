@@ -1,0 +1,117 @@
+rules:
+  - id: go-sql-injection
+    patterns:
+      - pattern: |
+          $DB.Query($QUERY + $VAR)
+      - pattern: |
+          $DB.Exec($QUERY + $VAR)
+      - pattern: |
+          $DB.QueryRow($QUERY + $VAR)
+    message: |
+      SQL injection vulnerability detected in Go database query.
+      Using string concatenation with user input in SQL queries can lead to SQL injection attacks.
+    languages: [go]
+    severity: ERROR
+    metadata:
+      cwe: CWE-89
+      owasp: "A03:2021 – Injection"
+      category: injection
+      confidence: HIGH
+      likelihood: HIGH
+      impact: HIGH
+    fix: |
+      Use parameterized queries instead:
+      db.Query("SELECT * FROM users WHERE id = ?", userID)
+
+  - id: go-command-injection
+    patterns:
+      - pattern: |
+          exec.Command($CMD, $ARG)
+      - pattern: |
+          exec.CommandContext($CTX, $CMD, $ARG)
+    message: |
+      Command injection vulnerability detected.
+      Executing system commands with user input can lead to command injection.
+    languages: [go]
+    severity: ERROR
+    metadata:
+      cwe: CWE-78
+      owasp: "A03:2021 – Injection"
+      category: injection
+      confidence: MEDIUM
+      likelihood: HIGH
+      impact: HIGH
+
+  - id: go-path-traversal
+    patterns:
+      - pattern: |
+          filepath.Join($BASE, $USERPATH)
+      - pattern-inside: |
+          func $FUNC(...) {
+            ...
+            $USERPATH := $REQUEST.$METHOD(...)
+            ...
+            filepath.Join($BASE, $USERPATH)
+            ...
+          }
+    message: |
+      Path traversal vulnerability detected.
+      Using user input in file paths without validation can lead to path traversal attacks.
+    languages: [go]
+    severity: ERROR
+    metadata:
+      cwe: CWE-22
+      owasp: "A01:2021 – Broken Access Control"
+      category: validation
+      confidence: HIGH
+      likelihood: MEDIUM
+      impact: HIGH
+
+  - id: go-xml-external-entity
+    patterns:
+      - pattern: |
+          xml.NewDecoder($READER)
+      - pattern-not-inside: |
+          $DECODER := xml.NewDecoder($READER)
+          $DECODER.Entity = ...
+    message: |
+      XML External Entity (XXE) vulnerability detected.
+      XML parsers that process external entities can be exploited for XXE attacks.
+    languages: [go]
+    severity: ERROR
+    metadata:
+      cwe: CWE-611
+      owasp: "A05:2021 – Security Misconfiguration"
+      category: deserialization
+      confidence: MEDIUM
+      likelihood: MEDIUM
+      impact: HIGH
+
+  - id: go-ssrf-vulnerability
+    patterns:
+      - pattern: |
+          http.Get($URL)
+      - pattern: |
+          http.Post($URL, ...)
+      - pattern: |
+          http.Client{}.Get($URL)
+      - pattern-inside: |
+          func $FUNC(...) {
+            ...
+            $URL := $REQUEST.$METHOD(...)
+            ...
+            http.Get($URL)
+            ...
+          }
+    message: |
+      Server-Side Request Forgery (SSRF) vulnerability detected.
+      Making HTTP requests with user-controlled URLs can lead to SSRF attacks.
+    languages: [go]
+    severity: ERROR
+    metadata:
+      cwe: CWE-918
+      owasp: "A10:2021 – Server-Side Request Forgery"
+      category: validation
+      confidence: HIGH
+      likelihood: MEDIUM
+      impact: HIGH

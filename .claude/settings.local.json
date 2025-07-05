@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:github.com)",
+      "Bash(mkdir:*)",
+      "Bash(cargo check:*)",
+      "Bash(cargo:*)",
+      "Bash(./target/debug/devaic:*)",
+      "Bash(ls:*)",
+      "Bash(grep:*)",
+      "Bash(rg:*)",
+      "Bash(rustc:*)",
+      "Bash(./test_c_syntax)",
+      "Bash(rm:*)",
+      "Bash(RUST_LOG=debug cargo run -- examples --verbose 2 >& 1)",
+      "Bash(RUST_LOG=debug cargo run -- examples --config devaic.toml --verbose 2 >& 1)",
+      "Bash(RUST_LOG=debug ./target/debug/devaic analyze examples/ 2 >& 1)",
+      "Bash(RUST_LOG=debug ./target/debug/devaic test_files/:*)",
+      "Bash(RUST_LOG=debug cargo run -- test_files/ 2 >& 1)",
+      "Bash(RUST_LOG=debug cargo run -- test_files/ 2>&1)",
+      "Bash(RUST_LOG=debug cargo run -- test_files/simple_owasp_test.py 2 >& 1)",
+      "Bash(RUST_LOG=devaic=debug ./target/debug/devaic test_files/owasp_test_direct.py)",
+      "Bash(./target/release/devaic:*)",
+      "WebFetch(domain:semgrep.dev)",
+      "Bash(sed:*)",
+      "Bash(./test_yaml_loading)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:ota-meshi.github.io)",
+      "WebFetch(domain:ota-meshi.github.io)",
+      "Bash(find:*)",
+      "Bash(mv:*)"
+    ],
+    "deny": []
+  }
+}

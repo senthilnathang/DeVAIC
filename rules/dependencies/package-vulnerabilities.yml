@@ -1,0 +1,173 @@
+rules:
+  - id: python-vulnerable-requests
+    patterns:
+      - pattern-regex: |
+          requests\s*==\s*2\.(0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|23|24|25|26|27|28|29|30)\.[0-9]+
+    message: |
+      Vulnerable version of requests library detected.
+      This version of requests may contain security vulnerabilities.
+    languages: [python]
+    severity: WARNING
+    metadata:
+      cwe: CWE-1104
+      owasp: "A06:2021 – Vulnerable and Outdated Components"
+      category: dependency
+      confidence: HIGH
+      likelihood: MEDIUM
+      impact: MEDIUM
+    fix: |
+      Update to requests >= 2.31.0:
+      requests>=2.31.0
+
+  - id: python-vulnerable-django
+    patterns:
+      - pattern-regex: |
+          Django\s*==\s*[12]\.[0-9]+\.[0-9]+
+      - pattern-regex: |
+          Django\s*==\s*3\.(0|1)\.[0-9]+
+    message: |
+      Vulnerable version of Django detected.
+      This version of Django may contain security vulnerabilities.
+    languages: [python]
+    severity: ERROR
+    metadata:
+      cwe: CWE-1104
+      owasp: "A06:2021 – Vulnerable and Outdated Components"
+      category: dependency
+      confidence: HIGH
+      likelihood: HIGH
+      impact: HIGH
+
+  - id: nodejs-vulnerable-lodash
+    patterns:
+      - pattern-regex: |
+          "lodash":\s*"4\.17\.(0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20)"
+    message: |
+      Vulnerable version of lodash detected.
+      This version contains prototype pollution vulnerabilities (CVE-2021-23337).
+    languages: [javascript]
+    severity: ERROR
+    metadata:
+      cwe: CWE-1321
+      owasp: "A08:2021 – Software and Data Integrity Failures"
+      category: dependency
+      confidence: HIGH
+      likelihood: HIGH
+      impact: HIGH
+    fix: |
+      Update to lodash >= 4.17.21:
+      "lodash": "^4.17.21"
+
+  - id: java-vulnerable-log4j
+    patterns:
+      - pattern-regex: |
+          <artifactId>log4j-core</artifactId>\s*<version>2\.(0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15)\.
+      - pattern-regex: |
+          log4j-core:2\.(0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15)\.
+    message: |
+      Vulnerable version of Log4j detected.
+      This version contains the Log4Shell vulnerability (CVE-2021-44228).
+    languages: [java]
+    severity: ERROR
+    metadata:
+      cwe: CWE-94
+      owasp: "A06:2021 – Vulnerable and Outdated Components"
+      category: dependency
+      confidence: HIGH
+      likelihood: HIGH
+      impact: CRITICAL
+    fix: |
+      Update to log4j-core >= 2.17.1
+
+  - id: java-vulnerable-jackson
+    patterns:
+      - pattern-regex: |
+          <artifactId>jackson-databind</artifactId>\s*<version>2\.(0|1|2|3|4|5|6|7|8|9|10|11)\.
+      - pattern-regex: |
+          jackson-databind:2\.(0|1|2|3|4|5|6|7|8|9|10|11)\.
+    message: |
+      Vulnerable version of Jackson Databind detected.
+      This version contains deserialization vulnerabilities.
+    languages: [java]
+    severity: ERROR
+    metadata:
+      cwe: CWE-502
+      owasp: "A08:2021 – Software and Data Integrity Failures"
+      category: dependency
+      confidence: HIGH
+      likelihood: HIGH
+      impact: HIGH
+
+  - id: ruby-vulnerable-rails
+    patterns:
+      - pattern-regex: |
+          gem\s+['"]rails['"],\s*['"][3-5]\.
+      - pattern-regex: |
+          gem\s+['"]rails['"],\s*['"]6\.[01]\.
+    message: |
+      Vulnerable version of Ruby on Rails detected.
+      This version may contain security vulnerabilities.
+    languages: [ruby]
+    severity: WARNING
+    metadata:
+      cwe: CWE-1104
+      owasp: "A06:2021 – Vulnerable and Outdated Components"
+      category: dependency
+      confidence: HIGH
+      likelihood: MEDIUM
+      impact: HIGH
+
+  - id: php-vulnerable-symfony
+    patterns:
+      - pattern-regex: |
+          "symfony/symfony":\s*"[2-4]\.[0-9]+\.[0-9]+"
+      - pattern-regex: |
+          "symfony/symfony":\s*"5\.[0-3]\.[0-9]+"
+    message: |
+      Vulnerable version of Symfony detected.
+      This version may contain security vulnerabilities.
+    languages: [php]
+    severity: WARNING
+    metadata:
+      cwe: CWE-1104
+      owasp: "A06:2021 – Vulnerable and Outdated Components"
+      category: dependency
+      confidence: HIGH
+      likelihood: MEDIUM
+      impact: MEDIUM
+
+  - id: go-vulnerable-gin
+    patterns:
+      - pattern-regex: |
+          github\.com/gin-gonic/gin\s+v1\.[0-7]\.
+    message: |
+      Potentially vulnerable version of Gin framework detected.
+      This version may contain security vulnerabilities.
+    languages: [go]
+    severity: INFO
+    metadata:
+      cwe: CWE-1104
+      owasp: "A06:2021 – Vulnerable and Outdated Components"
+      category: dependency
+      confidence: MEDIUM
+      likelihood: LOW
+      impact: MEDIUM
+
+  - id: dotnet-vulnerable-newtonsoft
+    patterns:
+      - pattern-regex: |
+          Newtonsoft\.Json.*[6-9]\.[0-9]+\.[0-9]+
+      - pattern-regex: |
+          Newtonsoft\.Json.*1[01]\.[0-9]+\.[0-9]+
+    message: |
+      Potentially vulnerable version of Newtonsoft.Json detected.
+      Older versions may contain deserialization vulnerabilities.
+    languages: [csharp]
+    severity: WARNING
+    metadata:
+      cwe: CWE-502
+      owasp: "A08:2021 – Software and Data Integrity Failures"
+      category: dependency
+      confidence: MEDIUM
+      likelihood: MEDIUM
+      impact: HIGH

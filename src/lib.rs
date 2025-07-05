@@ -6,6 +6,7 @@ pub mod report;
 pub mod config;
 pub mod error;
 pub mod semgrep;
+pub mod security_utils;
 
 pub use analyzer::Analyzer;
 pub use build_break::{BuildBreakAnalyzer, BuildBreakResult};
@@ -21,6 +22,12 @@ pub enum Language {
     Java,
     Javascript,
     TypeScript,
+    Go,
+    Php,
+    Ruby,
+    Kotlin,
+    CSharp,
+    Bash,
     Scada,
 }
 
@@ -33,6 +40,12 @@ impl Language {
             "java" => Some(Language::Java),
             "js" | "jsx" | "mjs" | "cjs" => Some(Language::Javascript),
             "ts" | "tsx" => Some(Language::TypeScript),
+            "go" => Some(Language::Go),
+            "php" | "php3" | "php4" | "php5" | "phtml" => Some(Language::Php),
+            "rb" | "ruby" | "rake" | "gemspec" => Some(Language::Ruby),
+            "kt" | "kts" => Some(Language::Kotlin),
+            "cs" => Some(Language::CSharp),
+            "sh" | "bash" | "zsh" | "fish" => Some(Language::Bash),
             "st" | "sl" | "scl" | "fbd" | "ld" | "il" => Some(Language::Scada),
             _ => None,
         }
@@ -48,6 +61,12 @@ impl std::fmt::Display for Language {
             Language::Java => write!(f, "java"),
             Language::Javascript => write!(f, "javascript"),
             Language::TypeScript => write!(f, "typescript"),
+            Language::Go => write!(f, "go"),
+            Language::Php => write!(f, "php"),
+            Language::Ruby => write!(f, "ruby"),
+            Language::Kotlin => write!(f, "kotlin"),
+            Language::CSharp => write!(f, "csharp"),
+            Language::Bash => write!(f, "bash"),
             Language::Scada => write!(f, "scada"),
         }
     }

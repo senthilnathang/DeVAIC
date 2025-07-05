@@ -7,13 +7,13 @@ pub struct JavascriptParser {
 }
 
 impl JavascriptParser {
-    pub fn new() -> Self {
+    pub fn new() -> Result<Self> {
         let mut parser = TreeSitterParser::new();
         parser
             .set_language(tree_sitter_javascript::language())
-            .expect("Error loading JavaScript grammar");
+            .map_err(|e| DevaicError::TreeSitter(format!("Error loading JavaScript grammar: {}", e)))?;
         
-        Self { parser }
+        Ok(Self { parser })
     }
 }
 

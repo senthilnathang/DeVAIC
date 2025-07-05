@@ -7,13 +7,13 @@ pub struct CppParser {
 }
 
 impl CppParser {
-    pub fn new() -> Self {
+    pub fn new() -> Result<Self> {
         let mut parser = TreeSitterParser::new();
         parser
             .set_language(tree_sitter_cpp::language())
-            .expect("Error loading C++ grammar");
+            .map_err(|e| DevaicError::TreeSitter(format!("Error loading C++ grammar: {}", e)))?;
         
-        Self { parser }
+        Ok(Self { parser })
     }
 }
 

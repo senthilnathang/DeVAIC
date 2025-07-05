@@ -57,10 +57,10 @@ pub enum ScadaNodeType {
 }
 
 impl ScadaParser {
-    pub fn new() -> Self {
-        Self {
+    pub fn new() -> Result<Self> {
+        Ok(Self {
             st_patterns: ScadaPatterns::new(),
-        }
+        })
     }
 
     fn parse_scada_content(&self, content: &str) -> Vec<ScadaAstNode> {

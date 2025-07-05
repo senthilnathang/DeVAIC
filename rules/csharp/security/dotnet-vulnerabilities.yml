@@ -1,0 +1,111 @@
+rules:
+  - id: csharp-sql-injection
+    patterns:
+      - pattern: |
+          new SqlCommand("$QUERY" + $VAR, ...)
+      - pattern: |
+          command.CommandText = "$QUERY" + $VAR
+      - pattern: |
+          ExecuteQuery("$QUERY" + $VAR)
+    message: |
+      SQL injection vulnerability detected in C#.
+      String concatenation in SQL commands can lead to SQL injection attacks.
+    languages: [csharp]
+    severity: ERROR
+    metadata:
+      cwe: CWE-89
+      owasp: "A03:2021 – Injection"
+      category: injection
+      confidence: HIGH
+      likelihood: HIGH
+      impact: CRITICAL
+
+  - id: csharp-command-injection
+    patterns:
+      - pattern: |
+          Process.Start($CMD)
+      - pattern: |
+          new ProcessStartInfo($CMD)
+      - pattern: |
+          cmd.exe /c $CMD
+    message: |
+      Command injection vulnerability detected in C#.
+      Executing processes with user input can lead to command injection.
+    languages: [csharp]
+    severity: ERROR
+    metadata:
+      cwe: CWE-78
+      owasp: "A03:2021 – Injection"
+      category: injection
+      confidence: HIGH
+      likelihood: HIGH
+      impact: CRITICAL
+
+  - id: csharp-deserialization
+    patterns:
+      - pattern: |
+          BinaryFormatter.Deserialize($STREAM)
+      - pattern: |
+          JavaScriptSerializer.Deserialize($JSON)
+      - pattern: |
+          XmlSerializer.Deserialize($XML)
+    message: |
+      Insecure deserialization detected in C#.
+      Deserializing untrusted data can lead to remote code execution.
+    languages: [csharp]
+    severity: ERROR
+    metadata:
+      cwe: CWE-502
+      owasp: "A08:2021 – Software and Data Integrity Failures"
+      category: deserialization
+      confidence: HIGH
+      likelihood: MEDIUM
+      impact: HIGH
+
+  - id: csharp-weak-crypto
+    patterns:
+      - pattern: |
+          MD5.Create()
+      - pattern: |
+          SHA1.Create()
+      - pattern: |
+          new DESCryptoServiceProvider()
+    message: |
+      Weak cryptographic algorithm detected in C#.
+      MD5, SHA1, and DES are cryptographically weak.
+    languages: [csharp]
+    severity: WARNING
+    metadata:
+      cwe: CWE-327
+      owasp: "A02:2021 – Cryptographic Failures"
+      category: cryptography
+      confidence: HIGH
+      likelihood: LOW
+      impact: MEDIUM
+
+  - id: csharp-path-traversal
+    patterns:
+      - pattern: |
+          File.ReadAllText($PATH)
+      - pattern: |
+          File.WriteAllText($PATH, ...)
+      - pattern-inside: |
+          public $TYPE $METHOD(...) {
+            ...
+            string $PATH = Request.QueryString["..."];
+            ...
+            File.ReadAllText($PATH);
+            ...
+          }
+    message: |
+      Path traversal vulnerability detected in C#.
+      Using user input in file paths can lead to unauthorized file access.
+    languages: [csharp]
+    severity: ERROR
+    metadata:
+      cwe: CWE-22
+      owasp: "A01:2021 – Broken Access Control"
+      category: validation
+      confidence: HIGH
+      likelihood: MEDIUM
+      impact: HIGH

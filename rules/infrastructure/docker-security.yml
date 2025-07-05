@@ -1,0 +1,171 @@
+rules:
+  - id: docker-privileged-mode
+    patterns:
+      - pattern: |
+          docker run --privileged ...
+      - pattern-regex: |
+          privileged:\s*true
+    message: |
+      Docker container running in privileged mode detected.
+      Privileged containers have access to all host devices and can compromise the host system.
+    languages: [dockerfile, yaml]
+    severity: ERROR
+    metadata:
+      cwe: CWE-250
+      owasp: "A05:2021 – Security Misconfiguration"
+      category: infrastructure
+      confidence: HIGH
+      likelihood: HIGH
+      impact: HIGH
+    fix: |
+      Avoid privileged mode. Use specific capabilities instead:
+      docker run --cap-add=SYS_TIME ...
+
+  - id: docker-root-user
+    patterns:
+      - pattern-regex: |
+          USER\s+0
+      - pattern-regex: |
+          USER\s+root
+      - pattern-regex: |
+          runAsUser:\s*0
+      - pattern-regex: |
+          runAsRoot:\s*true
+    message: |
+      Container running as root user detected.
+      Running containers as root increases the attack surface and potential for privilege escalation.
+    languages: [dockerfile, yaml]
+    severity: WARNING
+    metadata:
+      cwe: CWE-250
+      owasp: "A05:2021 – Security Misconfiguration"
+      category: infrastructure
+      confidence: HIGH
+      likelihood: MEDIUM
+      impact: HIGH
+    fix: |
+      Create and use a non-root user:
+      RUN adduser -D -s /bin/sh appuser
+      USER appuser
+
+  - id: docker-exposed-secrets
+    patterns:
+      - pattern-regex: |
+          ENV\s+.*PASSWORD.*=.*[a-zA-Z0-9]{8,}
+      - pattern-regex: |
+          ENV\s+.*SECRET.*=.*[a-zA-Z0-9]{8,}
+      - pattern-regex: |
+          ENV\s+.*API_KEY.*=.*[a-zA-Z0-9]{8,}
+      - pattern-regex: |
+          ENV\s+.*TOKEN.*=.*[a-zA-Z0-9]{8,}
+    message: |
+      Hardcoded secrets in Docker environment variables detected.
+      Secrets in environment variables can be exposed through image layers and process lists.
+    languages: [dockerfile]
+    severity: ERROR
+    metadata:
+      cwe: CWE-798
+      owasp: "A07:2021 – Identification and Authentication Failures"
+      category: authentication
+      confidence: HIGH
+      likelihood: HIGH
+      impact: HIGH
+
+  - id: docker-vulnerable-base-image
+    patterns:
+      - pattern-regex: |
+          FROM\s+(ubuntu:16\.04|ubuntu:14\.04|centos:7|centos:6|alpine:3\.[0-8]|node:10|python:2\.7|php:5\.)
+    message: |
+      Vulnerable or outdated base image detected.
+      Using outdated base images may contain known security vulnerabilities.
+    languages: [dockerfile]
+    severity: WARNING
+    metadata:
+      cwe: CWE-1104
+      owasp: "A06:2021 – Vulnerable and Outdated Components"
+      category: infrastructure
+      confidence: HIGH
+      likelihood: MEDIUM
+      impact: MEDIUM
+    fix: |
+      Use updated base images:
+      FROM ubuntu:22.04
+      FROM alpine:3.18
+      FROM node:18-alpine
+
+  - id: docker-add-instead-of-copy
+    patterns:
+      - pattern-regex: |
+          ADD\s+http[s]?://
+    message: |
+      Using ADD with URLs can lead to security vulnerabilities.
+      ADD command with URLs can execute downloaded content and may introduce security risks.
+    languages: [dockerfile]
+    severity: WARNING
+    metadata:
+      cwe: CWE-494
+      owasp: "A08:2021 – Software and Data Integrity Failures"
+      category: infrastructure
+      confidence: MEDIUM
+      likelihood: LOW
+      impact: MEDIUM
+    fix: |
+      Use RUN wget/curl and COPY instead:
+      RUN wget https://example.com/file.tar.gz && tar -xzf file.tar.gz
+      COPY local-file /app/
+
+  - id: kubernetes-host-network
+    patterns:
+      - pattern-regex: |
+          hostNetwork:\s*true
+    message: |
+      Kubernetes pod using host network detected.
+      Using host network gives the pod access to the host's network stack and can be a security risk.
+    languages: [yaml]
+    severity: WARNING
+    metadata:
+      cwe: CWE-250
+      owasp: "A05:2021 – Security Misconfiguration"
+      category: infrastructure
+      confidence: HIGH
+      likelihood: MEDIUM
+      impact: HIGH
+
+  - id: kubernetes-host-path-mount
+    patterns:
+      - pattern-regex: |
+          hostPath:
+    message: |
+      Kubernetes pod mounting host path detected.
+      Host path mounts can provide access to sensitive host files and directories.
+    languages: [yaml]
+    severity: WARNING
+    metadata:
+      cwe: CWE-250
+      owasp: "A05:2021 – Security Misconfiguration"
+      category: infrastructure
+      confidence: HIGH
+      likelihood: MEDIUM
+      impact: HIGH
+
+  - id: kubernetes-no-resource-limits
+    patterns:
+      - pattern-regex: |
+          resources:\s*\{\}
+      - pattern-not-inside: |
+          resources:
+            limits:
+              memory: ...
+              cpu: ...
+    message: |
+      Kubernetes container without resource limits detected.
+      Containers without resource limits can consume unlimited resources and affect other workloads.
+    languages: [yaml]
+    severity: INFO
+    metadata:
+      cwe: CWE-400
+      owasp: "A04:2021 – Insecure Design"
+      category: infrastructure
+      confidence: MEDIUM
+      likelihood: LOW
+      impact: MEDIUM

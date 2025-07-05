@@ -4,6 +4,12 @@ pub mod python_rules;
 pub mod java_rules;
 pub mod javascript_rules;
 pub mod typescript_rules;
+pub mod go_rules;
+pub mod php_rules;
+pub mod ruby_rules;
+pub mod kotlin_rules;
+pub mod csharp_rules;
+pub mod bash_rules;
 pub mod scada_rules;
 pub mod owasp_llm_rules;
 pub mod owasp_web_rules;
@@ -28,6 +34,12 @@ pub struct RuleEngine {
     java_rules: java_rules::JavaRules,
     javascript_rules: javascript_rules::JavascriptRules,
     typescript_rules: typescript_rules::TypeScriptRules,
+    go_rules: go_rules::GoRules,
+    php_rules: php_rules::PhpRules,
+    ruby_rules: ruby_rules::RubyRules,
+    kotlin_rules: kotlin_rules::KotlinRules,
+    csharp_rules: csharp_rules::CSharpRules,
+    bash_rules: bash_rules::BashRules,
     scada_rules: scada_rules::ScadaRules,
     owasp_llm_rules: owasp_llm_rules::OwaspLlmRules,
     owasp_web_rules: owasp_web_rules::OwaspWebRules,
@@ -48,6 +60,12 @@ impl RuleEngine {
             java_rules: java_rules::JavaRules::new(),
             javascript_rules: javascript_rules::JavascriptRules::new(),
             typescript_rules: typescript_rules::TypeScriptRules::new(),
+            go_rules: go_rules::GoRules::new(),
+            php_rules: php_rules::PhpRules::new(),
+            ruby_rules: ruby_rules::RubyRules::new(),
+            kotlin_rules: kotlin_rules::KotlinRules::new(),
+            csharp_rules: csharp_rules::CSharpRules::new(),
+            bash_rules: bash_rules::BashRules::new(),
             scada_rules: scada_rules::ScadaRules::new(),
             owasp_llm_rules: owasp_llm_rules::OwaspLlmRules::new(),
             owasp_web_rules: owasp_web_rules::OwaspWebRules::new(),
@@ -80,6 +98,24 @@ impl RuleEngine {
             }
             Language::TypeScript => {
                 vulnerabilities.extend(self.typescript_rules.analyze(source_file, ast)?);
+            }
+            Language::Go => {
+                vulnerabilities.extend(self.go_rules.analyze(source_file, ast)?);
+            }
+            Language::Php => {
+                vulnerabilities.extend(self.php_rules.analyze(source_file, ast)?);
+            }
+            Language::Ruby => {
+                vulnerabilities.extend(self.ruby_rules.analyze(source_file, ast)?);
+            }
+            Language::Kotlin => {
+                vulnerabilities.extend(self.kotlin_rules.analyze(source_file, ast)?);
+            }
+            Language::CSharp => {
+                vulnerabilities.extend(self.csharp_rules.analyze(source_file, ast)?);
+            }
+            Language::Bash => {
+                vulnerabilities.extend(self.bash_rules.analyze(source_file, ast)?);
             }
             Language::Scada => {
                 vulnerabilities.extend(self.scada_rules.analyze(source_file, ast)?);

@@ -7,13 +7,13 @@ pub struct JavaParser {
 }
 
 impl JavaParser {
-    pub fn new() -> Self {
+    pub fn new() -> Result<Self> {
         let mut parser = TreeSitterParser::new();
         parser
             .set_language(tree_sitter_java::language())
-            .expect("Error loading Java grammar");
+            .map_err(|e| DevaicError::TreeSitter(format!("Error loading Java grammar: {}", e)))?;
         
-        Self { parser }
+        Ok(Self { parser })
     }
 }
 

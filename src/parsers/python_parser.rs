@@ -7,13 +7,13 @@ pub struct PythonParser {
 }
 
 impl PythonParser {
-    pub fn new() -> Self {
+    pub fn new() -> Result<Self> {
         let mut parser = TreeSitterParser::new();
         parser
             .set_language(tree_sitter_python::language())
-            .expect("Error loading Python grammar");
+            .map_err(|e| DevaicError::TreeSitter(format!("Error loading Python grammar: {}", e)))?;
         
-        Self { parser }
+        Ok(Self { parser })
     }
 }
 

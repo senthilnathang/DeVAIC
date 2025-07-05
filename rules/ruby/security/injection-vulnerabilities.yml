@@ -1,0 +1,86 @@
+rules:
+  - id: ruby-sql-injection
+    patterns:
+      - pattern: |
+          $MODEL.where("$QUERY" + $VAR)
+      - pattern: |
+          $MODEL.find_by_sql("$QUERY" + $VAR)
+      - pattern: |
+          ActiveRecord::Base.connection.execute("$QUERY" + $VAR)
+    message: |
+      SQL injection vulnerability detected in Ruby/Rails.
+      String concatenation in SQL queries can lead to SQL injection attacks.
+    languages: [ruby]
+    severity: ERROR
+    metadata:
+      cwe: CWE-89
+      owasp: "A03:2021 – Injection"
+      category: injection
+      confidence: HIGH
+      likelihood: HIGH
+      impact: CRITICAL
+
+  - id: ruby-command-injection
+    patterns:
+      - pattern: |
+          system($CMD)
+      - pattern: |
+          `$CMD`
+      - pattern: |
+          exec($CMD)
+      - pattern: |
+          spawn($CMD)
+    message: |
+      Command injection vulnerability detected in Ruby.
+      Executing system commands with user input can lead to command injection.
+    languages: [ruby]
+    severity: ERROR
+    metadata:
+      cwe: CWE-78
+      owasp: "A03:2021 – Injection"
+      category: injection
+      confidence: HIGH
+      likelihood: HIGH
+      impact: CRITICAL
+
+  - id: ruby-code-injection
+    patterns:
+      - pattern: |
+          eval($CODE)
+      - pattern: |
+          instance_eval($CODE)
+      - pattern: |
+          class_eval($CODE)
+    message: |
+      Code injection vulnerability detected in Ruby.
+      Using eval with user input can lead to arbitrary code execution.
+    languages: [ruby]
+    severity: ERROR
+    metadata:
+      cwe: CWE-94
+      owasp: "A03:2021 – Injection"
+      category: injection
+      confidence: HIGH
+      likelihood: HIGH
+      impact: CRITICAL
+
+  - id: ruby-deserialization
+    patterns:
+      - pattern: |
+          Marshal.load($DATA)
+      - pattern: |
+          YAML.load($DATA)
+      - pattern: |
+          JSON.load($DATA)
+    message: |
+      Insecure deserialization detected in Ruby.
+      Deserializing untrusted data can lead to remote code execution.
+    languages: [ruby]
+    severity: ERROR
+    metadata:
+      cwe: CWE-502
+      owasp: "A08:2021 – Software and Data Integrity Failures"
+      category: deserialization
+      confidence: HIGH
+      likelihood: MEDIUM
+      impact: HIGH

@@ -1,0 +1,95 @@
+rules:
+  - id: bash-command-injection
+    patterns:
+      - pattern: |
+          eval $VAR
+      - pattern: |
+          $($VAR)
+      - pattern: |
+          `$VAR`
+    message: |
+      Command injection vulnerability detected in Bash.
+      Using variables in command substitution without validation can lead to injection.
+    languages: [bash]
+    severity: ERROR
+    metadata:
+      cwe: CWE-78
+      owasp: "A03:2021 – Injection"
+      category: injection
+      confidence: HIGH
+      likelihood: HIGH
+      impact: CRITICAL
+
+  - id: bash-path-traversal
+    patterns:
+      - pattern: |
+          cat $FILE
+      - pattern: |
+          less $FILE
+      - pattern: |
+          more $FILE
+      - pattern-inside: |
+          #!/bin/bash
+          ...
+          FILE=$1
+          ...
+          cat $FILE
+          ...
+    message: |
+      Path traversal vulnerability detected in Bash.
+      Using user input in file operations can lead to unauthorized file access.
+    languages: [bash]
+    severity: ERROR
+    metadata:
+      cwe: CWE-22
+      owasp: "A01:2021 – Broken Access Control"
+      category: validation
+      confidence: MEDIUM
+      likelihood: MEDIUM
+      impact: HIGH
+
+  - id: bash-unsafe-permissions
+    patterns:
+      - pattern: |
+          chmod 777 $FILE
+      - pattern: |
+          chmod 666 $FILE
+      - pattern: |
+          umask 000
+    message: |
+      Unsafe file permissions detected in Bash.
+      Setting overly permissive file permissions can lead to security issues.
+    languages: [bash]
+    severity: WARNING
+    metadata:
+      cwe: CWE-732
+      category: authorization
+      confidence: HIGH
+      likelihood: LOW
+      impact: MEDIUM
+
+  - id: bash-curl-ssrf
+    patterns:
+      - pattern: |
+          curl $URL
+      - pattern: |
+          wget $URL
+      - pattern-inside: |
+          #!/bin/bash
+          ...
+          URL=$1
+          ...
+          curl $URL
+          ...
+    message: |
+      SSRF vulnerability detected in Bash.
+      Making HTTP requests with user-controlled URLs can lead to SSRF attacks.
+    languages: [bash]
+    severity: ERROR
+    metadata:
+      cwe: CWE-918
+      owasp: "A10:2021 – Server-Side Request Forgery"
+      category: validation
+      confidence: MEDIUM
+      likelihood: MEDIUM
+      impact: HIGH
