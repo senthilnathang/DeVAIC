@@ -185,7 +185,7 @@ pub struct ScadaAst {
 }
 
 impl Parser for ScadaParser {
-    fn parse(&self, source_file: &SourceFile) -> Result<ParsedAst> {
+    fn parse(&mut self, source_file: &SourceFile) -> Result<ParsedAst> {
         // For SCADA languages, we create a custom AST structure
         // and wrap it in a way that's compatible with the ParsedAst interface
         let _nodes = self.parse_scada_content(&source_file.content);
@@ -217,7 +217,7 @@ mod tests {
 
     #[test]
     fn test_scada_parser_basic() {
-        let parser = ScadaParser::new();
+        let mut parser = ScadaParser::new().unwrap();
         let source = r#"
 PROGRAM TestProgram
 VAR
@@ -244,7 +244,7 @@ END_PROGRAM
 
     #[test]
     fn test_scada_patterns() {
-        let parser = ScadaParser::new();
+        let parser = ScadaParser::new().unwrap();
         
         let nodes = parser.parse_scada_content("PROGRAM TestProg");
         assert_eq!(nodes.len(), 1);

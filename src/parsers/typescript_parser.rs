@@ -18,12 +18,8 @@ impl TypeScriptParser {
 }
 
 impl Parser for TypeScriptParser {
-    fn parse(&self, source_file: &SourceFile) -> Result<ParsedAst> {
-        let mut parser = TreeSitterParser::new();
-        parser.set_language(tree_sitter_typescript::language_typescript())
-            .expect("Error loading TypeScript grammar");
-        
-        let tree = parser
+    fn parse(&mut self, source_file: &SourceFile) -> Result<ParsedAst> {
+        let tree = self.parser
             .parse(&source_file.content, None)
             .ok_or_else(|| DevaicError::Parse("Failed to parse TypeScript source code".to_string()))?;
         
@@ -42,7 +38,7 @@ mod tests {
 
     #[test]
     fn test_typescript_parser_basic() {
-        let parser = TypeScriptParser::new();
+        let mut parser = TypeScriptParser::new().unwrap();
         let source = r#"
 interface User {
     name: string;

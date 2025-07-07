@@ -906,7 +906,7 @@ mod tests {
     #[test]
     fn test_xss_detection() {
         let rules = JavascriptRules::new();
-        let parser = JavascriptParser::new();
+        let mut parser = JavascriptParser::new().unwrap();
         
         let source = r#"
 function updateDOM(userInput) {
@@ -930,7 +930,7 @@ function updateDOM(userInput) {
     #[test]
     fn test_redos_detection() {
         let rules = JavascriptRules::new();
-        let parser = JavascriptParser::new();
+        let mut parser = JavascriptParser::new().unwrap();
         
         let source = r#"
 const regex = /(.*)+ /;
@@ -953,7 +953,7 @@ const input = userInput.match(regex);
     #[test]
     fn test_supply_chain_detection() {
         let rules = JavascriptRules::new();
-        let parser = JavascriptParser::new();
+        let mut parser = JavascriptParser::new().unwrap();
         
         let source = r#"
 <script src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>

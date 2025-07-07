@@ -54,7 +54,7 @@ impl ParsedAst {
 }
 
 pub trait Parser {
-    fn parse(&self, source_file: &SourceFile) -> Result<ParsedAst>;
+    fn parse(&mut self, source_file: &SourceFile) -> Result<ParsedAst>;
     fn language(&self) -> Language;
 }
 

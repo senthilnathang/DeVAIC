@@ -10,8 +10,6 @@ use tree_sitter::Node;
 pub struct CppRules {
     memory_management_patterns: Vec<Regex>,
     unsafe_functions: Vec<Regex>,
-    exception_safety_patterns: Vec<Regex>,
-    smart_pointer_patterns: Vec<Regex>,
 }
 
 impl CppRules {
@@ -30,15 +28,6 @@ impl CppRules {
                 Regex::new(r"\bsprintf\s*\(").unwrap(),
                 Regex::new(r"\bgets\s*\(").unwrap(),
                 Regex::new(r"\bscanf\s*\(").unwrap(),
-            ],
-            exception_safety_patterns: vec![
-                Regex::new(r"\bthrow\s+\w+\s*\(").unwrap(),
-                Regex::new(r"\bcatch\s*\(\s*\.\.\.\s*\)").unwrap(),
-            ],
-            smart_pointer_patterns: vec![
-                Regex::new(r"\bstd::unique_ptr\s*<.*?>\s*\(").unwrap(),
-                Regex::new(r"\bstd::shared_ptr\s*<.*?>\s*\(").unwrap(),
-                Regex::new(r"\bstd::weak_ptr\s*<.*?>\s*\(").unwrap(),
             ],
         }
     }
@@ -318,13 +307,13 @@ impl RuleSet for CppRules {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{parsers::cpp_parser::CppParser, Language};
+    use crate::{parsers::{cpp_parser::CppParser, Parser}, Language};
     use std::path::PathBuf;
 
     #[test]
     fn test_memory_management_detection() {
         let rules = CppRules::new();
-        let parser = CppParser::new();
+        let mut parser = CppParser::new().unwrap();
         
         let source = r#"
 #include <iostream>

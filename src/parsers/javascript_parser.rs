@@ -18,12 +18,8 @@ impl JavascriptParser {
 }
 
 impl Parser for JavascriptParser {
-    fn parse(&self, source_file: &SourceFile) -> Result<ParsedAst> {
-        let mut parser = TreeSitterParser::new();
-        parser.set_language(tree_sitter_javascript::language())
-            .expect("Error loading JavaScript grammar");
-        
-        let tree = parser
+    fn parse(&mut self, source_file: &SourceFile) -> Result<ParsedAst> {
+        let tree = self.parser
             .parse(&source_file.content, None)
             .ok_or_else(|| DevaicError::Parse("Failed to parse JavaScript source code".to_string()))?;
         
@@ -42,7 +38,7 @@ mod tests {
 
     #[test]
     fn test_javascript_parser_basic() {
-        let parser = JavascriptParser::new();
+        let mut parser = JavascriptParser::new().unwrap();
         let source = r#"
 function greet(name) {
     console.log("Hello, " + name + "!");

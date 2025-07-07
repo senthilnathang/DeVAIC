@@ -244,7 +244,6 @@ fn would_analyze_file(path: &std::path::Path, config: &Config) -> bool {
 
 fn run_semgrep_analysis(cli: &Cli, config: &Config) -> Result<Vec<devaic::Vulnerability>> {
     use devaic::semgrep::SemgrepEngine;
-    use devaic::parsers::{SourceFile, ParsedAst};
     use walkdir::WalkDir;
     
     let mut engine = SemgrepEngine::new();
@@ -351,6 +350,13 @@ fn analyze_file_with_semgrep(
             return Ok(None);
         }
     };
+    
+    // Check file size limit
+    if content.len() > config.analysis.max_file_size {
+        eprintln!("Warning: File {} exceeds maximum size limit ({} bytes), skipping", 
+                 file_path.display(), config.analysis.max_file_size);
+        return Ok(None);
+    }
     
     // Create source file
     let source_file = SourceFile::new(file_path.to_path_buf(), content, language);

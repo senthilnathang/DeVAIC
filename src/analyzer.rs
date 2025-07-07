@@ -75,7 +75,7 @@ impl Analyzer {
         }
 
         let source_file = SourceFile::new(path.to_path_buf(), content, language);
-        let parser = ParserFactory::create_parser(&source_file.language)?;
+        let mut parser = ParserFactory::create_parser(&source_file.language)?;
         let ast = parser.parse(&source_file)?;
 
         self.rule_engine.analyze(&source_file, &ast)

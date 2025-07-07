@@ -167,6 +167,33 @@ impl CRules {
         Ok(vulnerabilities)
     }
 
+    fn check_unsafe_functions(&self, source_file: &SourceFile, ast: &ParsedAst) -> Result<Vec<Vulnerability>> {
+        let mut vulnerabilities = Vec::new();
+        let lines: Vec<&str> = ast.source.lines().collect();
+
+        for (line_num, line) in lines.iter().enumerate() {
+            for &unsafe_func in &self.unsafe_functions {
+                if line.contains(unsafe_func) && line.contains("(") {
+                    vulnerabilities.push(create_vulnerability(
+                        "C005",
+                        Some("CWE-120"),
+                        "Unsafe Function Usage",
+                        Severity::High,
+                        "injection",
+                        &format!("Usage of unsafe function: {}", unsafe_func),
+                        &source_file.path.to_string_lossy(),
+                        line_num + 1,
+                        0,
+                        line,
+                        "Use safe alternatives like strncpy, strncat, snprintf, or fgets instead of unsafe C functions",
+                    ));
+                }
+            }
+        }
+
+        Ok(vulnerabilities)
+    }
+
     fn traverse_node<F>(&self, node: &Node, source: &str, mut callback: F)
     where
         F: FnMut(&Node, &str),
@@ -205,6 +232,7 @@ impl RuleSet for CRules {
         all_vulnerabilities.extend(self.check_format_string(source_file, ast)?);
         all_vulnerabilities.extend(self.check_integer_overflow(source_file, ast)?);
         all_vulnerabilities.extend(self.check_null_pointer_dereference(source_file, ast)?);
+        all_vulnerabilities.extend(self.check_unsafe_functions(source_file, ast)?);
 
         Ok(all_vulnerabilities)
     }
@@ -213,13 +241,13 @@ impl RuleSet for CRules {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{parsers::c_parser::CParser, Language};
+    use crate::{parsers::{c_parser::CParser, Parser}, Language};
     use std::path::PathBuf;
 
     #[test]
     fn test_buffer_overflow_detection() {
         let rules = CRules::new();
-        let parser = CParser::new();
+        let mut parser = CParser::new().unwrap();
         
         let source = r#"
 #include <string.h>
@@ -241,5 +269,34 @@ void vulnerable_function(char* input) {
         
         assert!(!vulnerabilities.is_empty());
         assert!(vulnerabilities.iter().any(|v| v.id == "C001"));
+    }
+
+    #[test]
+    fn test_unsafe_functions_detection() {
+        let rules = CRules::new();
+        let mut parser = CParser::new().unwrap();
+        
+        let source = r#"
+#include <stdio.h>
+#include <string.h>
+
+void vulnerable_function() {
+    char buffer[100];
+    gets(buffer);  // Unsafe function
+    scanf("%s", buffer);  // Another unsafe function
+}
+"#;
+        
+        let source_file = SourceFile::new(
+            PathBuf::from("test.c"),
+            source.to_string(),
+            Language::C,
+        );
+        
+        let ast = parser.parse(&source_file).unwrap();
+        let vulnerabilities = rules.analyze(&source_file, &ast).unwrap();
+        
+        assert!(!vulnerabilities.is_empty());
+        assert!(vulnerabilities.iter().any(|v| v.id == "C005"));
     }
 }

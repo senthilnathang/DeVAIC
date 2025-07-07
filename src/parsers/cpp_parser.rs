@@ -18,12 +18,8 @@ impl CppParser {
 }
 
 impl Parser for CppParser {
-    fn parse(&self, source_file: &SourceFile) -> Result<ParsedAst> {
-        let mut parser = TreeSitterParser::new();
-        parser.set_language(tree_sitter_cpp::language())
-            .expect("Error loading C++ grammar");
-        
-        let tree = parser
+    fn parse(&mut self, source_file: &SourceFile) -> Result<ParsedAst> {
+        let tree = self.parser
             .parse(&source_file.content, None)
             .ok_or_else(|| DevaicError::Parse("Failed to parse C++ source code".to_string()))?;
         
@@ -42,7 +38,7 @@ mod tests {
 
     #[test]
     fn test_cpp_parser_basic() {
-        let parser = CppParser::new();
+        let mut parser = CppParser::new().unwrap();
         let source = r#"
 #include <iostream>
 

@@ -17,7 +17,7 @@ impl KotlinParser {
 }
 
 impl Parser for KotlinParser {
-    fn parse(&self, source_file: &SourceFile) -> Result<ParsedAst> {
+    fn parse(&mut self, source_file: &SourceFile) -> Result<ParsedAst> {
         // Validate input size to prevent DoS
         if source_file.content.len() > 50 * 1024 * 1024 { // 50MB limit
             return Err(DevaicError::Analysis("File too large for parsing".to_string()));

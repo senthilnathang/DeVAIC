@@ -36,7 +36,6 @@ enum SanitizerType {
     MemorySanitizer,     // MSan - detects uninitialized memory
     UndefinedBehavior,   // UBSan - detects undefined behavior
     LeakSanitizer,       // LSan - detects memory leaks
-    HardwareAddressSan,  // HWASan - hardware-assisted AddressSanitizer
 }
 
 impl SanitizerRules {

@@ -372,13 +372,13 @@ impl RuleSet for JavaRules {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{parsers::java_parser::JavaParser, Language};
+    use crate::{parsers::{java_parser::JavaParser, Parser}, Language};
     use std::path::PathBuf;
 
     #[test]
     fn test_sql_injection_detection() {
         let rules = JavaRules::new();
-        let parser = JavaParser::new();
+        let mut parser = JavaParser::new().unwrap();
         
         let source = r#"
 import java.sql.*;

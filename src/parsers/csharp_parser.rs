@@ -20,18 +20,13 @@ impl CSharpParser {
 }
 
 impl Parser for CSharpParser {
-    fn parse(&self, source_file: &SourceFile) -> Result<ParsedAst> {
+    fn parse(&mut self, source_file: &SourceFile) -> Result<ParsedAst> {
         // Validate input size to prevent DoS
         if source_file.content.len() > 50 * 1024 * 1024 { // 50MB limit
             return Err(DevaicError::Analysis("File too large for parsing".to_string()));
         }
         
-        let mut parser = tree_sitter::Parser::new();
-        parser
-            .set_language(tree_sitter_c_sharp::language())
-            .map_err(|e| DevaicError::TreeSitter(format!("Error setting C# language: {}", e)))?;
-        
-        let tree = parser
+        let tree = self.parser
             .parse(&source_file.content, None)
             .ok_or_else(|| DevaicError::Parse("Failed to parse C# code - syntax error or timeout".to_string()))?;
         

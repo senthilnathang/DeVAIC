@@ -21,18 +21,8 @@ struct PrivacyPattern {
     severity: Severity,
     description: String,
     recommendation: String,
-    data_type: DataType,
 }
 
-#[derive(Clone, Debug, PartialEq)]
-enum DataType {
-    PII,        // Personally Identifiable Information
-    PHI,        // Protected Health Information
-    Financial,  // Financial data
-    Biometric,  // Biometric data
-    Location,   // Location data
-    Contact,    // Contact information
-}
 
 impl PrivacyRules {
     pub fn new() -> Self {
@@ -50,7 +40,6 @@ impl PrivacyRules {
                 severity: Severity::Critical,
                 description: "Social Security Number detected in source code".to_string(),
                 recommendation: "Remove hardcoded SSN. Use tokenization or encryption for sensitive data storage.".to_string(),
-                data_type: DataType::PII,
             },
             PrivacyPattern {
                 id: "credit-card-number".to_string(),
@@ -60,7 +49,6 @@ impl PrivacyRules {
                 severity: Severity::Critical,
                 description: "Credit card number detected in source code".to_string(),
                 recommendation: "Remove hardcoded credit card data. Use PCI-compliant tokenization services.".to_string(),
-                data_type: DataType::Financial,
             },
             PrivacyPattern {
                 id: "email-address".to_string(),
@@ -70,7 +58,6 @@ impl PrivacyRules {
                 severity: Severity::Medium,
                 description: "Email address detected in source code".to_string(),
                 recommendation: "Avoid hardcoding email addresses. Use configuration or environment variables.".to_string(),
-                data_type: DataType::Contact,
             },
             PrivacyPattern {
                 id: "phone-number".to_string(),
@@ -80,7 +67,6 @@ impl PrivacyRules {
                 severity: Severity::Medium,
                 description: "Phone number detected in source code".to_string(),
                 recommendation: "Avoid hardcoding phone numbers. Use configuration or masked data for testing.".to_string(),
-                data_type: DataType::Contact,
             },
             PrivacyPattern {
                 id: "passport-number".to_string(),
@@ -90,7 +76,6 @@ impl PrivacyRules {
                 severity: Severity::Critical,
                 description: "Passport number detected in source code".to_string(),
                 recommendation: "Remove hardcoded passport data. Use anonymized test data.".to_string(),
-                data_type: DataType::PII,
             },
         ]);
 
@@ -104,7 +89,6 @@ impl PrivacyRules {
                 severity: Severity::Critical,
                 description: "Medical record number detected in source code".to_string(),
                 recommendation: "Remove hardcoded medical data. Ensure HIPAA compliance for PHI handling.".to_string(),
-                data_type: DataType::PHI,
             },
             PrivacyPattern {
                 id: "health-insurance-number".to_string(),
@@ -114,7 +98,6 @@ impl PrivacyRules {
                 severity: Severity::Critical,
                 description: "Health insurance number detected in source code".to_string(),
                 recommendation: "Remove hardcoded insurance data. Use synthetic data for testing.".to_string(),
-                data_type: DataType::PHI,
             },
         ]);
 
@@ -128,7 +111,6 @@ impl PrivacyRules {
                 severity: Severity::High,
                 description: "Database query selecting PII data detected".to_string(),
                 recommendation: "Ensure proper access controls and auditing for PII data queries.".to_string(),
-                data_type: DataType::PII,
             },
             PrivacyPattern {
                 id: "logging-sensitive-data".to_string(),
@@ -138,7 +120,6 @@ impl PrivacyRules {
                 severity: Severity::High,
                 description: "Sensitive data being logged detected".to_string(),
                 recommendation: "Avoid logging sensitive data. Use data masking or redaction.".to_string(),
-                data_type: DataType::PII,
             },
             PrivacyPattern {
                 id: "api-response-pii".to_string(),
@@ -148,7 +129,6 @@ impl PrivacyRules {
                 severity: Severity::High,
                 description: "API response containing PII data detected".to_string(),
                 recommendation: "Filter sensitive data from API responses. Use data transformation layers.".to_string(),
-                data_type: DataType::PII,
             },
         ]);
 

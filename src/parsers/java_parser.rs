@@ -18,12 +18,8 @@ impl JavaParser {
 }
 
 impl Parser for JavaParser {
-    fn parse(&self, source_file: &SourceFile) -> Result<ParsedAst> {
-        let mut parser = TreeSitterParser::new();
-        parser.set_language(tree_sitter_java::language())
-            .expect("Error loading Java grammar");
-        
-        let tree = parser
+    fn parse(&mut self, source_file: &SourceFile) -> Result<ParsedAst> {
+        let tree = self.parser
             .parse(&source_file.content, None)
             .ok_or_else(|| DevaicError::Parse("Failed to parse Java source code".to_string()))?;
         
@@ -42,7 +38,7 @@ mod tests {
 
     #[test]
     fn test_java_parser_basic() {
-        let parser = JavaParser::new();
+        let mut parser = JavaParser::new().unwrap();
         let source = r#"
 public class HelloWorld {
     public static void main(String[] args) {

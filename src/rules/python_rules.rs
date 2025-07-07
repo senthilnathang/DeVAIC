@@ -464,13 +464,13 @@ impl RuleSet for PythonRules {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{parsers::python_parser::PythonParser, Language};
+    use crate::{parsers::{python_parser::PythonParser, Parser}, Language};
     use std::path::PathBuf;
 
     #[test]
     fn test_hardcoded_secrets_detection() {
         let rules = PythonRules::new();
-        let parser = PythonParser::new();
+        let mut parser = PythonParser::new().unwrap();
         
         let source = r#"
 import os
@@ -499,7 +499,7 @@ def connect_db():
     #[test]
     fn test_sql_injection_detection() {
         let rules = PythonRules::new();
-        let parser = PythonParser::new();
+        let mut parser = PythonParser::new().unwrap();
         
         let source = r#"
 import sqlite3

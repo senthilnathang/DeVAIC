@@ -18,12 +18,8 @@ impl PythonParser {
 }
 
 impl Parser for PythonParser {
-    fn parse(&self, source_file: &SourceFile) -> Result<ParsedAst> {
-        let mut parser = TreeSitterParser::new();
-        parser.set_language(tree_sitter_python::language())
-            .expect("Error loading Python grammar");
-        
-        let tree = parser
+    fn parse(&mut self, source_file: &SourceFile) -> Result<ParsedAst> {
+        let tree = self.parser
             .parse(&source_file.content, None)
             .ok_or_else(|| DevaicError::Parse("Failed to parse Python source code".to_string()))?;
         
@@ -42,7 +38,7 @@ mod tests {
 
     #[test]
     fn test_python_parser_basic() {
-        let parser = PythonParser::new();
+        let mut parser = PythonParser::new().unwrap();
         let source = r#"
 import os
 import sys

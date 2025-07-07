@@ -252,6 +252,16 @@ impl DependencyScannerRules {
             }) {
                 continue;
             }
+            
+            // Check if this pattern applies to the source file's language
+            let source_language = source_file.language.to_string().to_lowercase();
+            if !pattern.languages.is_empty() && !pattern.languages.iter().any(|lang| {
+                lang.to_lowercase() == source_language || 
+                (source_language == "javascript" && lang.to_lowercase() == "typescript") ||
+                (source_language == "typescript" && lang.to_lowercase() == "javascript")
+            }) {
+                continue;
+            }
 
             for (line_index, line) in lines.iter().enumerate() {
                 if let Some(captures) = pattern.pattern.captures(line) {
@@ -336,5 +346,32 @@ mod tests {
         let ast = crate::parsers::ParsedAst::new_source_only(source.content.clone());
         let vulnerabilities = rules.analyze(&source, &ast).unwrap();
         assert!(!vulnerabilities.is_empty());
+    }
+
+    #[test]
+    fn test_language_filtering() {
+        let rules = DependencyScannerRules::new();
+        
+        // Test Python-specific pattern with Python file
+        let python_source = SourceFile::new(
+            PathBuf::from("requirements.txt"),
+            "requests==2.0.0".to_string(),
+            Language::Python,
+        );
+        let ast = crate::parsers::ParsedAst::new_source_only(python_source.content.clone());
+        let python_vulns = rules.analyze(&python_source, &ast).unwrap();
+        
+        // Test Python-specific pattern with Java file (should not match)
+        let java_source = SourceFile::new(
+            PathBuf::from("requirements.txt"), // Same filename but different language
+            "requests==2.0.0".to_string(),
+            Language::Java,
+        );
+        let ast = crate::parsers::ParsedAst::new_source_only(java_source.content.clone());
+        let java_vulns = rules.analyze(&java_source, &ast).unwrap();
+        
+        // Python file should have vulnerabilities, Java file should not
+        assert!(!python_vulns.is_empty());
+        assert!(java_vulns.is_empty());
     }
 }
