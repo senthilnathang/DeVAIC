@@ -11,6 +11,8 @@ pub mod kotlin_parser;
 pub mod csharp_parser;
 pub mod bash_parser;
 pub mod scada_parser;
+pub mod cobol_parser;
+pub mod pascal_parser;
 
 use crate::{error::Result, Language};
 use std::path::PathBuf;
@@ -76,6 +78,8 @@ impl ParserFactory {
             Language::CSharp => Ok(Box::new(csharp_parser::CSharpParser::new()?)),
             Language::Bash => Ok(Box::new(bash_parser::BashParser::new()?)),
             Language::Scada => Ok(Box::new(scada_parser::ScadaParser::new()?)),
+            Language::Cobol => Ok(Box::new(cobol_parser::CobolParser::new()?)),
+            Language::Pascal => Ok(Box::new(pascal_parser::PascalParser::new()?)),
         }
     }
 }

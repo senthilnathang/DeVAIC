@@ -936,7 +936,7 @@ impl RuleSet for TypeScriptRules {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{parsers::typescript_parser::TypeScriptParser, Language};
+    use crate::{parsers::{typescript_parser::TypeScriptParser, Parser, SourceFile}, Language};
     use std::path::PathBuf;
 
     #[test]
@@ -957,7 +957,7 @@ function processData(data: unknown) {
             Language::TypeScript,
         );
         
-        let ast = parser.parse(&source_file).unwrap();
+        let ast = parser.unwrap().parse(&source_file).unwrap();
         let vulnerabilities = rules.analyze(&source_file, &ast).unwrap();
         
         assert!(!vulnerabilities.is_empty());
@@ -981,7 +981,7 @@ function processInput(input: any): void {
             Language::TypeScript,
         );
         
-        let ast = parser.parse(&source_file).unwrap();
+        let ast = parser.unwrap().parse(&source_file).unwrap();
         let vulnerabilities = rules.analyze(&source_file, &ast).unwrap();
         
         assert!(!vulnerabilities.is_empty());
@@ -1003,7 +1003,7 @@ const value = possiblyNull!.property!.method();
             Language::TypeScript,
         );
         
-        let ast = parser.parse(&source_file).unwrap();
+        let ast = parser.unwrap().parse(&source_file).unwrap();
         let vulnerabilities = rules.analyze(&source_file, &ast).unwrap();
         
         assert!(!vulnerabilities.is_empty());
@@ -1025,7 +1025,7 @@ const userInput = req.body as UserInterface;
             Language::TypeScript,
         );
         
-        let ast = parser.parse(&source_file).unwrap();
+        let ast = parser.unwrap().parse(&source_file).unwrap();
         let vulnerabilities = rules.analyze(&source_file, &ast).unwrap();
         
         assert!(!vulnerabilities.is_empty());

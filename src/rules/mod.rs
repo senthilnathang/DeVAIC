@@ -11,6 +11,8 @@ pub mod kotlin_rules;
 pub mod csharp_rules;
 pub mod bash_rules;
 pub mod scada_rules;
+pub mod cobol_rules;
+pub mod pascal_rules;
 pub mod owasp_llm_rules;
 pub mod owasp_web_rules;
 pub mod privacy_rules;
@@ -41,6 +43,8 @@ pub struct RuleEngine {
     csharp_rules: csharp_rules::CSharpRules,
     bash_rules: bash_rules::BashRules,
     scada_rules: scada_rules::ScadaRules,
+    cobol_rules: cobol_rules::CobolRules,
+    pascal_rules: pascal_rules::PascalRules,
     owasp_llm_rules: owasp_llm_rules::OwaspLlmRules,
     owasp_web_rules: owasp_web_rules::OwaspWebRules,
     privacy_rules: privacy_rules::PrivacyRules,
@@ -67,6 +71,8 @@ impl RuleEngine {
             csharp_rules: csharp_rules::CSharpRules::new(),
             bash_rules: bash_rules::BashRules::new(),
             scada_rules: scada_rules::ScadaRules::new(),
+            cobol_rules: cobol_rules::CobolRules::new(),
+            pascal_rules: pascal_rules::PascalRules::new(),
             owasp_llm_rules: owasp_llm_rules::OwaspLlmRules::new(),
             owasp_web_rules: owasp_web_rules::OwaspWebRules::new(),
             privacy_rules: privacy_rules::PrivacyRules::new(),
@@ -119,6 +125,12 @@ impl RuleEngine {
             }
             Language::Scada => {
                 vulnerabilities.extend(self.scada_rules.analyze(source_file, ast)?);
+            }
+            Language::Cobol => {
+                vulnerabilities.extend(self.cobol_rules.analyze(source_file, ast)?);
+            }
+            Language::Pascal => {
+                vulnerabilities.extend(self.pascal_rules.analyze(source_file, ast)?);
             }
         }
 

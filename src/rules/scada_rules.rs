@@ -301,7 +301,7 @@ impl RuleSet for ScadaRules {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{parsers::scada_parser::ScadaParser, Language};
+    use crate::{parsers::{scada_parser::ScadaParser, Parser, SourceFile}, Language};
     use std::path::PathBuf;
 
     #[test]
@@ -328,7 +328,7 @@ END_PROGRAM
             Language::Scada,
         );
         
-        let ast = parser.parse(&source_file).unwrap();
+        let ast = parser.unwrap().parse(&source_file).unwrap();
         let vulnerabilities = rules.analyze(&source_file, &ast).unwrap();
         
         assert!(!vulnerabilities.is_empty());
@@ -358,7 +358,7 @@ END_PROGRAM
             Language::Scada,
         );
         
-        let ast = parser.parse(&source_file).unwrap();
+        let ast = parser.unwrap().parse(&source_file).unwrap();
         let vulnerabilities = rules.analyze(&source_file, &ast).unwrap();
         
         assert!(vulnerabilities.iter().any(|v| v.id == "SCADA002"));

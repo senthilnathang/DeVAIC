@@ -26,9 +26,9 @@
       "Bash(./test_yaml_loading)",
       "WebFetch(domain:raw.githubusercontent.com)",
       "WebFetch(domain:ota-meshi.github.io)",
-      "WebFetch(domain:ota-meshi.github.io)",
       "Bash(find:*)",
-      "Bash(mv:*)"
+      "Bash(mv:*)",
+      "Bash(cp:*)"
     ],
     "deny": []
   }

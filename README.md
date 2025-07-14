@@ -1,6 +1,6 @@
 # DeVAIC - Advanced Vulnerability Analysis with Bearer-Inspired Privacy & Google Sanitizers Memory Safety Detection
 
-A high-performance static code analyzer for comprehensive vulnerability, security risk, privacy detection, and memory safety analysis in 13+ programming languages including C, C++, Java, JavaScript, TypeScript, Python, Go, PHP, Ruby, Kotlin, C#, Bash, and SCADA, built in Rust.
+A high-performance static code analyzer for comprehensive vulnerability, security risk, privacy detection, and memory safety analysis in 15+ programming languages including C, C++, Java, JavaScript, TypeScript, Python, Go, PHP, Ruby, Kotlin, C#, Bash, SCADA, COBOL, and Pascal, built in Rust.
 
 DeVAIC provides enterprise-grade security analysis combining Bearer-inspired privacy risk detection, Google Sanitizers-inspired memory safety analysis, and traditional vulnerability scanning. Originally designed for industrial control systems and embedded devices, it now offers comprehensive security analysis suitable for any codebase, from web applications to critical infrastructure.
 
@@ -20,7 +20,7 @@ DeVAIC provides enterprise-grade security analysis combining Bearer-inspired pri
 - **LeakSanitizer Integration**: Memory and resource leak identification
 
 ### 🛡️ **Comprehensive Vulnerability Detection**
-- **Multi-language Support**: 13+ languages including C, C++, Java, JavaScript, TypeScript, Python, Go, PHP, Ruby, Kotlin, C#, Bash, and SCADA
+- **Multi-language Support**: 15+ languages including C, C++, Java, JavaScript, TypeScript, Python, Go, PHP, Ruby, Kotlin, C#, Bash, SCADA, COBOL, and Pascal
 - **OWASP Coverage**: Top 10 2021, LLM Top 10, and CWE Top 25 vulnerabilities
 - **Language-Specific Risks**: Tailored detection for each programming language and framework
 - **Industrial Security**: Specialized rules for SCADA and embedded systems
@@ -45,7 +45,7 @@ DeVAIC provides enterprise-grade security analysis combining Bearer-inspired pri
 | **Privacy Risk Detection** | ✅ Full PII/PHI | ✅ Privacy-focused | ❌ | ⚠️ Limited | ⚠️ Basic |
 | **Memory Safety Analysis** | ✅ Full Sanitizers | ❌ | ✅ Runtime Only | ⚠️ Limited | ⚠️ Basic |
 | **OWASP Top 10 Coverage** | ✅ Complete | ⚠️ Partial | ❌ | ✅ Complete | ✅ Complete |
-| **Multi-language Support** | ✅ 13+ Languages | ⚠️ Limited | ✅ Native Code | ✅ 20+ Languages | ✅ 25+ Languages |
+| **Multi-language Support** | ✅ 15+ Languages | ⚠️ Limited | ✅ Native Code | ✅ 20+ Languages | ✅ 25+ Languages |
 | **SCADA/Industrial** | ✅ Specialized | ❌ | ❌ | ❌ | ❌ |
 | **Performance** | ⚡ High (Rust) | ⚡ High (Go) | ⚡ Runtime | ⚡ High (OCaml) | ⚠️ Medium (Java) |
 | **Report Formats** | ✅ 5 Formats | ⚠️ 3 Formats | ❌ Terminal | ✅ 4 Formats | ✅ 5+ Formats |
@@ -55,7 +55,7 @@ DeVAIC provides enterprise-grade security analysis combining Bearer-inspired pri
 - **Analysis Speed**: ~10,000 lines/second on modern hardware
 - **Memory Usage**: Low memory footprint (~50MB for large codebases)
 - **Accuracy**: >95% precision with <2% false positives
-- **Coverage**: 500+ security patterns across 13+ supported languages
+- **Coverage**: 500+ security patterns across 15+ supported languages
 - **Scalability**: Handles codebases up to 10M+ lines of code
 
 ## Detection Capabilities
@@ -226,6 +226,23 @@ DeVAIC provides enterprise-grade security analysis combining Bearer-inspired pri
 - Unsafe operations and memory safety
 - Cryptographic vulnerabilities
 - Secrets and API token detection
+
+### COBOL Language
+- Hardcoded credentials in data division
+- SQL injection in embedded SQL statements
+- Insecure file access patterns
+- Data exposure through display statements
+- Buffer overflow in string operations
+- DB2 and IMS security configuration issues
+
+### Pascal Language
+- Buffer overflow in string manipulation functions
+- SQL injection in database queries
+- Memory management vulnerabilities
+- Unsafe type casting to pointer types
+- Hardcoded credentials and secrets
+- Input validation issues
+- Format string vulnerabilities
 
 ### OWASP LLM Top 10 (AI/ML Security)
 - **LLM01**: Prompt Injection - Untrusted input manipulation of LLM behavior
@@ -538,7 +555,11 @@ include_patterns = [
     "*.h", 
     "*.py",
     "*.st",
-    "*.scl"
+    "*.scl",
+    "*.cob",
+    "*.cbl",
+    "*.pas",
+    "*.pp"
 ]
 follow_symlinks = false
 ```
@@ -621,6 +642,8 @@ DeVAIC exits with status code 1 if critical or high severity vulnerabilities are
 - **Bash/Shell**: `.sh`, `.bash`, `.zsh`, `.fish`
 - **Rust**: `.rs`
 - **SCADA**: `.st`, `.scl`, `.fbd`, `.ld`, `.il`
+- **COBOL**: `.cob`, `.cbl`, `.cpy`, `.cobol`
+- **Pascal**: `.pas`, `.pp`, `.pascal`, `.inc`
 
 ## Real-World Usage Examples
 
@@ -772,7 +795,7 @@ The AST-based approach enables detection of complex vulnerabilities that traditi
 | **Privacy Detection** | ✅ Core Focus | ✅ Bearer-Inspired | PII/PHI detection, data flow analysis |
 | **Security Risks** | ✅ Enterprise | ✅ Enhanced | OWASP coverage, crypto, authentication |
 | **Vulnerability Scanning** | ✅ Basic | ✅ Comprehensive | CWE Top 25, language-specific patterns |
-| **Languages Supported** | 7 languages | **8+ languages** | Includes SCADA/industrial languages |
+| **Languages Supported** | 7 languages | **15+ languages** | Includes SCADA/industrial/legacy languages |
 | **Industrial/SCADA** | ❌ Not Supported | ✅ **Specialized** | Critical infrastructure focus |
 | **Output Formats** | JSON, SARIF | **5 formats** | Table, JSON, SARIF, PDF, Excel |
 | **Performance** | Go-based | **Rust-based** | Higher performance, memory safety |

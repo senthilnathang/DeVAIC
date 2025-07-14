@@ -29,6 +29,8 @@ pub enum Language {
     CSharp,
     Bash,
     Scada,
+    Cobol,
+    Pascal,
 }
 
 impl Language {
@@ -47,6 +49,8 @@ impl Language {
             "cs" => Some(Language::CSharp),
             "sh" | "bash" | "zsh" | "fish" => Some(Language::Bash),
             "st" | "sl" | "scl" | "fbd" | "ld" | "il" => Some(Language::Scada),
+            "cob" | "cbl" | "cpy" | "cobol" => Some(Language::Cobol),
+            "pas" | "pp" | "pascal" | "inc" => Some(Language::Pascal),
             _ => None,
         }
     }
@@ -68,6 +72,8 @@ impl std::fmt::Display for Language {
             Language::CSharp => write!(f, "csharp"),
             Language::Bash => write!(f, "bash"),
             Language::Scada => write!(f, "scada"),
+            Language::Cobol => write!(f, "cobol"),
+            Language::Pascal => write!(f, "pascal"),
         }
     }
 }
