@@ -284,7 +284,20 @@ fn run_semgrep_analysis(cli: &Cli, config: &Config) -> Result<Vec<devaic::Vulner
         stats.print_summary();
     }
     
-    let mut all_vulnerabilities = Vec::new();
+    // Pre-allocate vulnerabilities vector based on file count
+    let mut all_vulnerabilities = if cli.target.is_file() {
+        Vec::with_capacity(10) // Single file, assume ~10 vulnerabilities
+    } else {
+        // Count files to estimate capacity
+        let file_count = WalkDir::new(&cli.target)
+            .follow_links(config.analysis.follow_symlinks)
+            .into_iter()
+            .filter_map(|e| e.ok())
+            .filter(|entry| entry.file_type().is_file())
+            .filter(|entry| would_analyze_file(entry.path(), config))
+            .count();
+        Vec::with_capacity(file_count * 5) // Estimate 5 vulnerabilities per file
+    };
     
     // Analyze files
     if cli.target.is_file() {

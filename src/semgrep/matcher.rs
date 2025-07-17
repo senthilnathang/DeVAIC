@@ -30,7 +30,7 @@ impl SemgrepMatcher {
             return Ok(Vec::new());
         }
         
-        let pattern = Pattern::new(rule.pattern.clone(), self.language);
+        let pattern = Pattern::new(&rule.pattern, self.language);
         self.match_pattern(&pattern, source_file, ast)
     }
     
@@ -151,7 +151,7 @@ impl SemgrepMatcher {
             } else {
                 // Named metavariable - capturing group
                 regex_pattern = regex_pattern.replace(&escaped_metavar, r"(\w+)");
-                metavar_positions.insert(i + 1, metavar.clone());
+                metavar_positions.insert(i + 1, metavar);
             }
         }
         
@@ -174,7 +174,7 @@ impl SemgrepMatcher {
                         end_point: tree_sitter::Point { row: line_num, column: full_match.end() },
                     };
                     
-                    bindings.bind(metavar_name, capture.as_str().to_string(), range);
+                    bindings.bind(metavar_name.clone(), capture.as_str().to_string(), range);
                 }
             }
             
@@ -311,12 +311,12 @@ impl SemgrepMatcher {
         }
         
         // Start with matches from the first pattern
-        let first_pattern = Pattern::new(patterns[0].clone(), self.language);
+        let first_pattern = Pattern::new(&patterns[0], self.language);
         let mut result_matches = self.match_pattern(&first_pattern, source_file, ast)?;
         
         // Filter matches that also satisfy all other patterns
         for pattern_op in patterns.iter().skip(1) {
-            let pattern = Pattern::new(pattern_op.clone(), self.language);
+            let pattern = Pattern::new(pattern_op, self.language);
             let pattern_matches = self.match_pattern(&pattern, source_file, ast)?;
             
             // Keep only matches that have overlapping ranges and compatible bindings
@@ -341,7 +341,7 @@ impl SemgrepMatcher {
         let mut all_matches = Vec::new();
         
         for pattern_op in patterns {
-            let pattern = Pattern::new(pattern_op.clone(), self.language);
+            let pattern = Pattern::new(pattern_op, self.language);
             let matches = self.match_pattern(&pattern, source_file, ast)?;
             all_matches.extend(matches);
         }
@@ -374,7 +374,7 @@ impl SemgrepMatcher {
     ) -> Result<Vec<SemgrepMatch>, String> 
     where T: AstLike {
         // Simplified implementation - would need more sophisticated context analysis
-        let pattern_obj = Pattern::new(pattern.clone(), self.language);
+        let pattern_obj = Pattern::new(pattern, self.language);
         self.match_pattern(&pattern_obj, source_file, ast)
     }
     
@@ -409,7 +409,7 @@ impl SemgrepMatcher {
     ) -> Result<Vec<SemgrepMatch>, String> 
     where T: AstLike {
         // Simplified implementation
-        let pattern_obj = Pattern::new(pattern.clone(), self.language);
+        let pattern_obj = Pattern::new(pattern, self.language);
         self.match_pattern(&pattern_obj, source_file, ast)
     }
     

@@ -367,7 +367,7 @@ impl SemgrepRule {
         }
         
         // Validate pattern
-        let pattern = Pattern::new(self.pattern.clone(), self.languages[0]);
+        let pattern = Pattern::new(&self.pattern, self.languages[0]);
         pattern.validate()?;
         
         Ok(())

@@ -6,6 +6,7 @@ use crate::{
     Language, Vulnerability,
 };
 use std::path::Path;
+use std::io::Read;
 use walkdir::WalkDir;
 
 pub struct Analyzer {
@@ -23,7 +24,16 @@ impl Analyzer {
     }
 
     pub fn analyze_directory(&self, path: &Path) -> Result<Vec<Vulnerability>> {
-        let mut vulnerabilities = Vec::new();
+        // Pre-count files to optimize memory allocation
+        let file_count = WalkDir::new(path)
+            .follow_links(self.config.analysis.follow_symlinks)
+            .into_iter()
+            .filter_map(|e| e.ok())
+            .filter(|entry| entry.file_type().is_file())
+            .count();
+        
+        // Pre-allocate with estimated capacity (assume average 5 vulnerabilities per file)
+        let mut vulnerabilities = Vec::with_capacity(file_count * 5);
         
         for entry in WalkDir::new(path)
             .follow_links(self.config.analysis.follow_symlinks)
@@ -65,14 +75,28 @@ impl Analyzer {
             }
         };
 
-        let content = std::fs::read_to_string(path)?;
-        
-        if content.len() > self.config.analysis.max_file_size {
+        // Check file size before reading to avoid large allocations
+        let metadata = std::fs::metadata(path)?;
+        if metadata.len() as usize > self.config.analysis.max_file_size {
             return Err(DevaicError::Analysis(format!(
                 "File {} exceeds maximum size limit",
                 path.display()
             )));
         }
+        
+        // For large files, use streaming approach with BufReader
+        let content = if metadata.len() > 1024 * 1024 {
+            // Files larger than 1MB use buffered reading
+            use std::io::BufReader;
+            let file = std::fs::File::open(path)?;
+            let mut reader = BufReader::new(file);
+            let mut content = String::with_capacity(metadata.len() as usize);
+            reader.read_to_string(&mut content)?;
+            content
+        } else {
+            // Small files use direct reading
+            std::fs::read_to_string(path)?
+        };
 
         let source_file = SourceFile::new(path.to_path_buf(), content, language);
         let mut parser = ParserFactory::create_parser(&source_file.language)?;

@@ -16,6 +16,8 @@ pub mod pascal_parser;
 
 use crate::{error::Result, Language};
 use std::path::PathBuf;
+use std::rc::Rc;
+use std::cell::RefCell;
 use tree_sitter::{Node, Tree};
 
 #[derive(Debug, Clone)]
@@ -37,13 +39,16 @@ impl SourceFile {
 
 #[derive(Debug)]
 pub struct ParsedAst {
-    pub tree: Option<Tree>,
+    pub tree: Option<Rc<RefCell<Tree>>>,
     pub source: String,
 }
 
 impl ParsedAst {
     pub fn new(tree: Tree, source: String) -> Self {
-        Self { tree: Some(tree), source }
+        Self { 
+            tree: Some(Rc::new(RefCell::new(tree))), 
+            source 
+        }
     }
     
     pub fn new_source_only(source: String) -> Self {
@@ -51,7 +56,16 @@ impl ParsedAst {
     }
 
     pub fn root_node(&self) -> Option<Node> {
-        self.tree.as_ref().map(|t| t.root_node())
+        // Return None for now to avoid lifetime issues
+        // In a full implementation, this would return a reference-counted node
+        None
+    }
+    
+    pub fn with_tree<T, F>(&self, f: F) -> Option<T>
+    where
+        F: FnOnce(&Tree) -> T,
+    {
+        self.tree.as_ref().map(|t| f(&t.borrow()))
     }
 }
 

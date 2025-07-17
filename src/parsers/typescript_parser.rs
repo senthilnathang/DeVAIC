@@ -63,6 +63,6 @@ greet(user);
         assert!(result.is_ok());
         
         let ast = result.unwrap();
-        assert!(!ast.tree.as_ref().unwrap().root_node().has_error());
+        assert!(ast.tree.as_ref().unwrap().borrow().root_node().has_error() == false);
     }
 }

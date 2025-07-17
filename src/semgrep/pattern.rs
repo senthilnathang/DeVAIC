@@ -47,8 +47,8 @@ pub struct Pattern {
 }
 
 impl Pattern {
-    pub fn new(operator: PatternOperator, language: Language) -> Self {
-        Self { operator, language }
+    pub fn new(operator: &PatternOperator, language: Language) -> Self {
+        Self { operator: operator.clone(), language }
     }
     
     /// Parse a pattern string and extract metavariables
@@ -242,10 +242,8 @@ mod tests {
     
     #[test]
     fn test_metavariable_extraction() {
-        let pattern = Pattern::new(
-            PatternOperator::Pattern("function $FUNC($ARG1, $ARG2) { $BODY }".to_string()),
-            Language::Javascript,
-        );
+        let pattern_op = PatternOperator::Pattern("function $FUNC($ARG1, $ARG2) { $BODY }".to_string());
+        let pattern = Pattern::new(&pattern_op, Language::Javascript);
         
         let metavars = pattern.extract_metavariables();
         assert_eq!(metavars, vec!["$ARG1", "$ARG2", "$BODY", "$FUNC"]);
@@ -253,20 +251,16 @@ mod tests {
     
     #[test]
     fn test_ellipsis_detection() {
-        let pattern = Pattern::new(
-            PatternOperator::Pattern("console.log(...)".to_string()),
-            Language::Javascript,
-        );
+        let pattern_op = PatternOperator::Pattern("console.log(...)".to_string());
+        let pattern = Pattern::new(&pattern_op, Language::Javascript);
         
         assert!(pattern.has_ellipsis());
     }
     
     #[test]
     fn test_metavariable_validation() {
-        let pattern = Pattern::new(
-            PatternOperator::Pattern("$VALID_VAR".to_string()),
-            Language::Javascript,
-        );
+        let pattern_op = PatternOperator::Pattern("$VALID_VAR".to_string());
+        let pattern = Pattern::new(&pattern_op, Language::Javascript);
         
         assert!(pattern.is_valid_metavariable("$VALID_VAR"));
         assert!(pattern.is_valid_metavariable("$_"));
@@ -276,17 +270,13 @@ mod tests {
     
     #[test]
     fn test_pattern_validation() {
-        let valid_pattern = Pattern::new(
-            PatternOperator::Pattern("function $FUNC() { ... }".to_string()),
-            Language::Javascript,
-        );
+        let valid_pattern_op = PatternOperator::Pattern("function $FUNC() { ... }".to_string());
+        let valid_pattern = Pattern::new(&valid_pattern_op, Language::Javascript);
         
         assert!(valid_pattern.validate().is_ok());
         
-        let invalid_pattern = Pattern::new(
-            PatternOperator::Pattern("".to_string()),
-            Language::Javascript,
-        );
+        let invalid_pattern_op = PatternOperator::Pattern("".to_string());
+        let invalid_pattern = Pattern::new(&invalid_pattern_op, Language::Javascript);
         
         assert!(invalid_pattern.validate().is_err());
     }
