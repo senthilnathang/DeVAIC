@@ -11,11 +11,16 @@ def run_devaic_quick(args):
     start_time = time.time()
     
     try:
+        # Get the absolute path to the DeVAIC root directory  
+        import os
+        devaic_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'))
+        devaic_binary = os.path.join(devaic_root, 'target/release/devaic')
+        
         result = subprocess.run(
-            ['./target/release/devaic'] + args,
+            [devaic_binary] + args,
             capture_output=True,
             text=True,
-            cwd='/home/sen/DeVAIC',
+            cwd=devaic_root,
             timeout=30  # 30 second timeout
         )
         

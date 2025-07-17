@@ -37,7 +37,8 @@
       "Bash(RUST_LOG=warn ./target/release/devaic --max-depth 1 test_files/)",
       "Bash(python3:*)",
       "Bash(time:*)",
-      "Bash(/dev/null)"
+      "Bash(/dev/null)",
+      "Bash(echo:*)"
     ],
     "deny": []
   }

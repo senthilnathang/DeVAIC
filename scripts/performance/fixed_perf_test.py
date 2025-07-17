@@ -14,7 +14,7 @@ def run_devaic_safe(args, timeout=120):
     try:
         print(f"Running: devaic {' '.join(args)}")
         result = subprocess.run(
-            ['./target/release/devaic'] + args,
+            ['../../target/release/devaic'] + args,
             capture_output=True,
             text=True,
             cwd='/home/sen/DeVAIC',

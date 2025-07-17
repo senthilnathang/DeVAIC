@@ -26,7 +26,7 @@ def run_test(name, args, output_file, timeout=60):
     
     try:
         result = subprocess.run(
-            ['./target/release/devaic'] + args,
+            ['../../target/release/devaic'] + args,
             capture_output=True,
             text=True,
             cwd='/home/sen/DeVAIC',

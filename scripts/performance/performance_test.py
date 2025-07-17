@@ -13,7 +13,7 @@ def run_devaic_with_timing(args):
     
     try:
         result = subprocess.run(
-            ['./target/release/devaic'] + args,
+            ['../../target/release/devaic'] + args,
             capture_output=True,
             text=True,
             cwd='/home/sen/DeVAIC'
@@ -173,7 +173,7 @@ def main():
         ['cargo', 'build', '--release'],
         capture_output=True,
         text=True,
-        cwd='/home/sen/DeVAIC'
+        cwd='../../'
     )
     
     if build_result.returncode != 0:

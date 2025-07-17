@@ -647,6 +647,27 @@ $ devaic --categories "privacy" --severity high ./data-processors/
 
 For detailed usage examples and advanced configuration, see [USAGE.md](USAGE.md).
 
+## 📁 Project Structure
+
+```
+DeVAIC/
+├── src/                      # Core Rust source code
+│   ├── parsers/             # Language-specific AST parsers
+│   ├── rules/               # Security rule engines  
+│   └── semgrep/             # Semgrep integration
+├── rules/                   # YAML rule definitions by language
+├── examples/                # Example vulnerable files and patterns
+├── test_files/              # Test files for development and validation
+├── tests/                   # Additional test files and samples
+│   ├── samples/             # Sample vulnerable code files
+│   └── integration/         # Integration test data
+├── scripts/                 # Utility scripts
+│   ├── performance/         # Performance testing and benchmarking
+│   └── testing/             # Test data generation utilities
+├── reports/                 # Sample reports and analysis outputs
+└── target/                  # Compiled binaries (after build)
+```
+
 ### Command Line Options
 
 ```

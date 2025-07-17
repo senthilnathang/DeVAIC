@@ -9,7 +9,7 @@ from pathlib import Path
 
 def create_large_test_structure():
     """Create a large directory structure for performance testing"""
-    base_path = Path("/home/sen/DeVAIC/large_test_files")
+    base_path = Path("../../large_test_files")
     
     # Clear existing content
     if base_path.exists():
