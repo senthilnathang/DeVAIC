@@ -20,6 +20,7 @@ pub mod security_risk_rules;
 pub mod vulnerability_scanner_rules;
 pub mod sanitizer_rules;
 pub mod dependency_scanner_rules;
+pub mod custom_pattern_rules;
 
 use crate::{
     config::RulesConfig,
@@ -52,6 +53,7 @@ pub struct RuleEngine {
     vulnerability_scanner_rules: vulnerability_scanner_rules::VulnerabilityScannerRules,
     sanitizer_rules: sanitizer_rules::SanitizerRules,
     dependency_scanner_rules: dependency_scanner_rules::DependencyScannerRules,
+    custom_pattern_rules: Option<custom_pattern_rules::CustomPatternRules>,
 }
 
 impl RuleEngine {
@@ -80,7 +82,12 @@ impl RuleEngine {
             vulnerability_scanner_rules: vulnerability_scanner_rules::VulnerabilityScannerRules::new(),
             sanitizer_rules: sanitizer_rules::SanitizerRules::new(),
             dependency_scanner_rules: dependency_scanner_rules::DependencyScannerRules::new(),
+            custom_pattern_rules: None,
         }
+    }
+
+    pub fn set_custom_pattern_rules(&mut self, custom_rules: custom_pattern_rules::CustomPatternRules) {
+        self.custom_pattern_rules = Some(custom_rules);
     }
 
     pub fn analyze(&self, source_file: &SourceFile, ast: &ParsedAst) -> Result<Vec<Vulnerability>> {
@@ -148,6 +155,11 @@ impl RuleEngine {
 
         // Run dependency scanning rules inspired by sast-scan
         vulnerabilities.extend(self.dependency_scanner_rules.analyze(source_file, ast)?);
+
+        // Run custom pattern rules if available
+        if let Some(custom_rules) = &self.custom_pattern_rules {
+            vulnerabilities.extend(custom_rules.analyze(source_file, ast)?);
+        }
 
         // Filter by severity threshold
         let threshold_severity = self.parse_severity(&self.config.severity_threshold);

@@ -1,0 +1,321 @@
+version: "1.0"
+name: "Python Security Patterns"
+description: "Security patterns specifically for Python applications"
+author: "DeVAIC Python Team"
+license: "MIT"
+
+patterns:
+  # Python SQL Injection
+  - id: "python-sql-001"
+    name: "Python SQL Injection - String Formatting"
+    description: "Detects SQL injection vulnerabilities in Python using string formatting"
+    severity: "High"
+    category: "injection"
+    languages: ["python"]
+    patterns:
+      - regex: "(SELECT|INSERT|UPDATE|DELETE).*%s.*"
+        description: "SQL query with % string formatting"
+        confidence: 0.9
+      - regex: "(SELECT|INSERT|UPDATE|DELETE).*\\.format\\s*\\("
+        description: "SQL query with .format() method"
+        confidence: 0.9
+      - regex: "(SELECT|INSERT|UPDATE|DELETE).*f[\"'].*\\{.*\\}.*[\"']"
+        description: "SQL query with f-string formatting"
+        confidence: 0.9
+    fix_suggestion: "Use parameterized queries with execute() method and parameter placeholders"
+    cwe: "CWE-89"
+    owasp: "A03:2021"
+
+  # Python Command Injection
+  - id: "python-command-001"
+    name: "Python Command Injection"
+    description: "Detects command injection vulnerabilities in Python"
+    severity: "Critical"
+    category: "injection"
+    languages: ["python"]
+    patterns:
+      - regex: "os\\.system\\s*\\(.*\\+.*"
+        description: "os.system with string concatenation"
+        confidence: 0.9
+      - regex: "subprocess\\.call\\s*\\(.*\\+.*"
+        description: "subprocess.call with string concatenation"
+        confidence: 0.9
+      - regex: "subprocess\\.run\\s*\\(.*\\+.*"
+        description: "subprocess.run with string concatenation"
+        confidence: 0.9
+      - regex: "os\\.popen\\s*\\(.*\\+.*"
+        description: "os.popen with string concatenation"
+        confidence: 0.9
+    fix_suggestion: "Use subprocess with list arguments instead of shell=True and string concatenation"
+    cwe: "CWE-78"
+    owasp: "A03:2021"
+
+  # Python Deserialization
+  - id: "python-deserialization-001"
+    name: "Python Unsafe Deserialization"
+    description: "Detects unsafe deserialization in Python"
+    severity: "Critical"
+    category: "deserialization"
+    languages: ["python"]
+    patterns:
+      - regex: "pickle\\.loads\\s*\\("
+        description: "pickle.loads usage"
+        confidence: 0.9
+      - regex: "pickle\\.load\\s*\\("
+        description: "pickle.load usage"
+        confidence: 0.8
+      - regex: "cPickle\\.loads\\s*\\("
+        description: "cPickle.loads usage"
+        confidence: 0.9
+      - regex: "yaml\\.load\\s*\\([^,]*\\)"
+        description: "yaml.load without safe loader"
+        confidence: 0.8
+    fix_suggestion: "Use safe serialization formats like JSON, or yaml.safe_load() for YAML"
+    cwe: "CWE-502"
+    owasp: "A08:2021"
+
+  # Python Code Injection
+  - id: "python-code-injection-001"
+    name: "Python Code Injection"
+    description: "Detects code injection vulnerabilities in Python"
+    severity: "Critical"
+    category: "injection"
+    languages: ["python"]
+    patterns:
+      - regex: "eval\\s*\\("
+        description: "eval() usage"
+        confidence: 0.9
+      - regex: "exec\\s*\\("
+        description: "exec() usage"
+        confidence: 0.9
+      - regex: "compile\\s*\\(.*\\+.*"
+        description: "compile() with string concatenation"
+        confidence: 0.8
+      - regex: "importlib\\.import_module\\s*\\(.*\\+.*"
+        description: "Dynamic module import with user input"
+        confidence: 0.8
+    fix_suggestion: "Avoid eval() and exec(), use ast.literal_eval() for safe evaluation"
+    cwe: "CWE-95"
+    owasp: "A03:2021"
+
+  # Python Path Traversal
+  - id: "python-path-traversal-001"
+    name: "Python Path Traversal"
+    description: "Detects path traversal vulnerabilities in Python file operations"
+    severity: "High"
+    category: "path-traversal"
+    languages: ["python"]
+    patterns:
+      - regex: "open\\s*\\(.*\\+.*"
+        description: "File open with string concatenation"
+        confidence: 0.8
+      - regex: "os\\.path\\.join\\s*\\(.*\\+.*"
+        description: "os.path.join with string concatenation"
+        confidence: 0.7
+      - regex: "pathlib\\.Path\\s*\\(.*\\+.*"
+        description: "pathlib.Path with string concatenation"
+        confidence: 0.7
+    fix_suggestion: "Validate and sanitize file paths, use os.path.abspath() and check paths"
+    cwe: "CWE-22"
+    owasp: "A01:2021"
+
+  # Python XML Processing
+  - id: "python-xxe-001"
+    name: "Python XXE Vulnerabilities"
+    description: "Detects XXE vulnerabilities in Python XML processing"
+    severity: "High"
+    category: "xxe"
+    languages: ["python"]
+    patterns:
+      - regex: "xml\\.etree\\.ElementTree\\.parse\\s*\\("
+        description: "ElementTree.parse usage"
+        confidence: 0.7
+      - regex: "xml\\.dom\\.minidom\\.parse\\s*\\("
+        description: "minidom.parse usage"
+        confidence: 0.7
+      - regex: "xml\\.sax\\.parse\\s*\\("
+        description: "SAX parser usage"
+        confidence: 0.7
+    fix_suggestion: "Use defusedxml library instead of standard xml modules"
+    cwe: "CWE-611"
+    owasp: "A05:2021"
+
+  # Python Cryptography
+  - id: "python-crypto-001"
+    name: "Python Weak Cryptography"
+    description: "Detects weak cryptographic implementations in Python"
+    severity: "Medium"
+    category: "cryptography"
+    languages: ["python"]
+    patterns:
+      - regex: "hashlib\\.md5\\s*\\("
+        description: "MD5 hash usage"
+        confidence: 0.9
+      - regex: "hashlib\\.sha1\\s*\\("
+        description: "SHA1 hash usage"
+        confidence: 0.8
+      - regex: "Crypto\\.Cipher\\.DES"
+        description: "DES cipher usage"
+        confidence: 0.9
+      - regex: "Crypto\\.Cipher\\.ARC4"
+        description: "RC4 cipher usage"
+        confidence: 0.9
+    fix_suggestion: "Use strong cryptographic algorithms like SHA-256, SHA-3, or AES"
+    cwe: "CWE-327"
+    owasp: "A02:2021"
+
+  # Python Random Number Generation
+  - id: "python-random-001"
+    name: "Python Weak Random Number Generation"
+    description: "Detects weak random number generation in Python"
+    severity: "Medium"
+    category: "cryptography"
+    languages: ["python"]
+    patterns:
+      - regex: "random\\.random\\s*\\("
+        description: "random.random usage for security purposes"
+        confidence: 0.7
+      - regex: "random\\.randint\\s*\\("
+        description: "random.randint usage for security purposes"
+        confidence: 0.7
+      - regex: "random\\.choice\\s*\\("
+        description: "random.choice usage for security purposes"
+        confidence: 0.7
+    fix_suggestion: "Use secrets module for cryptographically secure random numbers"
+    cwe: "CWE-338"
+    owasp: "A02:2021"
+
+  # Python Django Security
+  - id: "python-django-001"
+    name: "Python Django SQL Injection"
+    description: "Detects SQL injection vulnerabilities in Django"
+    severity: "High"
+    category: "injection"
+    languages: ["python"]
+    patterns:
+      - regex: "\\.raw\\s*\\(.*\\+.*"
+        description: "Django raw SQL with string concatenation"
+        confidence: 0.9
+      - regex: "\\.extra\\s*\\(.*\\+.*"
+        description: "Django extra() with string concatenation"
+        confidence: 0.8
+    fix_suggestion: "Use Django ORM parameterized queries or raw() with parameters"
+    cwe: "CWE-89"
+    owasp: "A03:2021"
+
+  # Python Flask Security
+  - id: "python-flask-001"
+    name: "Python Flask Security Issues"
+    description: "Detects security issues in Flask applications"
+    severity: "Medium"
+    category: "web-security"
+    languages: ["python"]
+    patterns:
+      - regex: "render_template_string\\s*\\(.*\\+.*"
+        description: "Flask render_template_string with user input"
+        confidence: 0.8
+      - regex: "app\\.run\\s*\\(.*debug\\s*=\\s*True"
+        description: "Flask debug mode enabled"
+        confidence: 0.9
+      - regex: "app\\.config\\['SECRET_KEY'\\]\\s*=\\s*[\"'][^\"']{1,10}[\"']"
+        description: "Flask weak secret key"
+        confidence: 0.8
+    fix_suggestion: "Disable debug mode in production, use strong secret keys, sanitize template input"
+    cwe: "CWE-489"
+    owasp: "A05:2021"
+
+  # Python LDAP Injection
+  - id: "python-ldap-001"
+    name: "Python LDAP Injection"
+    description: "Detects LDAP injection vulnerabilities in Python"
+    severity: "High"
+    category: "injection"
+    languages: ["python"]
+    patterns:
+      - regex: "ldap\\.search\\s*\\(.*\\+.*"
+        description: "LDAP search with string concatenation"
+        confidence: 0.9
+      - regex: "search_s\\s*\\(.*\\+.*"
+        description: "LDAP search_s with string concatenation"
+        confidence: 0.9
+    fix_suggestion: "Use parameterized LDAP queries and escape special characters"
+    cwe: "CWE-90"
+    owasp: "A03:2021"
+
+  # Python Regular Expression DoS
+  - id: "python-regex-dos-001"
+    name: "Python Regular Expression DoS"
+    description: "Detects potentially vulnerable regular expressions"
+    severity: "Medium"
+    category: "dos"
+    languages: ["python"]
+    patterns:
+      - regex: "re\\.compile\\s*\\(.*\\(.*\\+.*\\).*\\*"
+        description: "Regex with nested quantifiers"
+        confidence: 0.7
+      - regex: "re\\.search\\s*\\(.*\\(.*\\+.*\\).*\\+"
+        description: "Regex with alternation and quantifiers"
+        confidence: 0.7
+    fix_suggestion: "Review regular expressions for catastrophic backtracking patterns"
+    cwe: "CWE-1333"
+    owasp: "A06:2021"
+
+  # Python Template Injection
+  - id: "python-template-001"
+    name: "Python Template Injection"
+    description: "Detects template injection vulnerabilities"
+    severity: "High"
+    category: "injection"
+    languages: ["python"]
+    patterns:
+      - regex: "Template\\s*\\(.*\\+.*"
+        description: "Template with string concatenation"
+        confidence: 0.8
+      - regex: "jinja2\\.Template\\s*\\(.*\\+.*"
+        description: "Jinja2 template with user input"
+        confidence: 0.8
+      - regex: "\\.render\\s*\\(.*\\+.*"
+        description: "Template render with concatenation"
+        confidence: 0.7
+    fix_suggestion: "Use template sandboxing and avoid user input in template strings"
+    cwe: "CWE-94"
+    owasp: "A03:2021"
+
+  # Python HTTP Request Vulnerabilities
+  - id: "python-http-001"
+    name: "Python HTTP Request Vulnerabilities"
+    description: "Detects HTTP request vulnerabilities that could lead to SSRF"
+    severity: "High"
+    category: "ssrf"
+    languages: ["python"]
+    patterns:
+      - regex: "requests\\.get\\s*\\(.*\\+.*"
+        description: "HTTP GET request with string concatenation"
+        confidence: 0.8
+      - regex: "requests\\.post\\s*\\(.*\\+.*"
+        description: "HTTP POST request with string concatenation"
+        confidence: 0.8
+      - regex: "urllib\\.request\\.urlopen\\s*\\(.*\\+.*"
+        description: "urllib request with string concatenation"
+        confidence: 0.8
+    fix_suggestion: "Validate URLs against allowlists, parse and validate URL components"
+    cwe: "CWE-918"
+    owasp: "A10:2021"
+
+  # Python Logging Injection
+  - id: "python-logging-001"
+    name: "Python Logging Injection"
+    description: "Detects log injection vulnerabilities in Python"
+    severity: "Low"
+    category: "injection"
+    languages: ["python"]
+    patterns:
+      - regex: "logging\\.(info|debug|warning|error)\\s*\\(.*\\+.*"
+        description: "Logging with string concatenation"
+        confidence: 0.7
+      - regex: "logger\\.(info|debug|warning|error)\\s*\\(.*\\+.*"
+        description: "Logger with string concatenation"
+        confidence: 0.7
+    fix_suggestion: "Use logging formatting parameters instead of string concatenation"
+    cwe: "CWE-117"
+    owasp: "A09:2021"

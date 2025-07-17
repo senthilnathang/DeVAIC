@@ -1,0 +1,312 @@
+version: "1.0"
+name: "Common Security Patterns"
+description: "A comprehensive collection of security patterns for common vulnerabilities"
+author: "DeVAIC Security Team"
+license: "MIT"
+
+patterns:
+  # SQL Injection Patterns
+  - id: "sql-injection-001"
+    name: "SQL Injection - String Concatenation"
+    description: "Detects SQL queries built using string concatenation which may lead to SQL injection"
+    severity: "High"
+    category: "injection"
+    languages: ["java", "python", "javascript", "typescript", "php", "csharp"]
+    patterns:
+      - regex: "(SELECT|INSERT|UPDATE|DELETE|DROP).*FROM.*WHERE.*\\+.*"
+        description: "SQL query with string concatenation"
+        confidence: 0.9
+      - regex: "\\\"SELECT.*\\\".*\\+.*"
+        description: "SQL string literal with concatenation"
+        confidence: 0.8
+    fix_suggestion: "Use parameterized queries or prepared statements instead of string concatenation"
+    cwe: "CWE-89"
+    owasp: "A03:2021"
+    references:
+      - "https://owasp.org/www-community/attacks/SQL_Injection"
+      - "https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html"
+
+  - id: "sql-injection-002"
+    name: "SQL Injection - Format String"
+    description: "Detects SQL queries using format strings which may lead to SQL injection"
+    severity: "High"
+    category: "injection"
+    languages: ["python", "javascript", "typescript"]
+    patterns:
+      - regex: "(SELECT|INSERT|UPDATE|DELETE).*%s.*"
+        description: "SQL query with format string"
+        confidence: 0.9
+      - regex: "\\\"SELECT.*\\\".*format\\("
+        description: "SQL string with format method"
+        confidence: 0.8
+    fix_suggestion: "Use parameterized queries instead of format strings"
+    cwe: "CWE-89"
+    owasp: "A03:2021"
+
+  # Cross-Site Scripting (XSS) Patterns
+  - id: "xss-001"
+    name: "XSS - innerHTML Usage"
+    description: "Detects dangerous innerHTML usage that may lead to XSS vulnerabilities"
+    severity: "Medium"
+    category: "xss"
+    languages: ["javascript", "typescript"]
+    patterns:
+      - regex: "\\.innerHTML\\s*=\\s*.*\\+.*"
+        description: "innerHTML with string concatenation"
+        confidence: 0.8
+      - regex: "\\.innerHTML\\s*=\\s*[^\"'].*"
+        description: "innerHTML with unescaped content"
+        confidence: 0.7
+    fix_suggestion: "Use textContent instead of innerHTML, or sanitize the content before assignment"
+    cwe: "CWE-79"
+    owasp: "A03:2021"
+
+  - id: "xss-002"
+    name: "XSS - eval() Usage"
+    description: "Detects eval() usage which can lead to code injection and XSS"
+    severity: "Critical"
+    category: "injection"
+    languages: ["javascript", "typescript"]
+    patterns:
+      - regex: "eval\\s*\\("
+        description: "Direct eval usage"
+        confidence: 0.9
+      - regex: "new\\s+Function\\s*\\("
+        description: "Function constructor usage"
+        confidence: 0.8
+    fix_suggestion: "Avoid using eval() or Function constructor. Use JSON.parse() for parsing JSON or implement safe alternatives"
+    cwe: "CWE-95"
+    owasp: "A03:2021"
+
+  # Path Traversal Patterns
+  - id: "path-traversal-001"
+    name: "Path Traversal - Directory Traversal"
+    description: "Detects potential path traversal vulnerabilities using directory traversal sequences"
+    severity: "High"
+    category: "path-traversal"
+    languages: ["java", "python", "javascript", "typescript", "php", "csharp", "go"]
+    patterns:
+      - regex: "\\.\\.[\\/\\\\]"
+        description: "Directory traversal sequence"
+        confidence: 0.9
+      - regex: "\\.\\.[\\/\\\\]\\.\\.[\\/\\\\]"
+        description: "Multiple directory traversal sequences"
+        confidence: 0.95
+    fix_suggestion: "Validate and sanitize file paths, use allowlists for permitted paths"
+    cwe: "CWE-22"
+    owasp: "A01:2021"
+
+  # Command Injection Patterns
+  - id: "command-injection-001"
+    name: "Command Injection - System Calls"
+    description: "Detects system command execution with user input that may lead to command injection"
+    severity: "Critical"
+    category: "injection"
+    languages: ["python", "php", "java", "javascript", "typescript"]
+    patterns:
+      - regex: "system\\s*\\(.*\\+.*"
+        description: "System call with string concatenation"
+        confidence: 0.9
+      - regex: "exec\\s*\\(.*\\+.*"
+        description: "Exec call with string concatenation"
+        confidence: 0.9
+      - regex: "shell_exec\\s*\\(.*\\+.*"
+        description: "Shell exec with string concatenation"
+        confidence: 0.9
+    fix_suggestion: "Use parameterized commands or safe alternatives, validate and sanitize input"
+    cwe: "CWE-78"
+    owasp: "A03:2021"
+
+  # Hardcoded Secrets Patterns
+  - id: "secrets-001"
+    name: "Hardcoded Secrets - API Keys"
+    description: "Detects hardcoded API keys and secrets in source code"
+    severity: "Critical"
+    category: "secrets"
+    languages: ["all"]
+    patterns:
+      - regex: "(?i)(api_key|apikey|secret_key|access_token)\\s*[=:]\\s*[\"'][a-zA-Z0-9_-]{20,}[\"']"
+        description: "Hardcoded API key or secret"
+        confidence: 0.9
+      - regex: "(?i)(password|passwd|pwd)\\s*[=:]\\s*[\"'][^\"']{8,}[\"']"
+        description: "Hardcoded password"
+        confidence: 0.8
+    fix_suggestion: "Use environment variables or secure configuration files for secrets"
+    cwe: "CWE-798"
+    owasp: "A02:2021"
+
+  # Insecure Cryptography Patterns
+  - id: "crypto-001"
+    name: "Weak Cryptography - MD5 Usage"
+    description: "Detects usage of weak MD5 hashing algorithm"
+    severity: "Medium"
+    category: "cryptography"
+    languages: ["java", "python", "javascript", "typescript", "csharp"]
+    patterns:
+      - regex: "MD5\\s*\\("
+        description: "MD5 hash function usage"
+        confidence: 0.9
+      - regex: "MessageDigest\\.getInstance\\s*\\(\\s*[\"']MD5[\"']"
+        description: "MD5 MessageDigest usage"
+        confidence: 0.9
+    fix_suggestion: "Use stronger hashing algorithms like SHA-256 or SHA-3"
+    cwe: "CWE-327"
+    owasp: "A02:2021"
+
+  - id: "crypto-002"
+    name: "Weak Cryptography - DES Usage"
+    description: "Detects usage of weak DES encryption algorithm"
+    severity: "High"
+    category: "cryptography"
+    languages: ["java", "python", "csharp"]
+    patterns:
+      - regex: "DES\\s*\\("
+        description: "DES encryption usage"
+        confidence: 0.9
+      - regex: "Cipher\\.getInstance\\s*\\(\\s*[\"']DES[\"']"
+        description: "DES cipher usage"
+        confidence: 0.9
+    fix_suggestion: "Use stronger encryption algorithms like AES-256"
+    cwe: "CWE-327"
+    owasp: "A02:2021"
+
+  # Deserialization Patterns
+  - id: "deserialization-001"
+    name: "Unsafe Deserialization"
+    description: "Detects unsafe deserialization that may lead to remote code execution"
+    severity: "Critical"
+    category: "deserialization"
+    languages: ["java", "python", "javascript", "typescript"]
+    patterns:
+      - regex: "ObjectInputStream\\s*\\("
+        description: "Java ObjectInputStream usage"
+        confidence: 0.8
+      - regex: "pickle\\.loads\\s*\\("
+        description: "Python pickle.loads usage"
+        confidence: 0.9
+      - regex: "JSON\\.parse\\s*\\(.*\\+.*"
+        description: "JSON.parse with concatenated string"
+        confidence: 0.7
+    fix_suggestion: "Validate serialized data, use safe serialization formats like JSON, implement allowlists"
+    cwe: "CWE-502"
+    owasp: "A08:2021"
+
+  # LDAP Injection Patterns
+  - id: "ldap-injection-001"
+    name: "LDAP Injection"
+    description: "Detects potential LDAP injection vulnerabilities"
+    severity: "High"
+    category: "injection"
+    languages: ["java", "python", "csharp"]
+    patterns:
+      - regex: "\\(.*\\+.*\\).*search"
+        description: "LDAP search with string concatenation"
+        confidence: 0.8
+      - regex: "LdapContext.*search.*\\+.*"
+        description: "LdapContext search with concatenation"
+        confidence: 0.9
+    fix_suggestion: "Use parameterized LDAP queries and escape special characters"
+    cwe: "CWE-90"
+    owasp: "A03:2021"
+
+  # File Upload Patterns
+  - id: "file-upload-001"
+    name: "Unrestricted File Upload"
+    description: "Detects unrestricted file upload functionality"
+    severity: "High"
+    category: "upload"
+    languages: ["java", "python", "javascript", "typescript", "php"]
+    patterns:
+      - regex: "upload.*\\.(exe|php|jsp|asp|sh|bat).*"
+        description: "Upload of executable file types"
+        confidence: 0.9
+      - regex: "move_uploaded_file\\s*\\("
+        description: "PHP file upload function"
+        confidence: 0.7
+    fix_suggestion: "Validate file types, size, and content. Store uploaded files outside web root"
+    cwe: "CWE-434"
+    owasp: "A04:2021"
+
+  # XML External Entity (XXE) Patterns
+  - id: "xxe-001"
+    name: "XML External Entity (XXE)"
+    description: "Detects XML parsers that may be vulnerable to XXE attacks"
+    severity: "High"
+    category: "xxe"
+    languages: ["java", "python", "javascript", "typescript", "csharp"]
+    patterns:
+      - regex: "DocumentBuilderFactory\\s*\\."
+        description: "Java DocumentBuilderFactory usage"
+        confidence: 0.7
+      - regex: "XMLParser\\s*\\("
+        description: "XML parser instantiation"
+        confidence: 0.7
+      - regex: "<!ENTITY.*>"
+        description: "XML entity declaration"
+        confidence: 0.8
+    fix_suggestion: "Disable external entity processing in XML parsers"
+    cwe: "CWE-611"
+    owasp: "A05:2021"
+
+  # Server-Side Request Forgery (SSRF) Patterns
+  - id: "ssrf-001"
+    name: "Server-Side Request Forgery (SSRF)"
+    description: "Detects HTTP requests with user-controlled URLs that may lead to SSRF"
+    severity: "High"
+    category: "ssrf"
+    languages: ["java", "python", "javascript", "typescript", "php"]
+    patterns:
+      - regex: "URL\\s*\\(.*\\+.*"
+        description: "URL construction with user input"
+        confidence: 0.8
+      - regex: "requests\\.get\\s*\\(.*\\+.*"
+        description: "HTTP request with concatenated URL"
+        confidence: 0.8
+      - regex: "fetch\\s*\\(.*\\+.*"
+        description: "Fetch request with concatenated URL"
+        confidence: 0.8
+    fix_suggestion: "Validate and whitelist allowed URLs, use URL parsing libraries"
+    cwe: "CWE-918"
+    owasp: "A10:2021"
+
+  # Race Condition Patterns
+  - id: "race-condition-001"
+    name: "Time-of-Check Time-of-Use (TOCTOU)"
+    description: "Detects potential race conditions in file operations"
+    severity: "Medium"
+    category: "race-condition"
+    languages: ["c", "cpp", "java", "python"]
+    patterns:
+      - regex: "access\\s*\\(.*\\).*open\\s*\\("
+        description: "File access check followed by open"
+        confidence: 0.8
+      - regex: "stat\\s*\\(.*\\).*open\\s*\\("
+        description: "File stat check followed by open"
+        confidence: 0.8
+    fix_suggestion: "Use atomic file operations or proper synchronization mechanisms"
+    cwe: "CWE-367"
+    owasp: "A04:2021"
+
+  # Buffer Overflow Patterns (for C/C++)
+  - id: "buffer-overflow-001"
+    name: "Buffer Overflow - Dangerous Functions"
+    description: "Detects usage of dangerous functions that can cause buffer overflows"
+    severity: "Critical"
+    category: "memory-safety"
+    languages: ["c", "cpp"]
+    patterns:
+      - regex: "strcpy\\s*\\("
+        description: "Unsafe strcpy usage"
+        confidence: 0.9
+      - regex: "strcat\\s*\\("
+        description: "Unsafe strcat usage"
+        confidence: 0.9
+      - regex: "sprintf\\s*\\("
+        description: "Unsafe sprintf usage"
+        confidence: 0.9
+      - regex: "gets\\s*\\("
+        description: "Unsafe gets usage"
+        confidence: 0.95
+    fix_suggestion: "Use safe alternatives like strncpy, strncat, snprintf, or fgets"
+    cwe: "CWE-120"
+    owasp: "A06:2021"

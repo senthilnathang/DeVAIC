@@ -1,0 +1,270 @@
+version: "1.0"
+name: "Java Security Patterns"
+description: "Security patterns specifically for Java applications"
+author: "DeVAIC Java Team"
+license: "MIT"
+
+patterns:
+  # Java-specific SQL Injection
+  - id: "java-sql-001"
+    name: "Java SQL Injection - Statement"
+    description: "Detects SQL injection vulnerabilities in Java Statement usage"
+    severity: "High"
+    category: "injection"
+    languages: ["java"]
+    patterns:
+      - regex: "Statement.*execute(Query|Update)?\\s*\\(.*\\+.*"
+        description: "Statement execution with string concatenation"
+        confidence: 0.9
+      - regex: "createStatement\\(\\).*execute.*\\+.*"
+        description: "CreateStatement with concatenated query"
+        confidence: 0.9
+    fix_suggestion: "Use PreparedStatement instead of Statement with concatenated strings"
+    cwe: "CWE-89"
+    owasp: "A03:2021"
+
+  # Java Deserialization
+  - id: "java-deserialization-001"
+    name: "Java Unsafe Deserialization"
+    description: "Detects unsafe object deserialization in Java"
+    severity: "Critical"
+    category: "deserialization"
+    languages: ["java"]
+    patterns:
+      - regex: "ObjectInputStream\\s*\\(.*\\)\\.readObject\\s*\\(\\)"
+        description: "Direct ObjectInputStream.readObject usage"
+        confidence: 0.9
+      - regex: "readUnshared\\s*\\(\\)"
+        description: "ObjectInputStream.readUnshared usage"
+        confidence: 0.8
+    fix_suggestion: "Validate serialized data, use safe serialization libraries, implement custom readObject methods"
+    cwe: "CWE-502"
+    owasp: "A08:2021"
+
+  # Java Path Traversal
+  - id: "java-path-traversal-001"
+    name: "Java Path Traversal - File Operations"
+    description: "Detects path traversal vulnerabilities in Java file operations"
+    severity: "High"
+    category: "path-traversal"
+    languages: ["java"]
+    patterns:
+      - regex: "new\\s+File\\s*\\(.*\\+.*"
+        description: "File constructor with string concatenation"
+        confidence: 0.8
+      - regex: "Paths\\.get\\s*\\(.*\\+.*"
+        description: "Paths.get with string concatenation"
+        confidence: 0.8
+      - regex: "FileInputStream\\s*\\(.*\\+.*"
+        description: "FileInputStream with concatenated path"
+        confidence: 0.8
+    fix_suggestion: "Validate and sanitize file paths, use canonical paths, implement path traversal protection"
+    cwe: "CWE-22"
+    owasp: "A01:2021"
+
+  # Java XML Processing
+  - id: "java-xxe-001"
+    name: "Java XXE - DocumentBuilderFactory"
+    description: "Detects XXE vulnerabilities in Java XML processing"
+    severity: "High"
+    category: "xxe"
+    languages: ["java"]
+    patterns:
+      - regex: "DocumentBuilderFactory\\.newInstance\\s*\\(\\)"
+        description: "DocumentBuilderFactory without XXE protection"
+        confidence: 0.7
+      - regex: "SAXParserFactory\\.newInstance\\s*\\(\\)"
+        description: "SAXParserFactory without XXE protection"
+        confidence: 0.7
+      - regex: "XMLInputFactory\\.newInstance\\s*\\(\\)"
+        description: "XMLInputFactory without XXE protection"
+        confidence: 0.7
+    fix_suggestion: "Disable external entity processing: setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true)"
+    cwe: "CWE-611"
+    owasp: "A05:2021"
+
+  # Java Cryptography
+  - id: "java-crypto-001"
+    name: "Java Weak Cryptography"
+    description: "Detects weak cryptographic implementations in Java"
+    severity: "Medium"
+    category: "cryptography"
+    languages: ["java"]
+    patterns:
+      - regex: "Cipher\\.getInstance\\s*\\(\\s*[\"']AES[\"']\\s*\\)"
+        description: "AES cipher without mode and padding specification"
+        confidence: 0.8
+      - regex: "Cipher\\.getInstance\\s*\\(\\s*[\"']DES[\"']"
+        description: "DES cipher usage"
+        confidence: 0.9
+      - regex: "Cipher\\.getInstance\\s*\\(\\s*[\"']RC4[\"']"
+        description: "RC4 cipher usage"
+        confidence: 0.9
+    fix_suggestion: "Use strong ciphers like AES/GCM/NoPadding or AES/CBC/PKCS5Padding"
+    cwe: "CWE-327"
+    owasp: "A02:2021"
+
+  # Java Random Number Generation
+  - id: "java-random-001"
+    name: "Java Weak Random Number Generation"
+    description: "Detects weak random number generation in Java"
+    severity: "Medium"
+    category: "cryptography"
+    languages: ["java"]
+    patterns:
+      - regex: "new\\s+Random\\s*\\(\\)"
+        description: "java.util.Random usage for security purposes"
+        confidence: 0.7
+      - regex: "Math\\.random\\s*\\(\\)"
+        description: "Math.random usage for security purposes"
+        confidence: 0.7
+    fix_suggestion: "Use SecureRandom for cryptographically secure random numbers"
+    cwe: "CWE-338"
+    owasp: "A02:2021"
+
+  # Java LDAP Injection
+  - id: "java-ldap-001"
+    name: "Java LDAP Injection"
+    description: "Detects LDAP injection vulnerabilities in Java"
+    severity: "High"
+    category: "injection"
+    languages: ["java"]
+    patterns:
+      - regex: "DirContext.*search\\s*\\(.*\\+.*"
+        description: "DirContext search with string concatenation"
+        confidence: 0.9
+      - regex: "LdapContext.*search\\s*\\(.*\\+.*"
+        description: "LdapContext search with string concatenation"
+        confidence: 0.9
+    fix_suggestion: "Use parameterized LDAP queries and escape special characters"
+    cwe: "CWE-90"
+    owasp: "A03:2021"
+
+  # Java Command Injection
+  - id: "java-command-injection-001"
+    name: "Java Command Injection"
+    description: "Detects command injection vulnerabilities in Java"
+    severity: "Critical"
+    category: "injection"
+    languages: ["java"]
+    patterns:
+      - regex: "Runtime\\.getRuntime\\s*\\(\\)\\.exec\\s*\\(.*\\+.*"
+        description: "Runtime.exec with string concatenation"
+        confidence: 0.9
+      - regex: "ProcessBuilder\\s*\\(.*\\+.*"
+        description: "ProcessBuilder with concatenated command"
+        confidence: 0.9
+    fix_suggestion: "Use ProcessBuilder with separate arguments, validate and sanitize input"
+    cwe: "CWE-78"
+    owasp: "A03:2021"
+
+  # Java Reflection
+  - id: "java-reflection-001"
+    name: "Java Unsafe Reflection"
+    description: "Detects potentially unsafe reflection usage"
+    severity: "Medium"
+    category: "reflection"
+    languages: ["java"]
+    patterns:
+      - regex: "Class\\.forName\\s*\\(.*\\+.*"
+        description: "Class.forName with user input"
+        confidence: 0.8
+      - regex: "getMethod\\s*\\(.*\\+.*"
+        description: "getMethod with user input"
+        confidence: 0.8
+      - regex: "getDeclaredMethod\\s*\\(.*\\+.*"
+        description: "getDeclaredMethod with user input"
+        confidence: 0.8
+    fix_suggestion: "Validate class and method names, use allowlists, avoid reflection with user input"
+    cwe: "CWE-470"
+    owasp: "A03:2021"
+
+  # Java HTTP Headers
+  - id: "java-http-headers-001"
+    name: "Java HTTP Response Splitting"
+    description: "Detects HTTP response splitting vulnerabilities"
+    severity: "Medium"
+    category: "injection"
+    languages: ["java"]
+    patterns:
+      - regex: "setHeader\\s*\\(.*\\+.*"
+        description: "HTTP header with string concatenation"
+        confidence: 0.8
+      - regex: "addHeader\\s*\\(.*\\+.*"
+        description: "HTTP header addition with concatenation"
+        confidence: 0.8
+    fix_suggestion: "Validate and sanitize header values, remove newline characters"
+    cwe: "CWE-113"
+    owasp: "A03:2021"
+
+  # Java Trust Manager
+  - id: "java-trust-manager-001"
+    name: "Java Insecure Trust Manager"
+    description: "Detects insecure trust manager implementations"
+    severity: "High"
+    category: "tls"
+    languages: ["java"]
+    patterns:
+      - regex: "X509TrustManager.*checkClientTrusted\\s*\\(.*\\)\\s*\\{\\s*\\}"
+        description: "Empty checkClientTrusted implementation"
+        confidence: 0.9
+      - regex: "X509TrustManager.*checkServerTrusted\\s*\\(.*\\)\\s*\\{\\s*\\}"
+        description: "Empty checkServerTrusted implementation"
+        confidence: 0.9
+    fix_suggestion: "Implement proper certificate validation in trust managers"
+    cwe: "CWE-295"
+    owasp: "A07:2021"
+
+  # Java URL Validation
+  - id: "java-url-validation-001"
+    name: "Java URL Validation"
+    description: "Detects missing URL validation that could lead to SSRF"
+    severity: "High"
+    category: "ssrf"
+    languages: ["java"]
+    patterns:
+      - regex: "new\\s+URL\\s*\\(.*\\+.*"
+        description: "URL construction with user input"
+        confidence: 0.8
+      - regex: "openConnection\\s*\\(\\)"
+        description: "URL connection without validation"
+        confidence: 0.6
+    fix_suggestion: "Validate URLs against allowlists, check protocol and hostname"
+    cwe: "CWE-918"
+    owasp: "A10:2021"
+
+  # Java JSP/Servlet Issues
+  - id: "java-jsp-001"
+    name: "Java JSP Expression Language Injection"
+    description: "Detects EL injection vulnerabilities in JSP"
+    severity: "High"
+    category: "injection"
+    languages: ["java"]
+    patterns:
+      - regex: "\\$\\{.*\\+.*\\}"
+        description: "EL expression with concatenation"
+        confidence: 0.8
+      - regex: "\\#\\{.*\\+.*\\}"
+        description: "EL expression with concatenation (alternative syntax)"
+        confidence: 0.8
+    fix_suggestion: "Sanitize user input before using in EL expressions"
+    cwe: "CWE-95"
+    owasp: "A03:2021"
+
+  # Java Spring Security
+  - id: "java-spring-001"
+    name: "Java Spring Security Bypass"
+    description: "Detects potential Spring Security bypass issues"
+    severity: "High"
+    category: "authentication"
+    languages: ["java"]
+    patterns:
+      - regex: "@PreAuthorize\\s*\\(\\s*[\"']true[\"']\\s*\\)"
+        description: "PreAuthorize with hardcoded true"
+        confidence: 0.9
+      - regex: "permitAll\\s*\\(\\)"
+        description: "PermitAll usage"
+        confidence: 0.7
+    fix_suggestion: "Review authentication and authorization configuration"
+    cwe: "CWE-287"
+    owasp: "A07:2021"

@@ -583,6 +583,58 @@ Static Analysis Results Interchange Format for integration with IDEs and CI/CD:
 devaic --format sarif --output report.sarif path/to/project/
 ```
 
+### Custom Security Pattern Import
+Import custom security patterns from YAML files for domain-specific analysis:
+
+```bash
+# Import patterns from a single file
+devaic --import-patterns custom-patterns.yaml path/to/project/
+
+# Import all patterns from a directory
+devaic --patterns-dir ./security-patterns/ path/to/project/
+
+# List all imported patterns and statistics
+devaic --import-patterns examples/security_patterns.yaml --list-patterns
+
+# Combine custom patterns with specific categories
+devaic --import-patterns java-patterns.yaml --categories "injection,cryptographic" ./java-app/
+```
+
+#### Custom Pattern Format
+Create YAML files with custom security patterns:
+
+```yaml
+version: "1.0"
+name: "Custom Security Patterns"
+description: "Domain-specific security patterns"
+author: "Security Team"
+license: "MIT"
+
+patterns:
+  - id: "custom-sql-injection"
+    name: "SQL Injection in Custom Framework"
+    description: "Detects SQL injection in our custom ORM"
+    severity: "High"
+    category: "injection"
+    languages: ["java", "python"]
+    patterns:
+      - regex: "CustomORM\\.query\\(.*\\+.*\\)"
+        description: "String concatenation in CustomORM query"
+        confidence: 0.9
+    fix_suggestion: "Use parameterized queries in CustomORM"
+    cwe: "CWE-89"
+    owasp: "A03:2021"
+    references:
+      - "https://example.com/secure-coding-guide"
+```
+
+#### Pattern Examples
+DeVAIC includes comprehensive example patterns:
+
+- **`examples/security_patterns.yaml`**: 76 general security patterns
+- **`examples/java_patterns.yaml`**: Java-specific security patterns  
+- **`examples/python_patterns.yaml`**: Python-specific security patterns
+
 ### PDF Format
 Formatted PDF report with comprehensive vulnerability analysis:
 

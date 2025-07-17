@@ -7,6 +7,7 @@ pub mod config;
 pub mod error;
 pub mod semgrep;
 pub mod security_utils;
+pub mod pattern_loader;
 
 pub use analyzer::Analyzer;
 pub use build_break::{BuildBreakAnalyzer, BuildBreakResult};
@@ -53,6 +54,26 @@ impl Language {
             "pas" | "pp" | "pascal" | "inc" => Some(Language::Pascal),
             _ => None,
         }
+    }
+
+    pub fn all() -> Vec<Language> {
+        vec![
+            Language::C,
+            Language::Cpp,
+            Language::Python,
+            Language::Java,
+            Language::Javascript,
+            Language::TypeScript,
+            Language::Go,
+            Language::Php,
+            Language::Ruby,
+            Language::Kotlin,
+            Language::CSharp,
+            Language::Bash,
+            Language::Scada,
+            Language::Cobol,
+            Language::Pascal,
+        ]
     }
 }
 

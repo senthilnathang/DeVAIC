@@ -1,5 +1,6 @@
 use clap::{Parser, ValueEnum};
 use devaic::{Analyzer, Config, Report, Result};
+use devaic::pattern_loader::PatternLoader;
 use std::path::PathBuf;
 use std::time::Instant;
 
@@ -10,7 +11,7 @@ use std::time::Instant;
 struct Cli {
     /// Target directory or file to analyze
     #[arg(value_name = "PATH")]
-    target: PathBuf,
+    target: Option<PathBuf>,
 
     /// Output format
     #[arg(short, long, default_value = "table")]
@@ -51,6 +52,18 @@ struct Cli {
     /// Directory containing Semgrep YAML rules
     #[arg(long)]
     rules_dir: Option<PathBuf>,
+
+    /// Import custom security patterns from YAML file
+    #[arg(long)]
+    import_patterns: Option<PathBuf>,
+
+    /// Directory containing custom security pattern YAML files
+    #[arg(long)]
+    patterns_dir: Option<PathBuf>,
+
+    /// List all imported patterns and statistics
+    #[arg(long)]
+    list_patterns: bool,
 }
 
 #[derive(Clone, ValueEnum)]
@@ -66,6 +79,56 @@ fn main() -> Result<()> {
     env_logger::init();
     
     let cli = Cli::parse();
+    
+    // Initialize pattern loader
+    let mut pattern_loader = PatternLoader::new();
+    
+    // Load custom patterns if specified
+    if let Some(patterns_file) = &cli.import_patterns {
+        match pattern_loader.load_from_file(patterns_file) {
+            Ok(count) => {
+                if cli.verbose {
+                    println!("Loaded {} custom patterns from {}", count, patterns_file.display());
+                }
+            }
+            Err(e) => {
+                eprintln!("Error loading patterns from {}: {}", patterns_file.display(), e);
+                std::process::exit(1);
+            }
+        }
+    }
+    
+    // Load patterns from directory if specified
+    if let Some(patterns_dir) = &cli.patterns_dir {
+        match pattern_loader.load_from_directory(patterns_dir) {
+            Ok(count) => {
+                if cli.verbose {
+                    println!("Loaded {} custom patterns from directory {}", count, patterns_dir.display());
+                }
+            }
+            Err(e) => {
+                eprintln!("Error loading patterns from directory {}: {}", patterns_dir.display(), e);
+                std::process::exit(1);
+            }
+        }
+    }
+    
+    // If list_patterns is requested, show pattern statistics and exit
+    if cli.list_patterns {
+        let stats = pattern_loader.get_statistics();
+        if stats.total_patterns == 0 {
+            println!("No custom patterns loaded.");
+            println!("Use --import-patterns or --patterns-dir to load custom security patterns.");
+        } else {
+            stats.print_summary();
+        }
+        return Ok(());
+    }
+    
+    // Ensure target is provided for analysis
+    let target = cli.target.clone().ok_or_else(|| {
+        devaic::DevaicError::Config("Target path is required for analysis".to_string())
+    })?;
     
     // Load configuration
     let mut config = if let Some(config_path) = &cli.config {
@@ -87,11 +150,15 @@ fn main() -> Result<()> {
             .collect();
     }
 
-    // Initialize analyzer
-    let analyzer = Analyzer::new(config.clone());
+    // Initialize analyzer with custom patterns if loaded
+    let analyzer = if pattern_loader.get_statistics().total_patterns > 0 {
+        Analyzer::new_with_custom_patterns(config.clone(), pattern_loader)
+    } else {
+        Analyzer::new(config.clone())
+    };
     
     if cli.verbose {
-        println!("Starting analysis of: {}", cli.target.display());
+        println!("Starting analysis of: {}", target.display());
     }
 
     let start_time = Instant::now();
@@ -99,23 +166,23 @@ fn main() -> Result<()> {
     // Perform analysis
     let vulnerabilities = if cli.semgrep {
         // Use Semgrep-style analysis
-        run_semgrep_analysis(&cli, &config)?
+        run_semgrep_analysis(&target, &config, &cli)?
     } else {
         // Use traditional analysis
-        if cli.target.is_file() {
-            analyzer.analyze_file(&cli.target)?
+        if target.is_file() {
+            analyzer.analyze_file(&target)?
         } else {
-            analyzer.analyze_directory(&cli.target)?
+            analyzer.analyze_directory(&target)?
         }
     };
 
     let analysis_duration = start_time.elapsed();
     
     // Count analyzed files
-    let files_analyzed = if cli.target.is_file() {
+    let files_analyzed = if target.is_file() {
         1
     } else {
-        count_analyzed_files(&cli.target, &config)
+        count_analyzed_files(&target, &config)
     };
 
     // Generate report
@@ -242,7 +309,7 @@ fn would_analyze_file(path: &std::path::Path, config: &Config) -> bool {
     true
 }
 
-fn run_semgrep_analysis(cli: &Cli, config: &Config) -> Result<Vec<devaic::Vulnerability>> {
+fn run_semgrep_analysis(target: &std::path::Path, config: &Config, cli: &Cli) -> Result<Vec<devaic::Vulnerability>> {
     use devaic::semgrep::SemgrepEngine;
     use walkdir::WalkDir;
     
@@ -285,11 +352,11 @@ fn run_semgrep_analysis(cli: &Cli, config: &Config) -> Result<Vec<devaic::Vulner
     }
     
     // Pre-allocate vulnerabilities vector based on file count
-    let mut all_vulnerabilities = if cli.target.is_file() {
+    let mut all_vulnerabilities = if target.is_file() {
         Vec::with_capacity(10) // Single file, assume ~10 vulnerabilities
     } else {
         // Count files to estimate capacity
-        let file_count = WalkDir::new(&cli.target)
+        let file_count = WalkDir::new(&target)
             .follow_links(config.analysis.follow_symlinks)
             .into_iter()
             .filter_map(|e| e.ok())
@@ -300,13 +367,13 @@ fn run_semgrep_analysis(cli: &Cli, config: &Config) -> Result<Vec<devaic::Vulner
     };
     
     // Analyze files
-    if cli.target.is_file() {
-        if let Some(vuln) = analyze_file_with_semgrep(&cli.target, &engine, config)? {
+    if target.is_file() {
+        if let Some(vuln) = analyze_file_with_semgrep(&target, &engine, config)? {
             all_vulnerabilities.extend(vuln);
         }
     } else {
         // Analyze directory
-        for entry in WalkDir::new(&cli.target)
+        for entry in WalkDir::new(&target)
             .follow_links(config.analysis.follow_symlinks)
             .into_iter()
             .filter_map(|e| e.ok())

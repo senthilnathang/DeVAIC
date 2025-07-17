@@ -2,7 +2,8 @@ use crate::{
     config::Config,
     error::{DevaicError, Result},
     parsers::{ParserFactory, SourceFile},
-    rules::RuleEngine,
+    rules::{RuleEngine, custom_pattern_rules::CustomPatternRules},
+    pattern_loader::PatternLoader,
     Language, Vulnerability,
 };
 use std::path::Path;
@@ -17,6 +18,17 @@ pub struct Analyzer {
 impl Analyzer {
     pub fn new(config: Config) -> Self {
         let rule_engine = RuleEngine::new(&config.rules);
+        Self {
+            config,
+            rule_engine,
+        }
+    }
+
+    pub fn new_with_custom_patterns(config: Config, pattern_loader: PatternLoader) -> Self {
+        let mut rule_engine = RuleEngine::new(&config.rules);
+        let custom_rules = CustomPatternRules::new(pattern_loader);
+        rule_engine.set_custom_pattern_rules(custom_rules);
+        
         Self {
             config,
             rule_engine,
