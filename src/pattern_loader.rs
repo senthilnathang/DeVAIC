@@ -191,6 +191,7 @@ impl PatternLoader {
                 "scada" | "st" => true,
                 "cobol" | "cob" => true,
                 "pascal" | "pas" => true,
+                "rust" | "rs" => true,
                 _ => false,
             };
             
@@ -245,6 +246,7 @@ impl PatternLoader {
                         "cob" => "cobol",
                         "pas" => "pascal",
                         "c++" => "cpp",
+                        "rs" => "rust",
                         other => other,
                     };
                     

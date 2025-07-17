@@ -64,6 +64,42 @@ struct Cli {
     /// List all imported patterns and statistics
     #[arg(long)]
     list_patterns: bool,
+
+    /// Number of threads for parallel processing (default: auto-detect)
+    #[arg(long)]
+    threads: Option<usize>,
+
+    /// Disable parallel processing (use sequential scanning)
+    #[arg(long)]
+    no_parallel: bool,
+
+    /// Disable caching to force fresh analysis
+    #[arg(long)]
+    no_cache: bool,
+
+    /// Show cache statistics
+    #[arg(long)]
+    cache_stats: bool,
+
+    /// Clear all caches before analysis
+    #[arg(long)]
+    clear_cache: bool,
+
+    /// Run performance benchmark
+    #[arg(long)]
+    benchmark: bool,
+
+    /// Maximum recursion depth for directory scanning (default: 100)
+    #[arg(long, default_value = "100")]
+    max_depth: usize,
+
+    /// Use legacy directory walker (slower but more compatible)
+    #[arg(long)]
+    legacy_walker: bool,
+
+    /// Traversal strategy: breadth-first, depth-first, or adaptive
+    #[arg(long, default_value = "breadth-first")]
+    traversal_strategy: String,
 }
 
 #[derive(Clone, ValueEnum)]
@@ -150,12 +186,54 @@ fn main() -> Result<()> {
             .collect();
     }
 
-    // Initialize analyzer with custom patterns if loaded
-    let analyzer = if pattern_loader.get_statistics().total_patterns > 0 {
+    // Initialize analyzer with custom patterns if loaded and performance options
+    let mut analyzer = if pattern_loader.get_statistics().total_patterns > 0 {
         Analyzer::new_with_custom_patterns(config.clone(), pattern_loader)
     } else {
         Analyzer::new(config.clone())
     };
+
+    // Configure performance options
+    if cli.no_parallel {
+        analyzer.set_parallel_enabled(false);
+        if cli.verbose {
+            println!("Parallel processing disabled");
+        }
+    } else if cli.verbose {
+        let thread_count = cli.threads.unwrap_or_else(|| {
+            std::thread::available_parallelism()
+                .map(|n| n.get())
+                .unwrap_or(4)
+        });
+        println!("Using {} threads for parallel processing", thread_count);
+    }
+
+    // Set max recursion depth
+    analyzer.set_max_depth(cli.max_depth);
+    if cli.verbose {
+        println!("Maximum recursion depth: {}", cli.max_depth);
+    }
+
+    // Handle cache options
+    if cli.clear_cache {
+        analyzer.clear_caches();
+        if cli.verbose {
+            println!("Caches cleared");
+        }
+    }
+
+    if cli.cache_stats {
+        let stats = analyzer.get_cache_stats();
+        stats.print_summary();
+    }
+
+    // Run benchmark if requested
+    if cli.benchmark {
+        let benchmark = devaic::benchmark::PerformanceBenchmark::new(config.clone());
+        let results = benchmark.run_benchmark(&target);
+        results.print_summary();
+        return Ok(());
+    }
     
     if cli.verbose {
         println!("Starting analysis of: {}", target.display());
@@ -179,14 +257,15 @@ fn main() -> Result<()> {
     let analysis_duration = start_time.elapsed();
     
     // Count analyzed files
-    let files_analyzed = if target.is_file() {
-        1
+    let (files_analyzed, lines_of_code) = if target.is_file() {
+        let lines = count_file_lines(&target).unwrap_or(0);
+        (1, lines)
     } else {
-        count_analyzed_files(&target, &config)
+        (count_analyzed_files(&target, &config), count_lines_of_code(&target, &config))
     };
 
     // Generate report
-    let mut report = Report::new(vulnerabilities, files_analyzed);
+    let mut report = Report::new_with_lines(vulnerabilities, files_analyzed, lines_of_code);
     report.set_duration(analysis_duration);
 
     // Output report
@@ -257,6 +336,35 @@ fn count_analyzed_files(path: &PathBuf, config: &Config) -> usize {
         .filter(|entry| entry.file_type().is_file())
         .filter(|entry| would_analyze_file(entry.path(), config))
         .count()
+}
+
+fn count_lines_of_code(path: &PathBuf, config: &Config) -> usize {
+    use walkdir::WalkDir;
+    
+    WalkDir::new(path)
+        .follow_links(config.analysis.follow_symlinks)
+        .into_iter()
+        .filter_map(|e| e.ok())
+        .filter(|entry| entry.file_type().is_file())
+        .filter(|entry| would_analyze_file(entry.path(), config))
+        .map(|entry| count_file_lines(entry.path()).unwrap_or(0))
+        .sum()
+}
+
+fn count_file_lines(file_path: &std::path::Path) -> std::io::Result<usize> {
+    use std::fs::File;
+    use std::io::{BufRead, BufReader};
+    
+    let file = File::open(file_path)?;
+    let reader = BufReader::new(file);
+    let mut line_count = 0;
+    
+    for line in reader.lines() {
+        let _ = line?; // Check for IO errors but don't store the line content
+        line_count += 1;
+    }
+    
+    Ok(line_count)
 }
 
 fn would_analyze_file(path: &std::path::Path, config: &Config) -> bool {

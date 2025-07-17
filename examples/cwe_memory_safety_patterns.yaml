@@ -1,0 +1,396 @@
+version: "1.0"
+name: "CWE Memory Safety Patterns"
+description: "Comprehensive regex patterns for memory safety vulnerabilities (CWE-119, CWE-120, CWE-121, CWE-122, CWE-124, CWE-125, CWE-126, CWE-127, CWE-415, CWE-416, CWE-476, CWE-787, CWE-788, CWE-789)"
+author: "DeVAIC Security Team"
+license: "MIT"
+
+patterns:
+  # CWE-119: Improper Restriction of Operations within the Bounds of a Memory Buffer
+  - id: "cwe-119-memory-buffer-bounds"
+    name: "Memory Buffer Bounds Restriction"
+    description: "Detects improper restriction of operations within memory buffer bounds"
+    severity: "Critical"
+    category: "memory-safety"
+    languages: ["c", "cpp", "rust"]
+    patterns:
+      - regex: "memcpy\\s*\\(\\s*\\w+\\s*,\\s*\\w+\\s*,\\s*\\w+\\s*\\*\\s*\\w+\\s*\\)"
+        description: "memcpy with calculated size"
+        confidence: 0.8
+      - regex: "memmove\\s*\\(\\s*\\w+\\s*,\\s*\\w+\\s*,\\s*\\w+\\s*\\*\\s*\\w+\\s*\\)"
+        description: "memmove with calculated size"
+        confidence: 0.8
+      - regex: "strcpy\\s*\\(\\s*\\w+\\s*,\\s*\\w+\\s*\\)|strcat\\s*\\(\\s*\\w+\\s*,\\s*\\w+\\s*\\)"
+        description: "Unsafe string operations"
+        confidence: 0.95
+      - regex: "char\\s+\\w+\\[\\d+\\].*gets\\s*\\(\\s*\\w+\\s*\\)"
+        description: "Fixed buffer with gets function"
+        confidence: 0.98
+    fix_suggestion: "Use bounded string functions (strncpy, strncat), validate buffer sizes, use secure alternatives"
+    cwe: "CWE-119"
+    owasp: "A06:2021"
+
+  # CWE-120: Buffer Copy without Checking Size of Input
+  - id: "cwe-120-buffer-copy-no-check"
+    name: "Buffer Copy without Size Check"
+    description: "Detects buffer copy operations without checking input size"
+    severity: "Critical"
+    category: "memory-safety"
+    languages: ["c", "cpp"]
+    patterns:
+      - regex: "strcpy\\s*\\(\\s*\\w+\\s*,\\s*\\w+\\s*\\)"
+        description: "strcpy without size checking"
+        confidence: 0.95
+      - regex: "strcat\\s*\\(\\s*\\w+\\s*,\\s*\\w+\\s*\\)"
+        description: "strcat without size checking"
+        confidence: 0.95
+      - regex: "sprintf\\s*\\(\\s*\\w+\\s*,\\s*['\\\"].*%s.*['\\\"]\\s*,\\s*\\w+\\s*\\)"
+        description: "sprintf with %s format specifier"
+        confidence: 0.9
+      - regex: "memcpy\\s*\\(\\s*\\w+\\s*,\\s*\\w+\\s*,\\s*strlen\\s*\\(\\s*\\w+\\s*\\)\\s*\\)"
+        description: "memcpy with strlen as size"
+        confidence: 0.85
+    fix_suggestion: "Use safe functions: strncpy, strncat, snprintf, with proper size validation"
+    cwe: "CWE-120"
+    owasp: "A06:2021"
+
+  # CWE-121: Stack-based Buffer Overflow
+  - id: "cwe-121-stack-buffer-overflow"
+    name: "Stack-based Buffer Overflow"
+    description: "Detects stack-based buffer overflow vulnerabilities"
+    severity: "Critical"
+    category: "memory-safety"
+    languages: ["c", "cpp"]
+    patterns:
+      - regex: "char\\s+\\w+\\[\\d+\\].*scanf\\s*\\(\\s*['\\\"]%s['\\\"]\\s*,\\s*\\w+\\s*\\)"
+        description: "Stack buffer with scanf %s"
+        confidence: 0.95
+      - regex: "char\\s+\\w+\\[\\d+\\].*gets\\s*\\(\\s*\\w+\\s*\\)"
+        description: "Stack buffer with gets function"
+        confidence: 0.98
+      - regex: "char\\s+\\w+\\[\\d+\\].*strcpy\\s*\\(\\s*\\w+\\s*,\\s*\\w+\\s*\\)"
+        description: "Stack buffer with strcpy"
+        confidence: 0.9
+      - regex: "char\\s+\\w+\\[\\d+\\].*sprintf\\s*\\(\\s*\\w+\\s*,\\s*['\\\"].*%s.*['\\\"]"
+        description: "Stack buffer with sprintf %s"
+        confidence: 0.9
+    fix_suggestion: "Use stack protection, bounds checking, safer alternatives like fgets, snprintf"
+    cwe: "CWE-121"
+    owasp: "A06:2021"
+
+  # CWE-122: Heap-based Buffer Overflow
+  - id: "cwe-122-heap-buffer-overflow"
+    name: "Heap-based Buffer Overflow"
+    description: "Detects heap-based buffer overflow vulnerabilities"
+    severity: "Critical"
+    category: "memory-safety"
+    languages: ["c", "cpp"]
+    patterns:
+      - regex: "malloc\\s*\\(\\s*\\d+\\s*\\).*strcpy\\s*\\(\\s*\\w+\\s*,\\s*\\w+\\s*\\)"
+        description: "Heap allocation with strcpy"
+        confidence: 0.9
+      - regex: "calloc\\s*\\(\\s*\\d+\\s*,\\s*\\d+\\s*\\).*memcpy\\s*\\(\\s*\\w+\\s*,\\s*\\w+\\s*,\\s*\\w+\\s*\\)"
+        description: "Heap allocation with memcpy"
+        confidence: 0.8
+      - regex: "new\\s+char\\[\\d+\\].*strcpy\\s*\\(\\s*\\w+\\s*,\\s*\\w+\\s*\\)"
+        description: "C++ heap allocation with strcpy"
+        confidence: 0.9
+      - regex: "\\*\\s*\\w+\\s*=\\s*malloc\\s*\\(\\s*\\w+\\s*\\).*strcpy\\s*\\(\\s*\\w+\\s*,\\s*\\w+\\s*\\)"
+        description: "Dynamic heap allocation with strcpy"
+        confidence: 0.85
+    fix_suggestion: "Validate heap buffer sizes, use safe string functions, implement proper bounds checking"
+    cwe: "CWE-122"
+    owasp: "A06:2021"
+
+  # CWE-124: Write-what-where Condition
+  - id: "cwe-124-write-what-where"
+    name: "Write-what-where Condition"
+    description: "Detects write-what-where vulnerabilities"
+    severity: "Critical"
+    category: "memory-safety"
+    languages: ["c", "cpp"]
+    patterns:
+      - regex: "\\*\\s*\\(\\s*\\w+\\s*\\+\\s*\\w+\\s*\\)\\s*=\\s*\\w+"
+        description: "Pointer arithmetic with write operation"
+        confidence: 0.8
+      - regex: "\\w+\\[\\w+\\]\\s*=\\s*\\w+"
+        description: "Array write without bounds check"
+        confidence: 0.7
+      - regex: "memset\\s*\\(\\s*\\w+\\s*\\+\\s*\\w+\\s*,\\s*\\w+\\s*,\\s*\\w+\\s*\\)"
+        description: "memset with pointer arithmetic"
+        confidence: 0.75
+      - regex: "\\*\\s*\\w+\\s*=\\s*\\w+"
+        description: "Pointer dereference (verify validation)"
+        confidence: 0.6
+    fix_suggestion: "Validate pointer arithmetic, implement bounds checking, use safe memory operations"
+    cwe: "CWE-124"
+    owasp: "A06:2021"
+
+  # CWE-126: Buffer Over-read
+  - id: "cwe-126-buffer-over-read"
+    name: "Buffer Over-read"
+    description: "Detects buffer over-read vulnerabilities"
+    severity: "Medium"
+    category: "memory-safety"
+    languages: ["c", "cpp"]
+    patterns:
+      - regex: "strlen\\s*\\(\\s*\\w+\\s*\\)"
+        description: "strlen on potentially unterminated string"
+        confidence: 0.7
+      - regex: "memcmp\\s*\\(\\s*\\w+\\s*,\\s*\\w+\\s*,\\s*\\w+\\s*\\*\\s*\\w+\\s*\\)"
+        description: "memcmp with calculated size"
+        confidence: 0.6
+      - regex: "strstr\\s*\\(\\s*\\w+\\s*,\\s*\\w+\\s*\\)|strchr\\s*\\(\\s*\\w+\\s*,\\s*\\w+\\s*\\)"
+        description: "String search functions on unterminated strings"
+        confidence: 0.65
+      - regex: "printf\\s*\\(\\s*\\w+\\s*\\)|puts\\s*\\(\\s*\\w+\\s*\\)"
+        description: "String output functions on unterminated strings"
+        confidence: 0.6
+    fix_suggestion: "Ensure string null-termination, validate buffer sizes, use bounded string functions"
+    cwe: "CWE-126"
+    owasp: "A06:2021"
+
+  # CWE-127: Buffer Under-read
+  - id: "cwe-127-buffer-under-read"
+    name: "Buffer Under-read"
+    description: "Detects buffer under-read vulnerabilities"
+    severity: "Medium"
+    category: "memory-safety"
+    languages: ["c", "cpp"]
+    patterns:
+      - regex: "\\w+\\[\\w+\\s*-\\s*\\d+\\]"
+        description: "Array access with negative offset"
+        confidence: 0.8
+      - regex: "\\*\\s*\\(\\s*\\w+\\s*-\\s*\\d+\\s*\\)"
+        description: "Pointer dereference with negative offset"
+        confidence: 0.8
+      - regex: "memcpy\\s*\\(\\s*\\w+\\s*,\\s*\\w+\\s*-\\s*\\d+\\s*,\\s*\\w+\\s*\\)"
+        description: "memcpy with negative source offset"
+        confidence: 0.85
+      - regex: "memmove\\s*\\(\\s*\\w+\\s*,\\s*\\w+\\s*-\\s*\\d+\\s*,\\s*\\w+\\s*\\)"
+        description: "memmove with negative source offset"
+        confidence: 0.85
+    fix_suggestion: "Validate array indices, ensure positive offsets, implement bounds checking"
+    cwe: "CWE-127"
+    owasp: "A06:2021"
+
+  # CWE-415: Double Free
+  - id: "cwe-415-double-free"
+    name: "Double Free"
+    description: "Detects double free vulnerabilities"
+    severity: "High"
+    category: "memory-safety"
+    languages: ["c", "cpp"]
+    patterns:
+      - regex: "free\\s*\\(\\s*\\w+\\s*\\);[\\s\\S]*free\\s*\\(\\s*\\w+\\s*\\)"
+        description: "Multiple free calls on same variable"
+        confidence: 0.8
+      - regex: "delete\\s+\\w+;[\\s\\S]*delete\\s+\\w+"
+        description: "Multiple delete calls on same variable"
+        confidence: 0.8
+      - regex: "free\\s*\\(\\s*\\w+\\s*\\)"
+        description: "free without setting pointer to NULL"
+        confidence: 0.7
+      - regex: "delete\\s+\\w+"
+        description: "delete without setting pointer to nullptr"
+        confidence: 0.7
+    fix_suggestion: "Set pointers to NULL after freeing, use smart pointers, implement proper memory management"
+    cwe: "CWE-415"
+    owasp: "A06:2021"
+
+  # CWE-416: Use After Free (Enhanced)
+  - id: "cwe-416-use-after-free-enhanced"
+    name: "Use After Free (Enhanced)"
+    description: "Enhanced detection of use-after-free vulnerabilities"
+    severity: "Critical"
+    category: "memory-safety"
+    languages: ["c", "cpp", "rust"]
+    patterns:
+      - regex: "free\\s*\\(\\s*\\w+\\s*\\);[\\s\\S]*\\*\\s*\\w+"
+        description: "Pointer dereference after free"
+        confidence: 0.9
+      - regex: "free\\s*\\(\\s*\\w+\\s*\\);[\\s\\S]*\\w+\\["
+        description: "Array access after free"
+        confidence: 0.9
+      - regex: "delete\\s+\\w+;[\\s\\S]*\\w+->"
+        description: "Member access after delete"
+        confidence: 0.9
+      - regex: "delete\\s+\\w+;[\\s\\S]*\\*\\s*\\w+"
+        description: "Pointer dereference after delete"
+        confidence: 0.9
+      - regex: "std::move\\s*\\(\\s*\\w+\\s*\\);[\\s\\S]*\\w+\\."
+        description: "Use after move in C++"
+        confidence: 0.8
+    fix_suggestion: "Set pointers to NULL after freeing, use RAII, implement proper lifetime management"
+    cwe: "CWE-416"
+    owasp: "A06:2021"
+
+  # CWE-476: NULL Pointer Dereference (Enhanced)
+  - id: "cwe-476-null-pointer-enhanced"
+    name: "NULL Pointer Dereference (Enhanced)"
+    description: "Enhanced detection of NULL pointer dereference vulnerabilities"
+    severity: "Medium"
+    category: "memory-safety"
+    languages: ["c", "cpp", "java", "csharp"]
+    patterns:
+      - regex: "malloc\\s*\\(\\s*\\w+\\s*\\);[\\s\\S]*\\*\\s*\\w+"
+        description: "malloc without null check before dereference"
+        confidence: 0.8
+      - regex: "calloc\\s*\\(\\s*\\w+\\s*,\\s*\\w+\\s*\\);[\\s\\S]*\\*\\s*\\w+"
+        description: "calloc without null check before dereference"
+        confidence: 0.8
+      - regex: "\\w+\\s*=\\s*NULL;[\\s\\S]*\\*\\s*\\w+"
+        description: "Pointer set to NULL then dereferenced"
+        confidence: 0.95
+      - regex: "\\w+\\s*=\\s*nullptr;[\\s\\S]*\\*\\s*\\w+"
+        description: "Pointer set to nullptr then dereferenced"
+        confidence: 0.95
+      - regex: "\\w+\\.\\w+\\(\\)"
+        description: "Method call (verify null check)"
+        confidence: 0.6
+    fix_suggestion: "Always check for NULL before dereferencing, use safe navigation, validate pointers"
+    cwe: "CWE-476"
+    owasp: "A06:2021"
+
+  # CWE-788: Access of Memory Location After End of Buffer
+  - id: "cwe-788-access-after-buffer-end"
+    name: "Access of Memory Location After End of Buffer"
+    description: "Detects access of memory location after buffer end"
+    severity: "High"
+    category: "memory-safety"
+    languages: ["c", "cpp"]
+    patterns:
+      - regex: "\\w+\\[\\w+\\s*\\+\\s*\\d+\\]"
+        description: "Array access with positive offset without bounds check"
+        confidence: 0.7
+      - regex: "\\*\\s*\\(\\s*\\w+\\s*\\+\\s*\\w+\\s*\\)"
+        description: "Pointer arithmetic access without bounds check"
+        confidence: 0.75
+      - regex: "for\\s*\\(\\s*\\w+\\s*=\\s*0\\s*;\\s*\\w+\\s*<=\\s*\\w+\\s*;\\s*\\w+\\+\\+\\s*\\)"
+        description: "Loop with <= condition on array bounds"
+        confidence: 0.8
+      - regex: "strncpy\\s*\\(\\s*\\w+\\s*,\\s*\\w+\\s*,\\s*\\w+\\s*\\+\\s*\\d+\\s*\\)"
+        description: "strncpy with size larger than buffer"
+        confidence: 0.8
+    fix_suggestion: "Validate array bounds, use proper loop conditions, implement bounds checking"
+    cwe: "CWE-788"
+    owasp: "A06:2021"
+
+  # CWE-789: Memory Allocation with Excessive Size Value
+  - id: "cwe-789-excessive-memory-allocation"
+    name: "Memory Allocation with Excessive Size"
+    description: "Detects memory allocation with excessive size values"
+    severity: "Medium"
+    category: "memory-safety"
+    languages: ["c", "cpp", "java", "csharp"]
+    patterns:
+      - regex: "malloc\\s*\\(\\s*\\w+\\s*\\*\\s*\\w+\\s*\\*\\s*\\w+\\s*\\)"
+        description: "malloc with multiple multiplication"
+        confidence: 0.7
+      - regex: "calloc\\s*\\(\\s*\\w+\\s*\\*\\s*\\w+\\s*,\\s*\\w+\\s*\\)"
+        description: "calloc with calculated count"
+        confidence: 0.7
+      - regex: "new\\s+\\w+\\[\\w+\\s*\\*\\s*\\w+\\]"
+        description: "C++ new with calculated size"
+        confidence: 0.7
+      - regex: "malloc\\s*\\(\\s*\\w+\\s*<<\\s*\\d+\\s*\\)|malloc\\s*\\(\\s*\\d+\\s*<<\\s*\\w+\\s*\\)"
+        description: "malloc with bit shift operations"
+        confidence: 0.8
+    fix_suggestion: "Validate allocation sizes, check for integer overflow, implement size limits"
+    cwe: "CWE-789"
+    owasp: "A06:2021"
+
+  # CWE-401: Missing Release of Memory after Effective Lifetime
+  - id: "cwe-401-memory-leak"
+    name: "Memory Leak"
+    description: "Detects potential memory leak vulnerabilities"
+    severity: "Medium"
+    category: "memory-safety"
+    languages: ["c", "cpp", "java", "csharp"]
+    patterns:
+      - regex: "malloc\\s*\\(\\s*\\w+\\s*\\)"
+        description: "malloc (verify corresponding free)"
+        confidence: 0.6
+      - regex: "calloc\\s*\\(\\s*\\w+\\s*,\\s*\\w+\\s*\\)"
+        description: "calloc (verify corresponding free)"
+        confidence: 0.6
+      - regex: "new\\s+\\w+"
+        description: "C++ new without corresponding delete"
+        confidence: 0.6
+      - regex: "new\\s+\\w+\\[\\w+\\]"
+        description: "C++ new[] without corresponding delete[]"
+        confidence: 0.6
+      - regex: "fopen\\s*\\(\\s*\\w+\\s*,\\s*\\w+\\s*\\)"
+        description: "fopen (verify corresponding fclose)"
+        confidence: 0.7
+    fix_suggestion: "Ensure proper resource cleanup, use RAII, implement proper error handling"
+    cwe: "CWE-401"
+    owasp: "A06:2021"
+
+  # CWE-590: Free of Memory not on the Heap
+  - id: "cwe-590-free-non-heap"
+    name: "Free of Memory not on the Heap"
+    description: "Detects freeing of memory not allocated on heap"
+    severity: "High"
+    category: "memory-safety"
+    languages: ["c", "cpp"]
+    patterns:
+      - regex: "char\\s+\\w+\\[\\d+\\];[\\s\\S]*free\\s*\\(\\s*\\w+\\s*\\)"
+        description: "free() called on stack array"
+        confidence: 0.95
+      - regex: "static\\s+\\w+\\s+\\w+\\[\\d+\\];[\\s\\S]*free\\s*\\(\\s*\\w+\\s*\\)"
+        description: "free() called on static array"
+        confidence: 0.95
+      - regex: "\\w+\\s+\\w+\\[\\d+\\];[\\s\\S]*free\\s*\\(\\s*&\\w+\\s*\\)"
+        description: "free() called on address of stack variable"
+        confidence: 0.9
+      - regex: "delete\\s+&\\w+|delete\\[\\]\\s+&\\w+"
+        description: "delete called on address of stack variable"
+        confidence: 0.9
+    fix_suggestion: "Only free heap-allocated memory, validate memory source before freeing"
+    cwe: "CWE-590"
+    owasp: "A06:2021"
+
+  # CWE-825: Expired Pointer Dereference
+  - id: "cwe-825-expired-pointer"
+    name: "Expired Pointer Dereference"
+    description: "Detects dereference of expired pointers"
+    severity: "High"
+    category: "memory-safety"
+    languages: ["c", "cpp"]
+    patterns:
+      - regex: "\\{[\\s\\S]*\\w+\\s*=\\s*&\\w+;[\\s\\S]*\\}[\\s\\S]*\\*\\s*\\w+"
+        description: "Pointer to local variable used after scope"
+        confidence: 0.8
+      - regex: "return\\s+&\\w+;|return\\s+\\w+\\s*\\+\\s*\\w+;"
+        description: "Returning pointer to local variable"
+        confidence: 0.9
+      - regex: "\\w+\\s*=\\s*alloca\\s*\\(\\s*\\w+\\s*\\);[\\s\\S]*return\\s+\\w+"
+        description: "Returning alloca pointer"
+        confidence: 0.85
+    fix_suggestion: "Avoid returning pointers to local variables, use heap allocation or static storage"
+    cwe: "CWE-825"
+    owasp: "A06:2021"
+
+  # CWE-194: Unexpected Sign Extension
+  - id: "cwe-194-sign-extension"
+    name: "Unexpected Sign Extension"
+    description: "Detects unexpected sign extension issues"
+    severity: "Medium"
+    category: "memory-safety"
+    languages: ["c", "cpp"]
+    patterns:
+      - regex: "char\\s+\\w+;[\\s\\S]*\\w+\\[\\w+\\]"
+        description: "char variable used as array index"
+        confidence: 0.7
+      - regex: "short\\s+\\w+;[\\s\\S]*malloc\\s*\\(\\s*\\w+\\s*\\)"
+        description: "short variable used in malloc size"
+        confidence: 0.7
+      - regex: "signed\\s+char\\s+\\w+;[\\s\\S]*\\w+\\[\\w+\\]"
+        description: "signed char used as array index"
+        confidence: 0.8
+      - regex: "int\\s+\\w+\\s*=\\s*-\\d+;[\\s\\S]*\\w+\\[\\w+\\]"
+        description: "negative int used as array index"
+        confidence: 0.8
+    fix_suggestion: "Use unsigned types for array indices, validate signed values before use"
+    cwe: "CWE-194"
+    owasp: "A06:2021"

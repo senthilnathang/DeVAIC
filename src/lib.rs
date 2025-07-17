@@ -8,6 +8,11 @@ pub mod error;
 pub mod semgrep;
 pub mod security_utils;
 pub mod pattern_loader;
+pub mod cache;
+pub mod optimized_reader;
+pub mod parallel_scanner;
+pub mod benchmark;
+pub mod fast_walker;
 
 pub use analyzer::Analyzer;
 pub use build_break::{BuildBreakAnalyzer, BuildBreakResult};

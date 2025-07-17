@@ -12,6 +12,7 @@ pub struct Report {
     pub summary: Summary,
     pub vulnerabilities: Vec<Vulnerability>,
     pub files_analyzed: usize,
+    pub total_lines_of_code: usize,
     pub analysis_duration: std::time::Duration,
 }
 
@@ -51,6 +52,19 @@ impl Report {
             summary,
             vulnerabilities,
             files_analyzed,
+            total_lines_of_code: 0,
+            analysis_duration: std::time::Duration::from_secs(0),
+        }
+    }
+    
+    pub fn new_with_lines(vulnerabilities: Vec<Vulnerability>, files_analyzed: usize, total_lines_of_code: usize) -> Self {
+        let summary = Summary::from_vulnerabilities(&vulnerabilities);
+        
+        Self {
+            summary,
+            vulnerabilities,
+            files_analyzed,
+            total_lines_of_code,
             analysis_duration: std::time::Duration::from_secs(0),
         }
     }
@@ -92,8 +106,9 @@ impl Report {
                     category: v.category.clone(),
                     file: v.file_path.clone(),
                     line: v.line_number.to_string(),
-                    description: if v.description.len() > 50 {
-                        format!("{}...", &v.description[..47])
+                    description: if v.description.chars().count() > 50 {
+                        let truncated: String = v.description.chars().take(47).collect();
+                        format!("{}...", truncated)
                     } else {
                         v.description.clone()
                     },
@@ -157,6 +172,9 @@ impl Report {
         
         // Summary
         current_layer.use_text(&format!("Files analyzed: {}", self.files_analyzed), 12.0, Mm(20.0), Mm(y_position), &helvetica);
+        y_position -= 10.0;
+        
+        current_layer.use_text(&format!("Total lines of code: {}", self.total_lines_of_code), 12.0, Mm(20.0), Mm(y_position), &helvetica);
         y_position -= 10.0;
         
         current_layer.use_text(&format!("Total vulnerabilities: {}", self.summary.total_vulnerabilities), 12.0, Mm(20.0), Mm(y_position), &helvetica);
@@ -223,6 +241,10 @@ impl Report {
         worksheet.write_number(row, 1, self.files_analyzed as f64)?;
         row += 1;
         
+        worksheet.write_string(row, 0, "Total Lines of Code")?;
+        worksheet.write_number(row, 1, self.total_lines_of_code as f64)?;
+        row += 1;
+        
         worksheet.write_string(row, 0, "Total Vulnerabilities")?;
         worksheet.write_number(row, 1, self.summary.total_vulnerabilities as f64)?;
         row += 1;
@@ -280,6 +302,7 @@ impl Report {
         
         summary.push_str(&format!("Analysis Summary:\n"));
         summary.push_str(&format!("- Files analyzed: {}\n", self.files_analyzed));
+        summary.push_str(&format!("- Total lines of code: {}\n", self.total_lines_of_code));
         summary.push_str(&format!("- Total vulnerabilities: {}\n", self.summary.total_vulnerabilities));
         summary.push_str(&format!("- Analysis duration: {:.2}s\n", self.analysis_duration.as_secs_f64()));
         
@@ -481,10 +504,11 @@ mod tests {
             }
         ];
 
-        let report = Report::new(vulnerabilities, 1);
+        let report = Report::new_with_lines(vulnerabilities, 1, 100);
         
         assert_eq!(report.summary.total_vulnerabilities, 1);
         assert_eq!(report.files_analyzed, 1);
+        assert_eq!(report.total_lines_of_code, 100);
         assert_eq!(report.summary.by_severity.get("HIGH"), Some(&1));
         assert_eq!(report.summary.by_category.get("injection"), Some(&1));
     }
@@ -507,7 +531,7 @@ mod tests {
             }
         ];
 
-        let report = Report::new(vulnerabilities, 1);
+        let report = Report::new_with_lines(vulnerabilities, 1, 50);
         let json = report.to_json().unwrap();
         
         assert!(json.contains("TEST001"));

@@ -28,7 +28,16 @@
       "WebFetch(domain:ota-meshi.github.io)",
       "Bash(find:*)",
       "Bash(mv:*)",
-      "Bash(cp:*)"
+      "Bash(cp:*)",
+      "WebFetch(domain:cwe.mitre.org)",
+      "Bash(chmod:*)",
+      "Bash(RUST_LOG=debug ./target/release/devaic test_files/nested/:*)",
+      "Bash(RUST_LOG=debug ./target/release/devaic --verbose --no-parallel test_files/)",
+      "Bash(RUST_LOG=debug ./target/release/devaic --verbose test_files/)",
+      "Bash(RUST_LOG=warn ./target/release/devaic --max-depth 1 test_files/)",
+      "Bash(python3:*)",
+      "Bash(time:*)",
+      "Bash(/dev/null)"
     ],
     "deny": []
   }

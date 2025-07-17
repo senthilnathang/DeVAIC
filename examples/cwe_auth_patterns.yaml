@@ -1,0 +1,552 @@
+version: "1.0"
+name: "CWE Authentication & Authorization Patterns"
+description: "Comprehensive regex patterns for authentication and authorization vulnerabilities (CWE-287, CWE-288, CWE-289, CWE-290, CWE-291, CWE-292, CWE-293, CWE-294, CWE-302, CWE-303, CWE-304, CWE-305, CWE-306, CWE-307, CWE-308, CWE-309, CWE-384, CWE-521, CWE-522, CWE-523, CWE-549, CWE-550, CWE-551, CWE-552, CWE-553, CWE-554, CWE-555, CWE-556, CWE-557, CWE-558, CWE-620, CWE-640, CWE-798, CWE-804, CWE-836, CWE-862, CWE-863, CWE-916, CWE-1275, CWE-1390)"
+author: "DeVAIC Security Team"
+license: "MIT"
+
+patterns:
+  # CWE-287: Improper Authentication
+  - id: "cwe-287-improper-authentication"
+    name: "Improper Authentication"
+    description: "Detects improper authentication implementations"
+    severity: "High"
+    category: "authentication"
+    languages: ["java", "python", "php", "csharp", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "if\\s*\\(\\s*\\$_POST\\[.*password.*\\]\\s*==\\s*['\\\"][^'\\\"]*['\\\"]\\s*\\)"
+        description: "PHP hardcoded password comparison"
+        confidence: 0.95
+      - regex: "if\\s*\\(\\s*password\\s*==\\s*['\\\"][^'\\\"]*['\\\"]\\s*\\)|if\\s*\\(\\s*pwd\\s*==\\s*['\\\"][^'\\\"]*['\\\"]\\s*\\)"
+        description: "Hardcoded password comparison"
+        confidence: 0.95
+      - regex: "authenticate\\s*\\(\\s*\\)\\s*\\{[^}]*return\\s+true[^}]*\\}"
+        description: "Always successful authentication"
+        confidence: 0.9
+      - regex: "login\\s*\\(\\s*\\)\\s*\\{[^}]*return\\s+true[^}]*\\}"
+        description: "Always successful login"
+        confidence: 0.9
+      - regex: "BasicAuth\\s*\\(\\s*['\\\"][^'\\\"]*['\\\"]\\s*,\\s*['\\\"][^'\\\"]*['\\\"]\\s*\\)"
+        description: "Hardcoded basic authentication"
+        confidence: 0.9
+      - regex: "session\\[.*authenticated.*\\]\\s*=\\s*true"
+        description: "Session authentication without verification"
+        confidence: 0.8
+    fix_suggestion: "Implement proper authentication mechanisms, use secure password hashing, validate credentials"
+    cwe: "CWE-287"
+    owasp: "A07:2021"
+
+  # CWE-288: Authentication Bypass Using an Alternate Path or Channel
+  - id: "cwe-288-auth-bypass-alternate"
+    name: "Authentication Bypass Using Alternate Path"
+    description: "Detects authentication bypass using alternate paths or channels"
+    severity: "High"
+    category: "authentication"
+    languages: ["java", "python", "php", "csharp", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "if\\s*\\(\\s*\\$_GET\\[.*debug.*\\]\\s*==\\s*['\\\"]true['\\\"]\\s*\\)\\s*\\{[^}]*\\$authenticated\\s*=\\s*true"
+        description: "Debug parameter bypassing authentication"
+        confidence: 0.9
+      - regex: "if\\s*\\(\\s*\\$_GET\\[.*admin.*\\]\\s*\\)|if\\s*\\(\\s*\\$_GET\\[.*bypass.*\\]\\s*\\)"
+        description: "Admin or bypass parameters"
+        confidence: 0.85
+      - regex: "if\\s*\\(\\s*request\\.args\\.get\\s*\\(\\s*['\\\"]admin['\\\"]\\s*\\)\\s*\\)|if\\s*\\(\\s*request\\.args\\.get\\s*\\(\\s*['\\\"]debug['\\\"]\\s*\\)\\s*\\)"
+        description: "Python admin/debug parameter bypass"
+        confidence: 0.85
+      - regex: "\\$_SERVER\\[.*HTTP_X_FORWARDED_FOR.*\\].*admin|\\$_SERVER\\[.*REMOTE_ADDR.*\\].*127\\.0\\.0\\.1"
+        description: "IP-based authentication bypass"
+        confidence: 0.8
+      - regex: "User-Agent.*admin|X-Admin.*true|X-Debug.*true"
+        description: "Header-based authentication bypass"
+        confidence: 0.8
+    fix_suggestion: "Remove debug bypasses, implement proper access controls, validate all input paths"
+    cwe: "CWE-288"
+    owasp: "A07:2021"
+
+  # CWE-289: Authentication Bypass by Alternate Name
+  - id: "cwe-289-auth-bypass-alternate-name"
+    name: "Authentication Bypass by Alternate Name"
+    description: "Detects authentication bypass using alternate names"
+    severity: "High"
+    category: "authentication"
+    languages: ["java", "python", "php", "csharp", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "username\\s*==\\s*['\\\"]admin['\\\"]\\s*\\|\\|\\s*username\\s*==\\s*['\\\"]administrator['\\\"]"
+        description: "Multiple admin username checks"
+        confidence: 0.8
+      - regex: "user\\s*==\\s*['\\\"]root['\\\"]\\s*\\|\\|\\s*user\\s*==\\s*['\\\"]admin['\\\"]"
+        description: "Multiple privileged user checks"
+        confidence: 0.8
+      - regex: "\\$_POST\\[.*user.*\\]\\s*==\\s*['\\\"]admin['\\\"]\\s*\\|\\|\\s*\\$_POST\\[.*user.*\\]\\s*==\\s*['\\\"]root['\\\"]"
+        description: "PHP multiple admin user checks"
+        confidence: 0.8
+      - regex: "request\\.form\\.get\\s*\\(\\s*['\\\"]username['\\\"]\\s*\\)\\s*in\\s*\\[\\s*['\\\"]admin['\\\"]\\s*,\\s*['\\\"]root['\\\"]\\s*\\]"
+        description: "Python multiple admin username checks"
+        confidence: 0.8
+    fix_suggestion: "Use consistent user identification, implement proper role-based access control"
+    cwe: "CWE-289"
+    owasp: "A07:2021"
+
+  # CWE-290: Authentication Bypass by Spoofing
+  - id: "cwe-290-auth-bypass-spoofing"
+    name: "Authentication Bypass by Spoofing"
+    description: "Detects authentication bypass by spoofing"
+    severity: "High"
+    category: "authentication"
+    languages: ["java", "python", "php", "csharp", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "\\$_SERVER\\[.*HTTP_X_FORWARDED_FOR.*\\]|\\$_SERVER\\[.*HTTP_CLIENT_IP.*\\]"
+        description: "Trusting forwarded headers for authentication"
+        confidence: 0.8
+      - regex: "request\\.headers\\.get\\s*\\(\\s*['\\\"]X-Forwarded-For['\\\"]\\s*\\)|request\\.headers\\.get\\s*\\(\\s*['\\\"]X-Real-IP['\\\"]\\s*\\)"
+        description: "Python trusting forwarded headers"
+        confidence: 0.8
+      - regex: "HttpServletRequest\\.getHeader\\s*\\(\\s*['\\\"]X-Forwarded-For['\\\"]\\s*\\)|HttpServletRequest\\.getRemoteAddr\\s*\\(\\s*\\)"
+        description: "Java trusting forwarded headers"
+        confidence: 0.8
+      - regex: "Request\\.Headers\\[.*X-Forwarded-For.*\\]|Request\\.UserHostAddress"
+        description: "ASP.NET trusting forwarded headers"
+        confidence: 0.8
+      - regex: "req\\.headers\\[.*x-forwarded-for.*\\]|req\\.connection\\.remoteAddress"
+        description: "Express.js trusting forwarded headers"
+        confidence: 0.8
+    fix_suggestion: "Validate client identity, use secure authentication tokens, don't trust client-provided headers"
+    cwe: "CWE-290"
+    owasp: "A07:2021"
+
+  # CWE-291: Reliance on IP Address for Authentication
+  - id: "cwe-291-ip-based-auth"
+    name: "Reliance on IP Address for Authentication"
+    description: "Detects reliance on IP address for authentication"
+    severity: "Medium"
+    category: "authentication"
+    languages: ["java", "python", "php", "csharp", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "\\$_SERVER\\[.*REMOTE_ADDR.*\\]\\s*==\\s*['\\\"]192\\.168\\.|\\$_SERVER\\[.*REMOTE_ADDR.*\\]\\s*==\\s*['\\\"]127\\.0\\.0\\.1"
+        description: "PHP IP-based authentication"
+        confidence: 0.9
+      - regex: "request\\.environ\\[.*REMOTE_ADDR.*\\]\\s*==\\s*['\\\"]192\\.168\\.|request\\.remote_addr\\s*==\\s*['\\\"]127\\.0\\.0\\.1"
+        description: "Python IP-based authentication"
+        confidence: 0.9
+      - regex: "request\\.getRemoteAddr\\s*\\(\\s*\\)\\.equals\\s*\\(\\s*['\\\"]192\\.168\\.|request\\.getRemoteAddr\\s*\\(\\s*\\)\\.equals\\s*\\(\\s*['\\\"]127\\.0\\.0\\.1"
+        description: "Java IP-based authentication"
+        confidence: 0.9
+      - regex: "Request\\.UserHostAddress\\s*==\\s*['\\\"]192\\.168\\.|Request\\.UserHostAddress\\s*==\\s*['\\\"]127\\.0\\.0\\.1"
+        description: "ASP.NET IP-based authentication"
+        confidence: 0.9
+      - regex: "req\\.connection\\.remoteAddress\\s*===\\s*['\\\"]192\\.168\\.|req\\.ip\\s*===\\s*['\\\"]127\\.0\\.0\\.1"
+        description: "Express.js IP-based authentication"
+        confidence: 0.9
+    fix_suggestion: "Use proper authentication mechanisms, implement multi-factor authentication, don't rely on IP addresses"
+    cwe: "CWE-291"
+    owasp: "A07:2021"
+
+  # CWE-292: Trusting Self-Reported DNS Name
+  - id: "cwe-292-dns-name-trust"
+    name: "Trusting Self-Reported DNS Name"
+    description: "Detects trusting self-reported DNS names for authentication"
+    severity: "Medium"
+    category: "authentication"
+    languages: ["java", "python", "php", "csharp", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "gethostbyaddr\\s*\\(\\s*\\$_SERVER\\[.*REMOTE_ADDR.*\\]\\s*\\)|gethostbyname\\s*\\(\\s*\\$_SERVER\\[.*HTTP_HOST.*\\]\\s*\\)"
+        description: "PHP DNS-based authentication"
+        confidence: 0.8
+      - regex: "socket\\.gethostbyaddr\\s*\\(\\s*request\\.environ\\[.*REMOTE_ADDR.*\\]\\s*\\)|socket\\.gethostbyname\\s*\\(\\s*request\\.environ\\[.*HTTP_HOST.*\\]\\s*\\)"
+        description: "Python DNS-based authentication"
+        confidence: 0.8
+      - regex: "InetAddress\\.getByName\\s*\\(\\s*request\\.getRemoteAddr\\s*\\(\\s*\\)\\s*\\)|InetAddress\\.getByName\\s*\\(\\s*request\\.getServerName\\s*\\(\\s*\\)\\s*\\)"
+        description: "Java DNS-based authentication"
+        confidence: 0.8
+      - regex: "Dns\\.GetHostEntry\\s*\\(\\s*Request\\.UserHostAddress\\s*\\)|Dns\\.GetHostEntry\\s*\\(\\s*Request\\.Url\\.Host\\s*\\)"
+        description: "ASP.NET DNS-based authentication"
+        confidence: 0.8
+      - regex: "dns\\.lookup\\s*\\(\\s*req\\.connection\\.remoteAddress\\s*\\)|dns\\.lookup\\s*\\(\\s*req\\.headers\\.host\\s*\\)"
+        description: "Node.js DNS-based authentication"
+        confidence: 0.8
+    fix_suggestion: "Don't trust DNS names for authentication, use cryptographic authentication methods"
+    cwe: "CWE-292"
+    owasp: "A07:2021"
+
+  # CWE-293: Using Referer Field for Authentication or Authorization
+  - id: "cwe-293-referer-auth"
+    name: "Using Referer Field for Authentication"
+    description: "Detects using referer field for authentication or authorization"
+    severity: "Medium"
+    category: "authentication"
+    languages: ["java", "python", "php", "csharp", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "\\$_SERVER\\[.*HTTP_REFERER.*\\].*admin|\\$_SERVER\\[.*HTTP_REFERER.*\\].*login"
+        description: "PHP referer-based authentication"
+        confidence: 0.9
+      - regex: "request\\.environ\\[.*HTTP_REFERER.*\\].*admin|request\\.headers\\.get\\s*\\(\\s*['\\\"]Referer['\\\"]\\s*\\).*login"
+        description: "Python referer-based authentication"
+        confidence: 0.9
+      - regex: "request\\.getHeader\\s*\\(\\s*['\\\"]Referer['\\\"]\\s*\\).*admin|request\\.getHeader\\s*\\(\\s*['\\\"]Referer['\\\"]\\s*\\).*login"
+        description: "Java referer-based authentication"
+        confidence: 0.9
+      - regex: "Request\\.Headers\\[.*Referer.*\\].*admin|Request\\.UrlReferrer.*admin"
+        description: "ASP.NET referer-based authentication"
+        confidence: 0.9
+      - regex: "req\\.headers\\.referer.*admin|req\\.get\\s*\\(\\s*['\\\"]Referer['\\\"]\\s*\\).*admin"
+        description: "Express.js referer-based authentication"
+        confidence: 0.9
+    fix_suggestion: "Don't use referer for authentication, implement proper authentication tokens, use CSRF protection"
+    cwe: "CWE-293"
+    owasp: "A07:2021"
+
+  # CWE-294: Authentication Bypass by Capture-replay
+  - id: "cwe-294-capture-replay"
+    name: "Authentication Bypass by Capture-replay"
+    description: "Detects authentication bypass by capture-replay attacks"
+    severity: "High"
+    category: "authentication"
+    languages: ["java", "python", "php", "csharp", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "session_id\\s*=\\s*\\$_GET\\[.*session.*\\]|session_id\\s*=\\s*\\$_POST\\[.*session.*\\]"
+        description: "Session ID from user input"
+        confidence: 0.9
+      - regex: "session\\[.*\\]\\s*=\\s*request\\.args\\.get\\s*\\(\\s*['\\\"]session['\\\"]\\s*\\)|session\\[.*\\]\\s*=\\s*request\\.form\\.get\\s*\\(\\s*['\\\"]session['\\\"]\\s*\\)"
+        description: "Python session from user input"
+        confidence: 0.9
+      - regex: "HttpSession\\s+session\\s*=\\s*request\\.getSession\\s*\\(\\s*false\\s*\\)"
+        description: "Java session without invalidation"
+        confidence: 0.7
+      - regex: "Session\\[.*\\]\\s*=\\s*Request\\.QueryString\\[.*\\]|Session\\[.*\\]\\s*=\\s*Request\\.Form\\[.*\\]"
+        description: "ASP.NET session from user input"
+        confidence: 0.9
+      - regex: "req\\.session\\[.*\\]\\s*=\\s*req\\.query\\[.*\\]|req\\.session\\[.*\\]\\s*=\\s*req\\.body\\[.*\\]"
+        description: "Express.js session from user input"
+        confidence: 0.9
+    fix_suggestion: "Use secure session management, implement session timeout, regenerate session IDs"
+    cwe: "CWE-294"
+    owasp: "A07:2021"
+
+  # CWE-302: Authentication Bypass by Assumed-Immutable Data
+  - id: "cwe-302-assumed-immutable"
+    name: "Authentication Bypass by Assumed-Immutable Data"
+    description: "Detects authentication bypass by assumed-immutable data"
+    severity: "High"
+    category: "authentication"
+    languages: ["java", "python", "php", "csharp", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "\\$_POST\\[.*role.*\\]\\s*==\\s*['\\\"]admin['\\\"]|\\$_POST\\[.*admin.*\\]\\s*==\\s*['\\\"]true['\\\"]"
+        description: "PHP role from user input"
+        confidence: 0.95
+      - regex: "request\\.form\\.get\\s*\\(\\s*['\\\"]role['\\\"]\\s*\\)\\s*==\\s*['\\\"]admin['\\\"]|request\\.form\\.get\\s*\\(\\s*['\\\"]admin['\\\"]\\s*\\)\\s*==\\s*['\\\"]true['\\\"]"
+        description: "Python role from user input"
+        confidence: 0.95
+      - regex: "request\\.getParameter\\s*\\(\\s*['\\\"]role['\\\"]\\s*\\)\\.equals\\s*\\(\\s*['\\\"]admin['\\\"]\\s*\\)|request\\.getParameter\\s*\\(\\s*['\\\"]admin['\\\"]\\s*\\)\\.equals\\s*\\(\\s*['\\\"]true['\\\"]\\s*\\)"
+        description: "Java role from user input"
+        confidence: 0.95
+      - regex: "Request\\.Form\\[.*role.*\\]\\s*==\\s*['\\\"]admin['\\\"]|Request\\.Form\\[.*admin.*\\]\\s*==\\s*['\\\"]true['\\\"]"
+        description: "ASP.NET role from user input"
+        confidence: 0.95
+      - regex: "req\\.body\\.role\\s*===\\s*['\\\"]admin['\\\"]|req\\.body\\.admin\\s*===\\s*['\\\"]true['\\\"]"
+        description: "Express.js role from user input"
+        confidence: 0.95
+    fix_suggestion: "Don't trust client-provided authorization data, implement server-side role management"
+    cwe: "CWE-302"
+    owasp: "A07:2021"
+
+  # CWE-303: Incorrect Implementation of Authentication Algorithm
+  - id: "cwe-303-incorrect-auth-algorithm"
+    name: "Incorrect Implementation of Authentication Algorithm"
+    description: "Detects incorrect implementation of authentication algorithms"
+    severity: "High"
+    category: "authentication"
+    languages: ["java", "python", "php", "csharp", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "md5\\s*\\(\\s*\\$password\\s*\\)\\s*==\\s*md5\\s*\\(\\s*\\$stored_password\\s*\\)|sha1\\s*\\(\\s*\\$password\\s*\\)\\s*==\\s*sha1\\s*\\(\\s*\\$stored_password\\s*\\)"
+        description: "PHP weak password hashing comparison"
+        confidence: 0.95
+      - regex: "hashlib\\.md5\\s*\\(\\s*password\\s*\\)\\.hexdigest\\s*\\(\\s*\\)\\s*==|hashlib\\.sha1\\s*\\(\\s*password\\s*\\)\\.hexdigest\\s*\\(\\s*\\)\\s*=="
+        description: "Python weak password hashing comparison"
+        confidence: 0.95
+      - regex: "MessageDigest\\.getInstance\\s*\\(\\s*['\\\"]MD5['\\\"]\\s*\\).*password|MessageDigest\\.getInstance\\s*\\(\\s*['\\\"]SHA-1['\\\"]\\s*\\).*password"
+        description: "Java weak password hashing"
+        confidence: 0.9
+      - regex: "MD5\\.Create\\s*\\(\\s*\\).*password|SHA1\\.Create\\s*\\(\\s*\\).*password"
+        description: "C# weak password hashing"
+        confidence: 0.9
+      - regex: "crypto\\.createHash\\s*\\(\\s*['\\\"]md5['\\\"]\\s*\\).*password|crypto\\.createHash\\s*\\(\\s*['\\\"]sha1['\\\"]\\s*\\).*password"
+        description: "Node.js weak password hashing"
+        confidence: 0.9
+    fix_suggestion: "Use bcrypt, scrypt, or Argon2 for password hashing, implement proper salt and iteration counts"
+    cwe: "CWE-303"
+    owasp: "A02:2021"
+
+  # CWE-304: Missing Critical Step in Authentication
+  - id: "cwe-304-missing-auth-step"
+    name: "Missing Critical Step in Authentication"
+    description: "Detects missing critical steps in authentication"
+    severity: "High"
+    category: "authentication"
+    languages: ["java", "python", "php", "csharp", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "password_verify\\s*\\(\\s*\\$password\\s*,\\s*\\$hash\\s*\\)"
+        description: "PHP password verification without additional checks"
+        confidence: 0.7
+      - regex: "bcrypt\\.checkpw\\s*\\(\\s*password\\s*,\\s*hash\\s*\\)"
+        description: "Python bcrypt verification without additional checks"
+        confidence: 0.7
+      - regex: "BCryptPasswordEncoder\\.matches\\s*\\(\\s*password\\s*,\\s*hash\\s*\\)"
+        description: "Java bcrypt verification without additional checks"
+        confidence: 0.7
+      - regex: "authenticate\\s*\\(\\s*\\)"
+        description: "Authentication without authorization check"
+        confidence: 0.8
+      - regex: "login\\s*\\(\\s*\\)"
+        description: "Login without session creation"
+        confidence: 0.8
+    fix_suggestion: "Implement complete authentication flow, include authorization checks, proper session management"
+    cwe: "CWE-304"
+    owasp: "A07:2021"
+
+  # CWE-305: Authentication Bypass by Primary Weakness
+  - id: "cwe-305-auth-bypass-primary"
+    name: "Authentication Bypass by Primary Weakness"
+    description: "Detects authentication bypass by primary weakness"
+    severity: "High"
+    category: "authentication"
+    languages: ["java", "python", "php", "csharp", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "if\\s*\\(\\s*\\$_POST\\[.*username.*\\]\\s*\\)\\s*\\{[^}]*\\$authenticated\\s*=\\s*true"
+        description: "PHP authentication bypass with username only"
+        confidence: 0.9
+      - regex: "if\\s*\\(\\s*request\\.form\\.get\\s*\\(\\s*['\\\"]username['\\\"]\\s*\\)\\s*\\)\\s*:[^:]*authenticated\\s*=\\s*True"
+        description: "Python authentication bypass with username only"
+        confidence: 0.9
+      - regex: "if\\s*\\(\\s*request\\.getParameter\\s*\\(\\s*['\\\"]username['\\\"]\\s*\\)\\s*!=\\s*null\\s*\\)\\s*\\{[^}]*authenticated\\s*=\\s*true"
+        description: "Java authentication bypass with username only"
+        confidence: 0.9
+      - regex: "if\\s*\\(\\s*Request\\.Form\\[.*username.*\\]\\s*!=\\s*null\\s*\\)\\s*\\{[^}]*authenticated\\s*=\\s*true"
+        description: "ASP.NET authentication bypass with username only"
+        confidence: 0.9
+      - regex: "if\\s*\\(\\s*req\\.body\\.username\\s*\\)\\s*\\{[^}]*authenticated\\s*=\\s*true"
+        description: "Express.js authentication bypass with username only"
+        confidence: 0.9
+    fix_suggestion: "Implement proper password verification, use multi-factor authentication, validate all credentials"
+    cwe: "CWE-305"
+    owasp: "A07:2021"
+
+  # CWE-306: Missing Authentication for Critical Function
+  - id: "cwe-306-missing-auth-critical"
+    name: "Missing Authentication for Critical Function"
+    description: "Detects missing authentication for critical functions"
+    severity: "Critical"
+    category: "authentication"
+    languages: ["java", "python", "php", "csharp", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "function\\s+delete_user\\s*\\(\\s*\\)\\s*\\{"
+        description: "Delete user function without authentication"
+        confidence: 0.9
+      - regex: "function\\s+admin_panel\\s*\\(\\s*\\)\\s*\\{"
+        description: "Admin panel function without authentication"
+        confidence: 0.9
+      - regex: "def\\s+delete_\\w+\\s*\\(\\s*\\)\\s*:"
+        description: "Python delete function without authentication"
+        confidence: 0.9
+      - regex: "app\\.delete\\s*\\(\\s*.*\\s*\\)"
+        description: "Express.js delete route without authentication"
+        confidence: 0.9
+      - regex: "\\[HttpDelete\\]"
+        description: "ASP.NET delete action without authorization"
+        confidence: 0.9
+      - regex: "@DeleteMapping"
+        description: "Spring Boot delete mapping without authorization"
+        confidence: 0.9
+    fix_suggestion: "Implement authentication for all critical functions, use proper authorization checks"
+    cwe: "CWE-306"
+    owasp: "A07:2021"
+
+  # CWE-307: Improper Restriction of Excessive Authentication Attempts
+  - id: "cwe-307-no-rate-limiting"
+    name: "Improper Restriction of Excessive Authentication Attempts"
+    description: "Detects lack of rate limiting on authentication attempts"
+    severity: "Medium"
+    category: "authentication"
+    languages: ["java", "python", "php", "csharp", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "function\\s+login\\s*\\(\\s*\\)\\s*\\{"
+        description: "Login function without rate limiting"
+        confidence: 0.8
+      - regex: "def\\s+login\\s*\\(\\s*\\)\\s*:"
+        description: "Python login function without rate limiting"
+        confidence: 0.8
+      - regex: "app\\.post\\s*\\(\\s*.*login.*\\s*\\)"
+        description: "Express.js login route without rate limiting"
+        confidence: 0.8
+      - regex: "\\[HttpPost\\].*login"
+        description: "ASP.NET login action without rate limiting"
+        confidence: 0.8
+      - regex: "@PostMapping.*login"
+        description: "Spring Boot login mapping without rate limiting"
+        confidence: 0.8
+    fix_suggestion: "Implement rate limiting, account lockout, CAPTCHA after failed attempts"
+    cwe: "CWE-307"
+    owasp: "A07:2021"
+
+  # CWE-521: Weak Password Requirements
+  - id: "cwe-521-weak-password-requirements"
+    name: "Weak Password Requirements"
+    description: "Detects weak password requirements"
+    severity: "Medium"
+    category: "authentication"
+    languages: ["java", "python", "php", "csharp", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "strlen\\s*\\(\\s*\\$password\\s*\\)\\s*>=\\s*[1-5]|len\\s*\\(\\s*password\\s*\\)\\s*>=\\s*[1-5]"
+        description: "Password length requirement too short"
+        confidence: 0.9
+      - regex: "password\\.length\\s*>=\\s*[1-5]|password\\.Length\\s*>=\\s*[1-5]"
+        description: "Password length requirement too short"
+        confidence: 0.9
+      - regex: "if\\s*\\(\\s*password\\s*\\)\\s*\\{[^}]*valid\\s*=\\s*true"
+        description: "Password validation without complexity check"
+        confidence: 0.7
+      - regex: "validate_password\\s*\\(\\s*\\$password\\s*\\)\\s*\\{[^}]*return\\s+true"
+        description: "Always valid password validation"
+        confidence: 0.9
+      - regex: "\\^\\[a-zA-Z0-9\\]\\+\\$|\\^\\[a-z\\]\\+\\$|\\^\\[A-Z\\]\\+\\$|\\^\\[0-9\\]\\+\\$"
+        description: "Simple password regex patterns"
+        confidence: 0.8
+    fix_suggestion: "Implement strong password requirements: minimum 8 characters, uppercase, lowercase, numbers, special characters"
+    cwe: "CWE-521"
+    owasp: "A07:2021"
+
+  # CWE-522: Insufficiently Protected Credentials
+  - id: "cwe-522-unprotected-credentials"
+    name: "Insufficiently Protected Credentials"
+    description: "Detects insufficiently protected credentials"
+    severity: "High"
+    category: "authentication"
+    languages: ["java", "python", "php", "csharp", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "password\\s*=\\s*['\\\"][^'\\\"]*['\\\"]"
+        description: "Plaintext password storage"
+        confidence: 0.9
+      - regex: "localStorage\\.setItem\\s*\\(\\s*.*password|sessionStorage\\.setItem\\s*\\(\\s*.*password"
+        description: "Password stored in browser storage"
+        confidence: 0.95
+      - regex: "cookie\\s*=\\s*.*password|setcookie\\s*\\(.*password"
+        description: "Password stored in cookies"
+        confidence: 0.95
+      - regex: "\\$_SESSION\\[.*password.*\\]\\s*=\\s*\\$_POST\\[.*password.*\\]"
+        description: "Plaintext password in session"
+        confidence: 0.9
+      - regex: "log\\s*\\(\\s*.*password|console\\.log\\s*\\(\\s*.*password|print\\s*\\(\\s*.*password"
+        description: "Password logged to console"
+        confidence: 0.95
+    fix_suggestion: "Hash passwords with bcrypt/scrypt/Argon2, never store plaintext passwords, use secure storage"
+    cwe: "CWE-522"
+    owasp: "A02:2021"
+
+  # CWE-798: Use of Hard-coded Credentials
+  - id: "cwe-798-hardcoded-credentials"
+    name: "Use of Hard-coded Credentials"
+    description: "Detects hard-coded credentials in source code"
+    severity: "Critical"
+    category: "authentication"
+    languages: ["java", "python", "php", "csharp", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "password\\s*=\\s*['\\\"][^'\\\"]{8,}['\\\"]|pwd\\s*=\\s*['\\\"][^'\\\"]{8,}['\\\"]"
+        description: "Hard-coded passwords"
+        confidence: 0.95
+      - regex: "username\\s*=\\s*['\\\"]admin['\\\"].*password\\s*=\\s*['\\\"][^'\\\"]{8,}['\\\"]"
+        description: "Hard-coded admin credentials"
+        confidence: 0.98
+      - regex: "api_key\\s*=\\s*['\\\"][A-Za-z0-9+/=]{16,}['\\\"]|secret\\s*=\\s*['\\\"][A-Za-z0-9+/=]{16,}['\\\"]"
+        description: "Hard-coded API keys"
+        confidence: 0.9
+      - regex: "private_key\\s*=\\s*['\\\"]-----BEGIN|certificate\\s*=\\s*['\\\"]-----BEGIN"
+        description: "Hard-coded private keys"
+        confidence: 0.95
+      - regex: "jdbc:[^'\\\"]*//[^'\\\"]*:[^'\\\"]*:[^'\\\"]*@|mongodb://[^'\\\"]*:[^'\\\"]*@"
+        description: "Database connection strings with credentials"
+        confidence: 0.9
+    fix_suggestion: "Use environment variables, secure configuration files, credential management systems"
+    cwe: "CWE-798"
+    owasp: "A07:2021"
+
+  # CWE-862: Missing Authorization
+  - id: "cwe-862-missing-authorization"
+    name: "Missing Authorization"
+    description: "Detects missing authorization checks"
+    severity: "High"
+    category: "authorization"
+    languages: ["java", "python", "php", "csharp", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "function\\s+admin_\\w+\\s*\\(\\s*\\)\\s*\\{"
+        description: "Admin function without authorization"
+        confidence: 0.9
+      - regex: "def\\s+admin_\\w+\\s*\\(\\s*\\)\\s*:"
+        description: "Python admin function without authorization"
+        confidence: 0.9
+      - regex: "app\\.(get|post|put|delete)\\s*\\(\\s*.*admin.*\\s*\\)"
+        description: "Express.js admin route without authorization"
+        confidence: 0.9
+      - regex: "\\[HttpGet\\].*admin"
+        description: "ASP.NET admin action without authorization"
+        confidence: 0.9
+      - regex: "@GetMapping.*admin"
+        description: "Spring Boot admin mapping without authorization"
+        confidence: 0.9
+    fix_suggestion: "Implement authorization checks, use role-based access control, validate permissions"
+    cwe: "CWE-862"
+    owasp: "A01:2021"
+
+  # CWE-863: Incorrect Authorization
+  - id: "cwe-863-incorrect-authorization"
+    name: "Incorrect Authorization"
+    description: "Detects incorrect authorization implementations"
+    severity: "High"
+    category: "authorization"
+    languages: ["java", "python", "php", "csharp", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "if\\s*\\(\\s*\\$_SESSION\\[.*role.*\\]\\s*==\\s*['\\\"]admin['\\\"]\\s*\\|\\||if\\s*\\(\\s*\\$_SESSION\\[.*admin.*\\]\\s*\\|\\|"
+        description: "PHP authorization with OR operator"
+        confidence: 0.9
+      - regex: "if\\s*\\(\\s*session\\[.*role.*\\]\\s*==\\s*['\\\"]admin['\\\"]\\s*or\\s*|if\\s*\\(\\s*session\\[.*admin.*\\]\\s*or\\s*"
+        description: "Python authorization with OR operator"
+        confidence: 0.9
+      - regex: "if\\s*\\(\\s*user\\.getRole\\s*\\(\\s*\\)\\.equals\\s*\\(\\s*['\\\"]admin['\\\"]\\s*\\)\\s*\\|\\|"
+        description: "Java authorization with OR operator"
+        confidence: 0.9
+      - regex: "if\\s*\\(\\s*User\\.IsInRole\\s*\\(\\s*['\\\"]admin['\\\"]\\s*\\)\\s*\\|\\|"
+        description: "ASP.NET authorization with OR operator"
+        confidence: 0.9
+      - regex: "if\\s*\\(\\s*req\\.user\\.role\\s*===\\s*['\\\"]admin['\\\"]\\s*\\|\\|"
+        description: "Express.js authorization with OR operator"
+        confidence: 0.9
+      - regex: "\\!\\s*\\(.*authorized\\)|\\!\\s*\\(.*permission\\)|\\!\\s*\\(.*admin\\)"
+        description: "Negated authorization checks"
+        confidence: 0.8
+    fix_suggestion: "Use AND operators for authorization, implement proper role validation, avoid negated checks"
+    cwe: "CWE-863"
+    owasp: "A01:2021"
+
+  # CWE-1390: Weak Authentication
+  - id: "cwe-1390-weak-authentication"
+    name: "Weak Authentication"
+    description: "Detects weak authentication mechanisms"
+    severity: "High"
+    category: "authentication"
+    languages: ["java", "python", "php", "csharp", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "BasicAuth\\s*\\(\\s*['\\\"][^'\\\"]*['\\\"]\\s*,\\s*['\\\"][^'\\\"]*['\\\"]\\s*\\)"
+        description: "Basic authentication with hard-coded credentials"
+        confidence: 0.9
+      - regex: "Authorization\\s*:\\s*Basic\\s+[A-Za-z0-9+/=]+"
+        description: "Basic authentication header"
+        confidence: 0.8
+      - regex: "auth\\s*=\\s*HTTPBasicAuth\\s*\\(\\s*['\\\"][^'\\\"]*['\\\"]\\s*,\\s*['\\\"][^'\\\"]*['\\\"]\\s*\\)"
+        description: "Python basic authentication"
+        confidence: 0.9
+      - regex: "setBasicAuth\\s*\\(\\s*['\\\"][^'\\\"]*['\\\"]\\s*,\\s*['\\\"][^'\\\"]*['\\\"]\\s*\\)"
+        description: "Basic authentication setup"
+        confidence: 0.9
+      - regex: "password\\s*==\\s*['\\\"][^'\\\"]*['\\\"]"
+        description: "Plain text password comparison"
+        confidence: 0.95
+    fix_suggestion: "Implement strong authentication mechanisms, use OAuth2, JWT tokens, multi-factor authentication"
+    cwe: "CWE-1390"
+    owasp: "A07:2021"

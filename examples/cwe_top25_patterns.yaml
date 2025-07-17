@@ -1,0 +1,607 @@
+version: "1.0"
+name: "CWE Top 25 2024 Security Patterns"
+description: "Comprehensive regex patterns for CWE Top 25 Most Dangerous Software Weaknesses (2024)"
+author: "DeVAIC Security Team"
+license: "MIT"
+
+patterns:
+  # CWE-79: Cross-site Scripting (XSS) - #1 in 2024
+  - id: "cwe-79-xss-reflected"
+    name: "Cross-site Scripting (XSS) - Reflected"
+    description: "Detects potential reflected XSS vulnerabilities in web applications"
+    severity: "High"
+    category: "injection"
+    languages: ["javascript", "typescript", "php", "python", "java", "csharp", "ruby"]
+    patterns:
+      - regex: "document\\.write\\s*\\(.*request\\.|innerHTML\\s*=.*request\\.|outerHTML\\s*=.*request\\."
+        description: "Direct DOM manipulation with request data"
+        confidence: 0.9
+      - regex: "\\$_GET\\[.*\\].*echo|\\$_POST\\[.*\\].*echo|print.*\\$_REQUEST"
+        description: "PHP direct output of user input"
+        confidence: 0.95
+      - regex: "render_template_string\\(.*request\\.|HttpResponse\\(.*request\\."
+        description: "Python/Django unsafe template rendering"
+        confidence: 0.9
+      - regex: "response\\.getWriter\\(\\)\\.write\\(.*request\\.|out\\.print\\(.*request\\."
+        description: "Java servlet unsafe output"
+        confidence: 0.85
+    fix_suggestion: "Use proper output encoding/escaping, validate and sanitize user input"
+    cwe: "CWE-79"
+    owasp: "A03:2021"
+    references:
+      - "https://owasp.org/www-community/attacks/xss/"
+
+  - id: "cwe-79-xss-stored"
+    name: "Cross-site Scripting (XSS) - Stored"
+    description: "Detects potential stored XSS vulnerabilities"
+    severity: "Critical"
+    category: "injection"
+    languages: ["javascript", "typescript", "php", "python", "java", "csharp", "ruby"]
+    patterns:
+      - regex: "innerHTML\\s*=\\s*['\"].*\\+.*['\"]|outerHTML\\s*=\\s*['\"].*\\+.*['\"]"
+        description: "DOM manipulation with string concatenation"
+        confidence: 0.8
+      - regex: "dangerouslySetInnerHTML\\s*:\\s*\\{\\s*__html\\s*:"
+        description: "React dangerouslySetInnerHTML usage"
+        confidence: 0.7
+      - regex: "\\$\\(.*\\)\\.html\\(.*\\+.*\\)|\\$\\(.*\\)\\.append\\(.*\\+.*\\)"
+        description: "jQuery unsafe HTML manipulation"
+        confidence: 0.85
+    fix_suggestion: "Use safe DOM manipulation methods, implement Content Security Policy"
+    cwe: "CWE-79"
+    owasp: "A03:2021"
+
+  # CWE-787: Out-of-bounds Write - #2 in 2024
+  - id: "cwe-787-buffer-overflow"
+    name: "Out-of-bounds Write (Buffer Overflow)"
+    description: "Detects potential buffer overflow vulnerabilities"
+    severity: "Critical"
+    category: "memory-safety"
+    languages: ["c", "cpp", "rust"]
+    patterns:
+      - regex: "strcpy\\s*\\(|strcat\\s*\\(|sprintf\\s*\\(|gets\\s*\\("
+        description: "Unsafe C string functions"
+        confidence: 0.95
+      - regex: "memcpy\\s*\\([^,]+,\\s*[^,]+,\\s*[^)]*\\)|memmove\\s*\\([^,]+,\\s*[^,]+,\\s*[^)]*\\)"
+        description: "Unsafe memory copy operations"
+        confidence: 0.8
+      - regex: "char\\s+\\w+\\[[0-9]+\\].*scanf|char\\s+\\w+\\[[0-9]+\\].*fgets"
+        description: "Fixed-size buffer with input functions"
+        confidence: 0.85
+      - regex: "unsafe\\s*\\{.*\\*.*=.*\\}"
+        description: "Rust unsafe pointer dereference"
+        confidence: 0.7
+    fix_suggestion: "Use safe string functions (strncpy, strncat, snprintf), validate buffer sizes"
+    cwe: "CWE-787"
+    owasp: "A06:2021"
+
+  # CWE-89: SQL Injection - #3 in 2024
+  - id: "cwe-89-sql-injection"
+    name: "SQL Injection"
+    description: "Detects potential SQL injection vulnerabilities"
+    severity: "Critical"
+    category: "injection"
+    languages: ["java", "python", "php", "csharp", "ruby", "go", "javascript", "typescript"]
+    patterns:
+      - regex: "SELECT\\s+.*\\+.*FROM|INSERT\\s+.*\\+.*INTO|UPDATE\\s+.*\\+.*SET|DELETE\\s+.*\\+.*FROM"
+        description: "String concatenation in SQL queries"
+        confidence: 0.9
+      - regex: "\\\"SELECT.*\\\"\\s*\\+|\\\"INSERT.*\\\"\\s*\\+|\\\"UPDATE.*\\\"\\s*\\+|\\\"DELETE.*\\\"\\s*\\+"
+        description: "SQL query string concatenation"
+        confidence: 0.95
+      - regex: "execute\\(.*\\+.*\\)|query\\(.*\\+.*\\)|exec\\(.*\\+.*\\)"
+        description: "Database execution with concatenated input"
+        confidence: 0.9
+      - regex: "\\$wpdb->query\\(.*\\$|\\$wpdb->get_results\\(.*\\$"
+        description: "WordPress database queries with variables"
+        confidence: 0.85
+    fix_suggestion: "Use parameterized queries, prepared statements, or ORM frameworks"
+    cwe: "CWE-89"
+    owasp: "A03:2021"
+
+  # CWE-352: Cross-Site Request Forgery (CSRF) - #4 in 2024
+  - id: "cwe-352-csrf"
+    name: "Cross-Site Request Forgery (CSRF)"
+    description: "Detects potential CSRF vulnerabilities"
+    severity: "Medium"
+    category: "authentication"
+    languages: ["javascript", "typescript", "php", "python", "java", "csharp", "ruby"]
+    patterns:
+      - regex: "\\<form[^>]*method\\s*=\\s*['\"]post['\"][^>]*\\>"
+        description: "POST form (check for CSRF protection)"
+        confidence: 0.7
+      - regex: "\\$_POST\\[.*\\]"
+        description: "PHP POST processing (check for CSRF validation)"
+        confidence: 0.6
+      - regex: "request\\.method\\s*==\\s*['\"]POST['\"]"
+        description: "POST request handler (check for CSRF validation)"
+        confidence: 0.65
+    fix_suggestion: "Implement CSRF tokens, use SameSite cookie attribute, validate referrer headers"
+    cwe: "CWE-352"
+    owasp: "A01:2021"
+
+  # CWE-22: Path Traversal - #5 in 2024
+  - id: "cwe-22-path-traversal"
+    name: "Path Traversal"
+    description: "Detects potential path traversal vulnerabilities"
+    severity: "High"
+    category: "path-traversal"
+    languages: ["java", "python", "php", "csharp", "ruby", "go", "javascript", "typescript"]
+    patterns:
+      - regex: "\\.\\.[\\/\\\\]|\\.\\.\\.[\\/\\\\]|%2e%2e[\\/\\\\]|%2e%2e%2f"
+        description: "Directory traversal sequences"
+        confidence: 0.9
+      - regex: "File\\(.*\\+.*\\)|FileInputStream\\(.*\\+.*\\)|FileReader\\(.*\\+.*\\)"
+        description: "Java file operations with concatenated paths"
+        confidence: 0.8
+      - regex: "open\\(.*\\+.*\\)|file_get_contents\\(.*\\+.*\\)|include\\(.*\\+.*\\)"
+        description: "File operations with user input"
+        confidence: 0.85
+      - regex: "os\\.path\\.join\\(.*request\\.|pathlib\\.Path\\(.*request\\."
+        description: "Python path operations with request data"
+        confidence: 0.8
+    fix_suggestion: "Validate file paths, use whitelist of allowed paths, sanitize user input"
+    cwe: "CWE-22"
+    owasp: "A01:2021"
+
+  # CWE-125: Out-of-bounds Read - #6 in 2024
+  - id: "cwe-125-oob-read"
+    name: "Out-of-bounds Read"
+    description: "Detects potential out-of-bounds read vulnerabilities"
+    severity: "Medium"
+    category: "memory-safety"
+    languages: ["c", "cpp", "rust"]
+    patterns:
+      - regex: "\\w+\\[\\w+\\]"
+        description: "Array access (verify bounds checking)"
+        confidence: 0.6
+      - regex: "memcpy\\s*\\([^,]+,\\s*[^,]+,\\s*[^)]*\\)|strncpy\\s*\\([^,]+,\\s*[^,]+,\\s*[^)]*\\)"
+        description: "Memory operations with potential OOB read"
+        confidence: 0.7
+      - regex: "\\*\\(\\w+\\s*\\+\\s*\\w+\\)|\\w+\\[\\w+\\s*\\+\\s*\\w+\\]"
+        description: "Pointer arithmetic without bounds checking"
+        confidence: 0.75
+    fix_suggestion: "Validate array bounds, use safe memory functions, implement bounds checking"
+    cwe: "CWE-125"
+    owasp: "A06:2021"
+
+  # CWE-20: Improper Input Validation - #7 in 2024
+  - id: "cwe-20-input-validation"
+    name: "Improper Input Validation"
+    description: "Detects lack of proper input validation"
+    severity: "Medium"
+    category: "validation"
+    languages: ["all"]
+    patterns:
+      - regex: "\\$_GET\\[.*\\]|\\$_POST\\[.*\\]"
+        description: "PHP input (verify validation)"
+        confidence: 0.7
+      - regex: "request\\.args\\.get\\(.*\\)|request\\.form\\.get\\(.*\\)"
+        description: "Flask request data (verify validation)"
+        confidence: 0.6
+      - regex: "req\\.query\\.|req\\.params\\.|req\\.body\\."
+        description: "Express.js request data without validation"
+        confidence: 0.65
+      - regex: "Integer\\.parseInt\\(.*\\)|Long\\.parseLong\\(.*\\)|Double\\.parseDouble\\(.*\\)"
+        description: "Java parsing without exception handling"
+        confidence: 0.7
+    fix_suggestion: "Implement comprehensive input validation, sanitization, and type checking"
+    cwe: "CWE-20"
+    owasp: "A03:2021"
+
+  # CWE-416: Use After Free - #8 in 2024
+  - id: "cwe-416-use-after-free"
+    name: "Use After Free"
+    description: "Detects potential use-after-free vulnerabilities"
+    severity: "Critical"
+    category: "memory-safety"
+    languages: ["c", "cpp", "rust"]
+    patterns:
+      - regex: "free\\s*\\(\\s*\\w+\\s*\\);[\\s\\S]*\\*\\w+|free\\s*\\(\\s*\\w+\\s*\\);[\\s\\S]*\\w+\\["
+        description: "Memory usage after free()"
+        confidence: 0.8
+      - regex: "delete\\s+\\w+;[\\s\\S]*\\*\\w+|delete\\s+\\w+;[\\s\\S]*\\w+->"
+        description: "C++ object usage after delete"
+        confidence: 0.85
+      - regex: "Box::from_raw\\(.*\\)|unsafe.*\\*.*=.*drop"
+        description: "Rust unsafe operations with potential UAF"
+        confidence: 0.7
+    fix_suggestion: "Set pointers to NULL after freeing, use smart pointers, implement RAII"
+    cwe: "CWE-416"
+    owasp: "A06:2021"
+
+  # CWE-862: Missing Authorization - #9 in 2024
+  - id: "cwe-862-missing-authorization"
+    name: "Missing Authorization"
+    description: "Detects missing authorization checks"
+    severity: "High"
+    category: "authorization"
+    languages: ["all"]
+    patterns:
+      - regex: "@PostMapping|@GetMapping|@PutMapping|@DeleteMapping"
+        description: "Spring Boot endpoints without authorization"
+        confidence: 0.8
+      - regex: "def\\s+\\w+\\(.*request.*\\):"
+        description: "Django view without authorization decorator"
+        confidence: 0.75
+      - regex: "app\\.(get|post|put|delete)\\(.*\\)"
+        description: "Express.js routes without authorization middleware"
+        confidence: 0.7
+      - regex: "\\[HttpPost\\]|\\[HttpGet\\]|\\[HttpPut\\]|\\[HttpDelete\\]"
+        description: "ASP.NET Core actions without authorization"
+        confidence: 0.8
+    fix_suggestion: "Implement proper authorization checks, use role-based access control"
+    cwe: "CWE-862"
+    owasp: "A01:2021"
+
+  # CWE-78: OS Command Injection - #10 in 2024
+  - id: "cwe-78-command-injection"
+    name: "OS Command Injection"
+    description: "Detects potential OS command injection vulnerabilities"
+    severity: "Critical"
+    category: "injection"
+    languages: ["java", "python", "php", "csharp", "ruby", "go", "javascript", "typescript"]
+    patterns:
+      - regex: "Runtime\\.getRuntime\\(\\)\\.exec\\(.*\\+|ProcessBuilder\\(.*\\+|Process\\.start\\(.*\\+"
+        description: "Java command execution with concatenated input"
+        confidence: 0.9
+      - regex: "system\\(.*\\+|exec\\(.*\\+|shell_exec\\(.*\\+|passthru\\(.*\\+"
+        description: "PHP command execution with user input"
+        confidence: 0.95
+      - regex: "os\\.system\\(.*\\+|subprocess\\.(run|call|Popen)\\(.*\\+"
+        description: "Python command execution with concatenated input"
+        confidence: 0.9
+      - regex: "cmd\\.exec\\(.*\\+|spawn\\(.*\\+|execSync\\(.*\\+"
+        description: "Node.js command execution with user input"
+        confidence: 0.9
+    fix_suggestion: "Use parameterized commands, validate input, avoid system() functions"
+    cwe: "CWE-78"
+    owasp: "A03:2021"
+
+  # CWE-190: Integer Overflow - #11 in 2024
+  - id: "cwe-190-integer-overflow"
+    name: "Integer Overflow or Wraparound"
+    description: "Detects potential integer overflow vulnerabilities"
+    severity: "Medium"
+    category: "numeric-errors"
+    languages: ["c", "cpp", "java", "csharp", "rust"]
+    patterns:
+      - regex: "int\\s+\\w+\\s*=\\s*\\w+\\s*\\*\\s*\\w+|long\\s+\\w+\\s*=\\s*\\w+\\s*\\*\\s*\\w+"
+        description: "Integer multiplication without overflow checking"
+        confidence: 0.6
+      - regex: "malloc\\s*\\(\\s*\\w+\\s*\\*\\s*\\w+\\s*\\)|calloc\\s*\\(\\s*\\w+\\s*,\\s*\\w+\\s*\\)"
+        description: "Memory allocation with potential overflow"
+        confidence: 0.7
+      - regex: "\\w+\\s*\\+\\s*\\w+\\s*>\\s*\\w+|\\w+\\s*\\*\\s*\\w+\\s*>\\s*\\w+"
+        description: "Arithmetic operations without overflow checking"
+        confidence: 0.5
+    fix_suggestion: "Use safe arithmetic functions, validate input ranges, implement overflow checks"
+    cwe: "CWE-190"
+    owasp: "A03:2021"
+
+  # CWE-502: Deserialization of Untrusted Data - #12 in 2024
+  - id: "cwe-502-unsafe-deserialization"
+    name: "Deserialization of Untrusted Data"
+    description: "Detects unsafe deserialization vulnerabilities"
+    severity: "Critical"
+    category: "deserialization"
+    languages: ["java", "python", "php", "csharp", "ruby"]
+    patterns:
+      - regex: "ObjectInputStream\\(.*\\)\\.readObject\\(\\)|Serializable"
+        description: "Java unsafe deserialization"
+        confidence: 0.8
+      - regex: "pickle\\.loads\\(|pickle\\.load\\(|cPickle\\.loads\\(|yaml\\.load\\("
+        description: "Python unsafe deserialization"
+        confidence: 0.9
+      - regex: "unserialize\\(\\$_|unserialize\\(\\$_GET|unserialize\\(\\$_POST"
+        description: "PHP unsafe deserialization of user input"
+        confidence: 0.95
+      - regex: "JsonConvert\\.DeserializeObject\\(.*\\)|BinaryFormatter\\.Deserialize\\("
+        description: "C# unsafe deserialization"
+        confidence: 0.8
+    fix_suggestion: "Use safe deserialization methods, validate input, implement type checking"
+    cwe: "CWE-502"
+    owasp: "A08:2021"
+
+  # CWE-77: Command Injection - #13 in 2024
+  - id: "cwe-77-command-injection-indirect"
+    name: "Command Injection (Indirect)"
+    description: "Detects indirect command injection vulnerabilities"
+    severity: "High"
+    category: "injection"
+    languages: ["java", "python", "php", "csharp", "ruby", "go", "javascript", "typescript"]
+    patterns:
+      - regex: "eval\\(.*\\+|Function\\(.*\\+|setTimeout\\(.*\\+|setInterval\\(.*\\+"
+        description: "Dynamic code execution with user input"
+        confidence: 0.9
+      - regex: "\\$\\$\\(.*\\)|\\$\\{.*\\}|\\`.*\\$\\{.*\\}.*\\`"
+        description: "Template injection or command substitution"
+        confidence: 0.8
+      - regex: "os\\.popen\\(.*\\+|commands\\.getoutput\\(.*\\+"
+        description: "Python command execution with user input"
+        confidence: 0.9
+    fix_suggestion: "Avoid dynamic code execution, use safer alternatives, validate input"
+    cwe: "CWE-77"
+    owasp: "A03:2021"
+
+  # CWE-119: Buffer Overflow - #14 in 2024
+  - id: "cwe-119-buffer-overflow"
+    name: "Buffer Overflow"
+    description: "Detects general buffer overflow vulnerabilities"
+    severity: "Critical"
+    category: "memory-safety"
+    languages: ["c", "cpp"]
+    patterns:
+      - regex: "gets\\s*\\(|scanf\\s*\\(\\s*\\\"%s\\\"|strcat\\s*\\(.*,.*\\)"
+        description: "Unsafe input functions"
+        confidence: 0.95
+      - regex: "char\\s+\\w+\\[\\d+\\].*=.*\\w+\\[|strcpy\\s*\\(\\w+,\\s*\\w+\\)"
+        description: "Fixed buffer with dynamic input"
+        confidence: 0.8
+      - regex: "memset\\s*\\(.*,.*,.*sizeof\\(.*\\)\\s*\\+|memcpy\\s*\\(.*,.*,.*sizeof\\(.*\\)\\s*\\+"
+        description: "Memory operations with calculated sizes"
+        confidence: 0.7
+    fix_suggestion: "Use safer functions (fgets, snprintf), validate buffer sizes, implement bounds checking"
+    cwe: "CWE-119"
+    owasp: "A06:2021"
+
+  # CWE-798: Hardcoded Credentials - #15 in 2024
+  - id: "cwe-798-hardcoded-credentials"
+    name: "Hardcoded Credentials"
+    description: "Detects hardcoded credentials in source code"
+    severity: "High"
+    category: "authentication"
+    languages: ["all"]
+    patterns:
+      - regex: "password\\s*=\\s*['\\\"][^'\\\"]{8,}['\\\"]|pwd\\s*=\\s*['\\\"][^'\\\"]{8,}['\\\"]"
+        description: "Hardcoded passwords"
+        confidence: 0.9
+      - regex: "api_key\\s*=\\s*['\\\"][^'\\\"]{16,}['\\\"]|secret\\s*=\\s*['\\\"][^'\\\"]{16,}['\\\"]"
+        description: "Hardcoded API keys or secrets"
+        confidence: 0.9
+      - regex: "private_key\\s*=\\s*['\\\"]-----BEGIN|certificate\\s*=\\s*['\\\"]-----BEGIN"
+        description: "Hardcoded private keys or certificates"
+        confidence: 0.95
+      - regex: "jdbc:[^'\\\"]*//[^'\\\"]*:[^'\\\"]*@|mongodb://[^'\\\"]*:[^'\\\"]*@"
+        description: "Database connection strings with credentials"
+        confidence: 0.8
+    fix_suggestion: "Use environment variables, secure configuration, credential management systems"
+    cwe: "CWE-798"
+    owasp: "A07:2021"
+
+  # CWE-476: NULL Pointer Dereference - #21 in 2024
+  - id: "cwe-476-null-pointer"
+    name: "NULL Pointer Dereference"
+    description: "Detects potential null pointer dereference vulnerabilities"
+    severity: "Medium"
+    category: "memory-safety"
+    languages: ["c", "cpp", "java", "csharp"]
+    patterns:
+      - regex: "\\*\\w+"
+        description: "Pointer dereference (verify null check)"
+        confidence: 0.6
+      - regex: "\\w+->\\w+"
+        description: "Object member access (verify null check)"
+        confidence: 0.6
+      - regex: "\\w+\\.\\w+\\(\\)"
+        description: "Method call (verify null check)"
+        confidence: 0.5
+    fix_suggestion: "Implement null checks, use safe navigation operators, validate pointers"
+    cwe: "CWE-476"
+    owasp: "A06:2021"
+
+  # CWE-287: Improper Authentication - #16 in 2024
+  - id: "cwe-287-improper-authentication"
+    name: "Improper Authentication"
+    description: "Detects improper authentication implementations"
+    severity: "High"
+    category: "authentication"
+    languages: ["all"]
+    patterns:
+      - regex: "password\\s*==\\s*['\\\"][^'\\\"]*['\\\"]|pwd\\s*==\\s*['\\\"][^'\\\"]*['\\\"]"
+        description: "Hardcoded password comparison"
+        confidence: 0.9
+      - regex: "md5\\s*\\(.*password|sha1\\s*\\(.*password|crypt\\s*\\(.*password"
+        description: "Weak password hashing"
+        confidence: 0.8
+      - regex: "login\\s*\\(.*\\)\\s*\\{[^}]*return\\s+true"
+        description: "Unconditional login success"
+        confidence: 0.7
+      - regex: "session\\[.*\\]\\s*=\\s*true"
+        description: "Session creation without authentication"
+        confidence: 0.6
+    fix_suggestion: "Implement strong password hashing, multi-factor authentication, secure session management"
+    cwe: "CWE-287"
+    owasp: "A07:2021"
+
+  # CWE-434: Unrestricted Upload - #17 in 2024
+  - id: "cwe-434-unrestricted-upload"
+    name: "Unrestricted Upload of File with Dangerous Type"
+    description: "Detects unrestricted file upload vulnerabilities"
+    severity: "High"
+    category: "upload"
+    languages: ["php", "java", "python", "csharp", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "move_uploaded_file\\(\\$_FILES\\[.*\\]\\[.*\\]"
+        description: "PHP file upload without type validation"
+        confidence: 0.9
+      - regex: "MultipartFile.*\\.transferTo\\("
+        description: "Spring Boot file upload without validation"
+        confidence: 0.8
+      - regex: "request\\.files\\[.*\\]\\.save\\("
+        description: "Flask file upload without validation"
+        confidence: 0.85
+      - regex: "multer\\(\\{[^}]*\\}\\)"
+        description: "Express.js multer without file restrictions"
+        confidence: 0.7
+    fix_suggestion: "Implement file type validation, size limits, secure file storage"
+    cwe: "CWE-434"
+    owasp: "A01:2021"
+
+  # CWE-863: Incorrect Authorization - #18 in 2024
+  - id: "cwe-863-incorrect-authorization"
+    name: "Incorrect Authorization"
+    description: "Detects incorrect authorization implementations"
+    severity: "High"
+    category: "authorization"
+    languages: ["all"]
+    patterns:
+      - regex: "if\\s*\\(.*isAdmin\\(\\)\\s*\\|\\||if\\s*\\(.*role\\s*==\\s*['\\\"]admin['\\\"]\\s*\\|\\|"
+        description: "Logical OR in authorization checks"
+        confidence: 0.8
+      - regex: "hasRole\\(.*\\)\\s*\\|\\||hasPermission\\(.*\\)\\s*\\|\\|"
+        description: "Authorization bypass with OR operator"
+        confidence: 0.85
+      - regex: "user\\.id\\s*==\\s*\\d+|userId\\s*==\\s*\\d+"
+        description: "Hardcoded user ID checks"
+        confidence: 0.7
+      - regex: "\\!\\s*\\(.*authorized\\)|\\!\\s*\\(.*permission\\)"
+        description: "Negated authorization checks"
+        confidence: 0.6
+    fix_suggestion: "Implement proper authorization logic, use AND operators, validate user permissions"
+    cwe: "CWE-863"
+    owasp: "A01:2021"
+
+  # CWE-400: Uncontrolled Resource Consumption - #19 in 2024
+  - id: "cwe-400-resource-consumption"
+    name: "Uncontrolled Resource Consumption"
+    description: "Detects uncontrolled resource consumption vulnerabilities"
+    severity: "Medium"
+    category: "resource-management"
+    languages: ["all"]
+    patterns:
+      - regex: "while\\s*\\(\\s*true\\s*\\)|for\\s*\\(\\s*;;\\s*\\)|while\\s*\\(\\s*1\\s*\\)"
+        description: "Infinite loops"
+        confidence: 0.8
+      - regex: "malloc\\s*\\(\\s*\\w+\\s*\\*\\s*\\w+\\s*\\)|new\\s+\\w+\\[\\w+\\]"
+        description: "Memory allocation with user input"
+        confidence: 0.6
+      - regex: "Thread\\s*\\(.*\\)\\.start\\(\\)|new\\s+Thread\\s*\\(|threading\\.Thread\\("
+        description: "Thread creation without limits"
+        confidence: 0.5
+      - regex: "setTimeout\\(.*,\\s*0\\)|setInterval\\(.*,\\s*0\\)"
+        description: "Rapid timer execution"
+        confidence: 0.7
+    fix_suggestion: "Implement rate limiting, resource quotas, timeout mechanisms"
+    cwe: "CWE-400"
+    owasp: "A06:2021"
+
+  # CWE-94: Code Injection - #20 in 2024
+  - id: "cwe-94-code-injection"
+    name: "Code Injection"
+    description: "Detects code injection vulnerabilities"
+    severity: "Critical"
+    category: "injection"
+    languages: ["javascript", "typescript", "python", "php", "ruby"]
+    patterns:
+      - regex: "eval\\s*\\(.*\\+|Function\\s*\\(.*\\+|new\\s+Function\\(.*\\+"
+        description: "Dynamic code execution with user input"
+        confidence: 0.95
+      - regex: "exec\\s*\\(.*\\+|compile\\s*\\(.*\\+|execfile\\s*\\(.*\\+"
+        description: "Python code execution with user input"
+        confidence: 0.9
+      - regex: "eval\\s*\\(\\s*\\$|assert\\s*\\(\\s*\\$|create_function\\s*\\("
+        description: "PHP code execution functions"
+        confidence: 0.95
+      - regex: "\\$\\{.*\\}|\\#\\{.*\\}|<%=.*%>"
+        description: "Template injection patterns"
+        confidence: 0.8
+    fix_suggestion: "Avoid dynamic code execution, use safe alternatives, validate and sanitize input"
+    cwe: "CWE-94"
+    owasp: "A03:2021"
+
+  # CWE-269: Improper Privilege Management - #22 in 2024
+  - id: "cwe-269-privilege-management"
+    name: "Improper Privilege Management"
+    description: "Detects improper privilege management"
+    severity: "High"
+    category: "authorization"
+    languages: ["all"]
+    patterns:
+      - regex: "setuid\\s*\\(\\s*0\\s*\\)|setgid\\s*\\(\\s*0\\s*\\)|seteuid\\s*\\(\\s*0\\s*\\)"
+        description: "Setting root privileges"
+        confidence: 0.9
+      - regex: "chmod\\s*\\(.*,\\s*0777\\)|chmod\\s*\\(.*,\\s*0666\\)"
+        description: "Overly permissive file permissions"
+        confidence: 0.8
+      - regex: "Process\\.Start\\(.*\\)"
+        description: "Process execution with shell"
+        confidence: 0.6
+      - regex: "sudo\\s+.*\\$|su\\s+.*\\$"
+        description: "Privilege escalation with user input"
+        confidence: 0.85
+    fix_suggestion: "Follow principle of least privilege, validate privilege changes, use proper access controls"
+    cwe: "CWE-269"
+    owasp: "A01:2021"
+
+  # CWE-200: Information Exposure - #23 in 2024
+  - id: "cwe-200-information-exposure"
+    name: "Information Exposure"
+    description: "Detects information exposure vulnerabilities"
+    severity: "Medium"
+    category: "information-disclosure"
+    languages: ["all"]
+    patterns:
+      - regex: "printStackTrace\\(\\)|print_r\\(\\$|var_dump\\(\\$|console\\.log\\(.*error"
+        description: "Error information exposure"
+        confidence: 0.7
+      - regex: "\\$_SERVER\\[.*\\]|phpinfo\\(\\)|error_reporting\\(E_ALL\\)"
+        description: "Server information exposure"
+        confidence: 0.8
+      - regex: "Connection\\s+refused|Access\\s+denied|No\\s+such\\s+file"
+        description: "System error messages"
+        confidence: 0.6
+      - regex: "DEBUG\\s*=\\s*True|app\\.debug\\s*=\\s*true|development"
+        description: "Debug mode enabled"
+        confidence: 0.9
+    fix_suggestion: "Implement proper error handling, disable debug mode in production, sanitize error messages"
+    cwe: "CWE-200"
+    owasp: "A09:2021"
+
+  # CWE-522: Insufficiently Protected Credentials - #24 in 2024
+  - id: "cwe-522-unprotected-credentials"
+    name: "Insufficiently Protected Credentials"
+    description: "Detects insufficiently protected credentials"
+    severity: "High"
+    category: "authentication"
+    languages: ["all"]
+    patterns:
+      - regex: "password\\s*=\\s*['\\\"][^'\\\"]*['\\\"]"
+        description: "Plaintext password storage"
+        confidence: 0.9
+      - regex: "localStorage\\.setItem\\(.*password|sessionStorage\\.setItem\\(.*password"
+        description: "Client-side credential storage"
+        confidence: 0.95
+      - regex: "http://.*:.*@|ftp://.*:.*@"
+        description: "Credentials in URLs"
+        confidence: 0.9
+      - regex: "\\$_POST\\[.*password.*\\]"
+        description: "Password processing without hashing"
+        confidence: 0.8
+    fix_suggestion: "Use strong encryption, secure storage, implement proper hashing"
+    cwe: "CWE-522"
+    owasp: "A02:2021"
+
+  # CWE-306: Missing Authentication - #25 in 2024
+  - id: "cwe-306-missing-authentication"
+    name: "Missing Authentication for Critical Function"
+    description: "Detects missing authentication for critical functions"
+    severity: "High"
+    category: "authentication"
+    languages: ["all"]
+    patterns:
+      - regex: "def\\s+delete_\\w+\\(.*\\):"
+        description: "Delete function without authentication"
+        confidence: 0.8
+      - regex: "app\\.delete\\(.*\\)"
+        description: "Delete endpoint without authentication"
+        confidence: 0.8
+      - regex: "\\[HttpDelete\\]"
+        description: "Delete action without authorization"
+        confidence: 0.8
+      - regex: "DROP\\s+TABLE|DELETE\\s+FROM|UPDATE\\s+.*SET"
+        description: "Database operations without user context"
+        confidence: 0.7
+    fix_suggestion: "Implement authentication for all critical functions, use proper access controls"
+    cwe: "CWE-306"
+    owasp: "A07:2021"

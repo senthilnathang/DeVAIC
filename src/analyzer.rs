@@ -4,23 +4,36 @@ use crate::{
     parsers::{ParserFactory, SourceFile},
     rules::{RuleEngine, custom_pattern_rules::CustomPatternRules},
     pattern_loader::PatternLoader,
+    cache::get_global_cache,
+    optimized_reader::OptimizedFileReader,
+    parallel_scanner::{ParallelDirectoryScanner, SmartFileFilter},
     Language, Vulnerability,
 };
 use std::path::Path;
-use std::io::Read;
 use walkdir::WalkDir;
 
 pub struct Analyzer {
     config: Config,
     rule_engine: RuleEngine,
+    optimized_reader: OptimizedFileReader,
+    file_filter: SmartFileFilter,
+    parallel_enabled: bool,
+    max_depth: usize,
 }
 
 impl Analyzer {
     pub fn new(config: Config) -> Self {
         let rule_engine = RuleEngine::new(&config.rules);
+        let optimized_reader = OptimizedFileReader::new(true); // Enable caching
+        let file_filter = SmartFileFilter::new(config.clone());
+        
         Self {
             config,
             rule_engine,
+            optimized_reader,
+            file_filter,
+            parallel_enabled: true,
+            max_depth: 100,
         }
     }
 
@@ -29,23 +42,70 @@ impl Analyzer {
         let custom_rules = CustomPatternRules::new(pattern_loader);
         rule_engine.set_custom_pattern_rules(custom_rules);
         
+        let optimized_reader = OptimizedFileReader::new(true); // Enable caching
+        let file_filter = SmartFileFilter::new(config.clone());
+        
         Self {
             config,
             rule_engine,
+            optimized_reader,
+            file_filter,
+            parallel_enabled: true,
+            max_depth: 100,
         }
     }
 
+    /// Enable or disable parallel processing
+    pub fn set_parallel_enabled(&mut self, enabled: bool) {
+        self.parallel_enabled = enabled;
+    }
+
+    /// Set maximum recursion depth for directory scanning
+    pub fn set_max_depth(&mut self, max_depth: usize) {
+        self.max_depth = max_depth;
+    }
+
+    /// Get cache statistics
+    pub fn get_cache_stats(&self) -> crate::cache::CacheStats {
+        get_global_cache().get_stats()
+    }
+
+    /// Clear all caches
+    pub fn clear_caches(&self) {
+        get_global_cache().clear_all();
+    }
+
     pub fn analyze_directory(&self, path: &Path) -> Result<Vec<Vulnerability>> {
-        // Pre-count files to optimize memory allocation
-        let file_count = WalkDir::new(path)
-            .follow_links(self.config.analysis.follow_symlinks)
-            .into_iter()
-            .filter_map(|e| e.ok())
-            .filter(|entry| entry.file_type().is_file())
-            .count();
-        
-        // Pre-allocate with estimated capacity (assume average 5 vulnerabilities per file)
-        let mut vulnerabilities = Vec::with_capacity(file_count * 5);
+        if self.parallel_enabled {
+            // Use parallel scanner for better performance
+            let scanner = ParallelDirectoryScanner::new(
+                self.config.clone(),
+                None, // Use default thread count
+                true, // Enable caching
+                Some(self.max_depth), // Use configured max depth
+                Some(true), // Use fast walker
+            );
+            
+            match scanner.scan_directory(path) {
+                Ok(results) => {
+                    log::info!("Parallel scan completed: {} files, {} vulnerabilities, {}ms", 
+                              results.files_scanned, results.vulnerabilities.len(), results.scan_time_ms);
+                    Ok(results.vulnerabilities)
+                }
+                Err(e) => {
+                    log::warn!("Parallel scan failed, falling back to sequential: {}", e);
+                    self.analyze_directory_sequential(path)
+                }
+            }
+        } else {
+            self.analyze_directory_sequential(path)
+        }
+    }
+
+    /// Sequential directory analysis (fallback)
+    fn analyze_directory_sequential(&self, path: &Path) -> Result<Vec<Vulnerability>> {
+        // Use smart file filter for better performance
+        let mut vulnerabilities = Vec::new();
         
         for entry in WalkDir::new(path)
             .follow_links(self.config.analysis.follow_symlinks)
@@ -55,8 +115,12 @@ impl Analyzer {
             if entry.file_type().is_file() {
                 let file_path = entry.path();
                 
-                // Load all files instead of filtering by extension
-                log::debug!("Loading file: {}", file_path.display());
+                // Use smart filter to skip non-code files early
+                if !self.file_filter.should_analyze(file_path) {
+                    continue;
+                }
+                
+                log::debug!("Analyzing file: {}", file_path.display());
                 match self.analyze_file(file_path) {
                     Ok(mut file_vulns) => vulnerabilities.append(&mut file_vulns),
                     Err(e) => {
@@ -70,6 +134,11 @@ impl Analyzer {
     }
 
     pub fn analyze_file(&self, path: &Path) -> Result<Vec<Vulnerability>> {
+        // Use smart filter to check if file should be analyzed
+        if !self.file_filter.should_analyze(path) {
+            return Ok(Vec::new());
+        }
+
         let extension = match path.extension().and_then(|ext| ext.to_str()) {
             Some(ext) => ext,
             None => {
@@ -78,37 +147,41 @@ impl Analyzer {
             }
         };
 
-        let language = match Language::from_extension(extension) {
-            Some(lang) => lang,
-            None => {
-                // Skip files with unsupported extensions but still load them
-                log::debug!("Unsupported language extension: {} for file: {}", extension, path.display());
-                return Ok(Vec::new());
+        // Get language with caching
+        let language = {
+            let cache = get_global_cache();
+            if let Some(cached_lang) = cache.get_language_for_extension(extension) {
+                match cached_lang {
+                    Some(lang) => lang,
+                    None => {
+                        log::debug!("Unsupported language extension: {} for file: {}", extension, path.display());
+                        return Ok(Vec::new());
+                    }
+                }
+            } else {
+                let lang = Language::from_extension(extension);
+                cache.cache_language_for_extension(extension.to_string(), lang);
+                match lang {
+                    Some(lang) => lang,
+                    None => {
+                        log::debug!("Unsupported language extension: {} for file: {}", extension, path.display());
+                        return Ok(Vec::new());
+                    }
+                }
             }
         };
 
-        // Check file size before reading to avoid large allocations
-        let metadata = std::fs::metadata(path)?;
-        if metadata.len() as usize > self.config.analysis.max_file_size {
-            return Err(DevaicError::Analysis(format!(
-                "File {} exceeds maximum size limit",
-                path.display()
-            )));
+        // Use optimized reader for better performance
+        let content = self.optimized_reader.read_file(path)
+            .map_err(|e| DevaicError::Analysis(format!("Failed to read file {}: {}", path.display(), e)))?;
+
+        // Check if content has changed using cache
+        let cache = get_global_cache();
+        if !cache.has_content_changed(path, &content) {
+            // Content hasn't changed, could return cached analysis results
+            // For now, we'll continue with analysis
+            log::debug!("File content unchanged: {}", path.display());
         }
-        
-        // For large files, use streaming approach with BufReader
-        let content = if metadata.len() > 1024 * 1024 {
-            // Files larger than 1MB use buffered reading
-            use std::io::BufReader;
-            let file = std::fs::File::open(path)?;
-            let mut reader = BufReader::new(file);
-            let mut content = String::with_capacity(metadata.len() as usize);
-            reader.read_to_string(&mut content)?;
-            content
-        } else {
-            // Small files use direct reading
-            std::fs::read_to_string(path)?
-        };
 
         let source_file = SourceFile::new(path.to_path_buf(), content, language);
         let mut parser = ParserFactory::create_parser(&source_file.language)?;

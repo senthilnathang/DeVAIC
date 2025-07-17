@@ -1,0 +1,600 @@
+version: "1.0"
+name: "CWE Cryptographic Vulnerabilities Patterns"
+description: "Comprehensive regex patterns for cryptographic vulnerabilities (CWE-261, CWE-295, CWE-296, CWE-297, CWE-298, CWE-299, CWE-300, CWE-301, CWE-302, CWE-303, CWE-304, CWE-305, CWE-321, CWE-322, CWE-323, CWE-324, CWE-325, CWE-326, CWE-327, CWE-328, CWE-329, CWE-330, CWE-331, CWE-332, CWE-333, CWE-334, CWE-335, CWE-336, CWE-337, CWE-338, CWE-339, CWE-340, CWE-341, CWE-342, CWE-343, CWE-344, CWE-345, CWE-346, CWE-347, CWE-348, CWE-349, CWE-350, CWE-351, CWE-352, CWE-353, CWE-354, CWE-355, CWE-356, CWE-357, CWE-358, CWE-359, CWE-360, CWE-361, CWE-362, CWE-363, CWE-364, CWE-365, CWE-366, CWE-367, CWE-368, CWE-369, CWE-370, CWE-371, CWE-372, CWE-373, CWE-374, CWE-375, CWE-376, CWE-377, CWE-378, CWE-379, CWE-380, CWE-381, CWE-382, CWE-383, CWE-384, CWE-385, CWE-386, CWE-387, CWE-388, CWE-389, CWE-390, CWE-391, CWE-392, CWE-393, CWE-394, CWE-395, CWE-396, CWE-397, CWE-398, CWE-399)"
+author: "DeVAIC Security Team"
+license: "MIT"
+
+patterns:
+  # CWE-261: Weak Encoding for Password
+  - id: "cwe-261-weak-password-encoding"
+    name: "Weak Password Encoding"
+    description: "Detects weak password encoding methods"
+    severity: "High"
+    category: "cryptography"
+    languages: ["java", "python", "php", "csharp", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "base64\\.encode\\s*\\(.*password|btoa\\s*\\(.*password|base64_encode\\s*\\(.*password"
+        description: "Base64 encoding of passwords"
+        confidence: 0.9
+      - regex: "URLEncoder\\.encode\\s*\\(.*password|urllib\\.parse\\.quote\\s*\\(.*password"
+        description: "URL encoding of passwords"
+        confidence: 0.85
+      - regex: "rot13\\s*\\(.*password|str_rot13\\s*\\(.*password"
+        description: "ROT13 encoding of passwords"
+        confidence: 0.95
+      - regex: "hex\\s*\\(.*password|hexlify\\s*\\(.*password|bin2hex\\s*\\(.*password"
+        description: "Hexadecimal encoding of passwords"
+        confidence: 0.85
+    fix_suggestion: "Use strong password hashing algorithms like bcrypt, scrypt, or Argon2"
+    cwe: "CWE-261"
+    owasp: "A02:2021"
+
+  # CWE-295: Improper Certificate Validation
+  - id: "cwe-295-improper-cert-validation"
+    name: "Improper Certificate Validation"
+    description: "Detects improper certificate validation"
+    severity: "High"
+    category: "cryptography"
+    languages: ["java", "python", "php", "csharp", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "TrustManager\\[\\].*=.*new\\s+TrustManager\\[\\]\\s*\\{|X509TrustManager.*checkClientTrusted\\s*\\(\\s*\\)\\s*\\{\\s*\\}"
+        description: "Java trust all certificates"
+        confidence: 0.95
+      - regex: "ssl\\._create_unverified_context\\(\\)|ssl_verify_mode\\s*=\\s*ssl\\.CERT_NONE"
+        description: "Python SSL verification disabled"
+        confidence: 0.95
+      - regex: "curl_setopt\\s*\\(.*CURLOPT_SSL_VERIFYPEER.*false\\)|curl_setopt\\s*\\(.*CURLOPT_SSL_VERIFYHOST.*false\\)"
+        description: "PHP cURL SSL verification disabled"
+        confidence: 0.95
+      - regex: "ServicePointManager\\.ServerCertificateValidationCallback\\s*=.*true|ServerCertificateValidationCallback\\s*=.*return\\s+true"
+        description: "C# certificate validation bypassed"
+        confidence: 0.95
+      - regex: "verify\\s*:\\s*false|rejectUnauthorized\\s*:\\s*false"
+        description: "Node.js SSL verification disabled"
+        confidence: 0.9
+    fix_suggestion: "Enable proper certificate validation, use certificate pinning, validate certificate chains"
+    cwe: "CWE-295"
+    owasp: "A02:2021"
+
+  # CWE-296: Improper Following of a Certificate's Chain of Trust
+  - id: "cwe-296-cert-chain-validation"
+    name: "Improper Certificate Chain Validation"
+    description: "Detects improper certificate chain validation"
+    severity: "High"
+    category: "cryptography"
+    languages: ["java", "python", "csharp", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "X509Certificate\\.verify\\s*\\(\\s*\\)|certificate\\.verify\\s*\\(\\s*\\)"
+        description: "Certificate verification without chain validation"
+        confidence: 0.8
+      - regex: "CertificateFactory\\.getInstance\\s*\\(.*\\)"
+        description: "Java certificate factory without path validation"
+        confidence: 0.7
+      - regex: "X509Store\\.Add\\s*\\(\\s*\\)|X509Certificate2\\.Verify\\s*\\(\\s*\\)"
+        description: "C# certificate without chain validation"
+        confidence: 0.8
+      - regex: "OpenSSL::X509::Certificate\\.new\\s*\\(\\s*\\)"
+        description: "Ruby certificate without store validation"
+        confidence: 0.75
+    fix_suggestion: "Validate complete certificate chain, check certificate authority, implement proper trust store"
+    cwe: "CWE-296"
+    owasp: "A02:2021"
+
+  # CWE-297: Improper Validation of Certificate with Host Mismatch
+  - id: "cwe-297-hostname-verification"
+    name: "Improper Hostname Verification"
+    description: "Detects improper hostname verification in certificates"
+    severity: "High"
+    category: "cryptography"
+    languages: ["java", "python", "csharp", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "HttpsURLConnection\\.setDefaultHostnameVerifier\\s*\\(.*return\\s+true"
+        description: "Java hostname verification bypassed"
+        confidence: 0.95
+      - regex: "ssl\\.match_hostname\\s*\\(.*\\)|ssl\\.create_default_context\\s*\\(.*\\)"
+        description: "Python SSL hostname verification disabled"
+        confidence: 0.9
+      - regex: "ServicePointManager\\.ServerCertificateValidationCallback.*hostname|RemoteCertificateValidationCallback.*hostname"
+        description: "C# hostname validation bypassed"
+        confidence: 0.85
+      - regex: "verify_mode\\s*=\\s*OpenSSL::SSL::VERIFY_NONE|OpenSSL::SSL::VERIFY_PEER"
+        description: "Ruby SSL hostname verification disabled"
+        confidence: 0.9
+    fix_suggestion: "Enable hostname verification, validate certificate Common Name and Subject Alternative Names"
+    cwe: "CWE-297"
+    owasp: "A02:2021"
+
+  # CWE-321: Use of Hard-coded Cryptographic Key
+  - id: "cwe-321-hardcoded-crypto-key"
+    name: "Hard-coded Cryptographic Key"
+    description: "Detects hard-coded cryptographic keys"
+    severity: "Critical"
+    category: "cryptography"
+    languages: ["java", "python", "php", "csharp", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "private_key\\s*=\\s*['\\\"]-----BEGIN\\s+(RSA\\s+)?PRIVATE\\s+KEY-----"
+        description: "Hard-coded private key"
+        confidence: 0.98
+      - regex: "secret_key\\s*=\\s*['\\\"][A-Za-z0-9+/=]{32,}['\\\"]|api_key\\s*=\\s*['\\\"][A-Za-z0-9+/=]{32,}['\\\"]"
+        description: "Hard-coded secret key"
+        confidence: 0.9
+      - regex: "SecretKeySpec\\s*\\(\\s*['\\\"][^'\\\"]+['\\\"]|new\\s+SecretKeySpec\\s*\\(\\s*['\\\"][^'\\\"]+['\\\"]"
+        description: "Java hard-coded secret key"
+        confidence: 0.9
+      - regex: "Cipher\\.getInstance\\s*\\(.*\\).*['\\\"][A-Za-z0-9+/=]{16,}['\\\"]"
+        description: "Hard-coded cipher key"
+        confidence: 0.85
+      - regex: "crypto\\.createCipher\\s*\\(.*['\\\"][^'\\\"]{8,}['\\\"]|crypto\\.createDecipher\\s*\\(.*['\\\"][^'\\\"]{8,}['\\\"]"
+        description: "Node.js hard-coded cipher key"
+        confidence: 0.9
+    fix_suggestion: "Use environment variables, secure key management, key derivation functions"
+    cwe: "CWE-321"
+    owasp: "A02:2021"
+
+  # CWE-322: Key Exchange without Entity Authentication
+  - id: "cwe-322-key-exchange-no-auth"
+    name: "Key Exchange without Entity Authentication"
+    description: "Detects key exchange without entity authentication"
+    severity: "High"
+    category: "cryptography"
+    languages: ["java", "python", "csharp", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "KeyAgreement\\.getInstance\\s*\\(\\s*['\\\"]DH['\\\"]\\)"
+        description: "Java Diffie-Hellman without authentication"
+        confidence: 0.8
+      - regex: "ECDH\\s*\\(\\s*\\)"
+        description: "ECDH key exchange without authentication"
+        confidence: 0.8
+      - regex: "KeyExchange\\.getInstance\\s*\\(\\s*\\)"
+        description: "Key exchange without authentication"
+        confidence: 0.75
+      - regex: "crypto\\.createDiffieHellman\\s*\\(\\s*\\)"
+        description: "Node.js Diffie-Hellman without authentication"
+        confidence: 0.8
+    fix_suggestion: "Implement mutual authentication, use authenticated key exchange protocols"
+    cwe: "CWE-322"
+    owasp: "A02:2021"
+
+  # CWE-323: Reusing a Nonce, Key Pair in Encryption
+  - id: "cwe-323-nonce-reuse"
+    name: "Nonce/Key Reuse in Encryption"
+    description: "Detects nonce or key reuse in encryption"
+    severity: "High"
+    category: "cryptography"
+    languages: ["java", "python", "php", "csharp", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "nonce\\s*=\\s*['\\\"][^'\\\"]*['\\\"]|IV\\s*=\\s*['\\\"][^'\\\"]*['\\\"]"
+        description: "Hard-coded nonce or IV"
+        confidence: 0.9
+      - regex: "IvParameterSpec\\s*\\(\\s*['\\\"][^'\\\"]*['\\\"]\\)|new\\s+IvParameterSpec\\s*\\(\\s*['\\\"][^'\\\"]*['\\\"]"
+        description: "Java hard-coded IV"
+        confidence: 0.9
+      - regex: "Cipher\\.getInstance\\s*\\(.*\\).*\\$iv|cipher\\.encrypt\\s*\\(.*\\$iv"
+        description: "Reused IV in encryption"
+        confidence: 0.8
+      - regex: "crypto\\.createCipher\\s*\\(.*,\\s*['\\\"][^'\\\"]*['\\\"]\\)|crypto\\.createDecipher\\s*\\(.*,\\s*['\\\"][^'\\\"]*['\\\"]"
+        description: "Node.js hard-coded cipher parameters"
+        confidence: 0.85
+    fix_suggestion: "Generate random nonces/IVs for each encryption, use proper key rotation"
+    cwe: "CWE-323"
+    owasp: "A02:2021"
+
+  # CWE-324: Use of a Key Past its Expiration Date
+  - id: "cwe-324-expired-key"
+    name: "Use of Expired Key"
+    description: "Detects use of keys past expiration date"
+    severity: "Medium"
+    category: "cryptography"
+    languages: ["java", "python", "csharp", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "X509Certificate\\.checkValidity\\s*\\(\\s*\\)|certificate\\.not_valid_after"
+        description: "Certificate validity check"
+        confidence: 0.7
+      - regex: "KeyStore\\.load\\s*\\(\\s*\\)|PrivateKey\\s*\\w+"
+        description: "Key usage without expiration check"
+        confidence: 0.6
+      - regex: "jwt\\.decode\\s*\\(\\s*\\)|token\\.verify\\s*\\(\\s*\\)"
+        description: "JWT without expiration verification"
+        confidence: 0.75
+    fix_suggestion: "Implement key expiration checks, use certificate validation, automatic key rotation"
+    cwe: "CWE-324"
+    owasp: "A02:2021"
+
+  # CWE-325: Missing Required Cryptographic Step
+  - id: "cwe-325-missing-crypto-step"
+    name: "Missing Required Cryptographic Step"
+    description: "Detects missing required cryptographic steps"
+    severity: "High"
+    category: "cryptography"
+    languages: ["java", "python", "php", "csharp", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "Cipher\\.getInstance\\s*\\(.*\\)"
+        description: "Java cipher without initialization"
+        confidence: 0.8
+      - regex: "MessageDigest\\.getInstance\\s*\\(.*\\)"
+        description: "Java message digest without update"
+        confidence: 0.8
+      - regex: "hash_hmac\\s*\\(.*\\)|password_hash\\s*\\(.*\\)"
+        description: "PHP hash without verification"
+        confidence: 0.7
+      - regex: "crypto\\.createHash\\s*\\(.*\\)"
+        description: "Node.js hash without update"
+        confidence: 0.8
+    fix_suggestion: "Complete all required cryptographic steps, use proper initialization and finalization"
+    cwe: "CWE-325"
+    owasp: "A02:2021"
+
+  # CWE-326: Inadequate Encryption Strength
+  - id: "cwe-326-weak-encryption"
+    name: "Inadequate Encryption Strength"
+    description: "Detects weak encryption algorithms and key sizes"
+    severity: "High"
+    category: "cryptography"
+    languages: ["java", "python", "php", "csharp", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "DES|3DES|TripleDES|RC2|RC4|RC5"
+        description: "Weak encryption algorithms"
+        confidence: 0.95
+      - regex: "KeyGenerator\\.getInstance\\s*\\(\\s*['\\\"]AES['\\\"]\\s*\\).*1024|RSA.*1024|DSA.*1024"
+        description: "Weak key sizes"
+        confidence: 0.9
+      - regex: "Cipher\\.getInstance\\s*\\(\\s*['\\\"]AES/ECB|Cipher\\.getInstance\\s*\\(\\s*['\\\"]DES"
+        description: "Weak cipher modes"
+        confidence: 0.9
+      - regex: "mcrypt_encrypt\\s*\\(\\s*MCRYPT_DES|mcrypt_encrypt\\s*\\(\\s*MCRYPT_3DES"
+        description: "PHP weak encryption"
+        confidence: 0.95
+      - regex: "crypto\\.createCipher\\s*\\(\\s*['\\\"]des|crypto\\.createCipher\\s*\\(\\s*['\\\"]rc4"
+        description: "Node.js weak encryption"
+        confidence: 0.95
+    fix_suggestion: "Use AES-256, RSA-2048+, proper cipher modes (GCM, CBC with HMAC)"
+    cwe: "CWE-326"
+    owasp: "A02:2021"
+
+  # CWE-327: Use of a Broken or Risky Cryptographic Algorithm
+  - id: "cwe-327-broken-crypto"
+    name: "Broken or Risky Cryptographic Algorithm"
+    description: "Detects use of broken or risky cryptographic algorithms"
+    severity: "High"
+    category: "cryptography"
+    languages: ["java", "python", "php", "csharp", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "MD2|MD4|MD5|SHA1|SHA-1"
+        description: "Broken hash algorithms"
+        confidence: 0.95
+      - regex: "MessageDigest\\.getInstance\\s*\\(\\s*['\\\"]MD5['\\\"]\\)|MessageDigest\\.getInstance\\s*\\(\\s*['\\\"]SHA-1['\\\"]"
+        description: "Java broken hash algorithms"
+        confidence: 0.95
+      - regex: "hashlib\\.md5\\s*\\(\\s*\\)|hashlib\\.sha1\\s*\\(\\s*\\)"
+        description: "Python broken hash algorithms"
+        confidence: 0.95
+      - regex: "md5\\s*\\(\\s*\\)|sha1\\s*\\(\\s*\\)|crypt\\s*\\(\\s*\\)"
+        description: "PHP broken hash algorithms"
+        confidence: 0.95
+      - regex: "MD5\\.Create\\s*\\(\\s*\\)|SHA1\\.Create\\s*\\(\\s*\\)"
+        description: "C# broken hash algorithms"
+        confidence: 0.95
+      - regex: "crypto\\.createHash\\s*\\(\\s*['\\\"]md5['\\\"]\\)|crypto\\.createHash\\s*\\(\\s*['\\\"]sha1['\\\"]"
+        description: "Node.js broken hash algorithms"
+        confidence: 0.95
+    fix_suggestion: "Use SHA-256, SHA-384, SHA-512, or SHA-3 for hashing"
+    cwe: "CWE-327"
+    owasp: "A02:2021"
+
+  # CWE-328: Reversible One-Way Hash
+  - id: "cwe-328-reversible-hash"
+    name: "Reversible One-Way Hash"
+    description: "Detects use of reversible hashing methods"
+    severity: "High"
+    category: "cryptography"
+    languages: ["java", "python", "php", "csharp", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "base64\\.encode\\s*\\(.*password|base64_encode\\s*\\(.*password"
+        description: "Base64 encoding used for password hashing"
+        confidence: 0.95
+      - regex: "crypt\\s*\\(\\s*\\$password|hash\\s*\\(\\s*['\\\"]md5['\\\"].*\\$password"
+        description: "Weak password hashing"
+        confidence: 0.9
+      - regex: "CryptoJS\\.MD5\\s*\\(.*password|CryptoJS\\.SHA1\\s*\\(.*password"
+        description: "Client-side password hashing"
+        confidence: 0.9
+      - regex: "Digest::MD5\\.hexdigest\\s*\\(.*password|Digest::SHA1\\.hexdigest\\s*\\(.*password"
+        description: "Ruby weak password hashing"
+        confidence: 0.9
+    fix_suggestion: "Use bcrypt, scrypt, Argon2, or PBKDF2 for password hashing"
+    cwe: "CWE-328"
+    owasp: "A02:2021"
+
+  # CWE-329: Not Using a Random IV with CBC Mode
+  - id: "cwe-329-non-random-iv"
+    name: "Not Using Random IV with CBC Mode"
+    description: "Detects non-random IV usage with CBC mode"
+    severity: "High"
+    category: "cryptography"
+    languages: ["java", "python", "php", "csharp", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "AES/CBC.*IvParameterSpec\\s*\\(\\s*['\\\"][^'\\\"]*['\\\"]\\)"
+        description: "Java CBC mode with fixed IV"
+        confidence: 0.9
+      - regex: "AES\\.new\\s*\\(.*AES\\.MODE_CBC\\s*\\).*\\$iv"
+        description: "Python CBC mode with fixed IV"
+        confidence: 0.9
+      - regex: "mcrypt_encrypt\\s*\\(.*MCRYPT_MODE_CBC.*['\\\"][^'\\\"]*['\\\"]"
+        description: "PHP CBC mode with fixed IV"
+        confidence: 0.9
+      - regex: "AesCryptoServiceProvider\\s*\\(\\s*\\).*\\.IV\\s*=\\s*['\\\"][^'\\\"]*['\\\"]"
+        description: "C# CBC mode with fixed IV"
+        confidence: 0.9
+      - regex: "crypto\\.createCipheriv\\s*\\(\\s*['\\\"]aes.*cbc['\\\"].*['\\\"][^'\\\"]*['\\\"]"
+        description: "Node.js CBC mode with fixed IV"
+        confidence: 0.9
+    fix_suggestion: "Generate random IV for each encryption operation, use secure random number generator"
+    cwe: "CWE-329"
+    owasp: "A02:2021"
+
+  # CWE-330: Use of Insufficiently Random Values
+  - id: "cwe-330-weak-random"
+    name: "Use of Insufficiently Random Values"
+    description: "Detects use of weak random number generators"
+    severity: "Medium"
+    category: "cryptography"
+    languages: ["java", "python", "php", "csharp", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "Random\\s*\\(\\s*\\)|new\\s+Random\\s*\\(\\s*\\)|Math\\.random\\s*\\(\\s*\\)"
+        description: "Weak random number generators"
+        confidence: 0.9
+      - regex: "rand\\s*\\(\\s*\\)|srand\\s*\\(\\s*\\)|mt_rand\\s*\\(\\s*\\)"
+        description: "PHP weak random functions"
+        confidence: 0.9
+      - regex: "random\\.random\\s*\\(\\s*\\)|random\\.randint\\s*\\(\\s*\\)"
+        description: "Python weak random functions"
+        confidence: 0.85
+      - regex: "Random\\.Next\\s*\\(\\s*\\)|Random\\.NextDouble\\s*\\(\\s*\\)"
+        description: "C# weak random functions"
+        confidence: 0.85
+      - regex: "Math\\.random\\s*\\(\\s*\\)|Date\\.now\\s*\\(\\s*\\)"
+        description: "JavaScript weak random functions"
+        confidence: 0.85
+    fix_suggestion: "Use cryptographically secure random number generators (SecureRandom, os.urandom, crypto.randomBytes)"
+    cwe: "CWE-330"
+    owasp: "A02:2021"
+
+  # CWE-331: Insufficient Entropy
+  - id: "cwe-331-insufficient-entropy"
+    name: "Insufficient Entropy"
+    description: "Detects insufficient entropy in cryptographic operations"
+    severity: "Medium"
+    category: "cryptography"
+    languages: ["java", "python", "php", "csharp", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "SecureRandom\\s*\\(\\s*\\)|SecureRandom\\.getInstance\\s*\\(\\s*\\)"
+        description: "Java SecureRandom without proper seeding"
+        confidence: 0.7
+      - regex: "random\\.SystemRandom\\s*\\(\\s*\\)|os\\.urandom\\s*\\(\\s*1\\s*\\)"
+        description: "Python insufficient entropy"
+        confidence: 0.7
+      - regex: "openssl_random_pseudo_bytes\\s*\\(\\s*\\d+\\s*\\)"
+        description: "PHP weak random bytes"
+        confidence: 0.8
+      - regex: "RNGCryptoServiceProvider\\s*\\(\\s*\\)"
+        description: "C# crypto provider without proper usage"
+        confidence: 0.7
+      - regex: "crypto\\.randomBytes\\s*\\(\\s*[1-4]\\s*\\)|crypto\\.randomBytes\\s*\\(\\s*\\w+\\s*\\)"
+        description: "Node.js insufficient random bytes"
+        confidence: 0.75
+    fix_suggestion: "Use sufficient entropy sources, proper seeding, adequate key lengths"
+    cwe: "CWE-331"
+    owasp: "A02:2021"
+
+  # CWE-332: Insufficient Entropy in PRNG
+  - id: "cwe-332-prng-entropy"
+    name: "Insufficient Entropy in PRNG"
+    description: "Detects insufficient entropy in pseudo-random number generators"
+    severity: "Medium"
+    category: "cryptography"
+    languages: ["java", "python", "php", "csharp", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "SecureRandom\\s*\\(\\s*\\)\\.setSeed\\s*\\(\\s*\\d+\\s*\\)"
+        description: "Java SecureRandom with weak seed"
+        confidence: 0.8
+      - regex: "random\\.seed\\s*\\(\\s*\\d+\\s*\\)|random\\.seed\\s*\\(\\s*time\\s*\\(\\s*\\)\\s*\\)"
+        description: "Python random with predictable seed"
+        confidence: 0.85
+      - regex: "srand\\s*\\(\\s*\\d+\\s*\\)|srand\\s*\\(\\s*time\\s*\\(\\s*\\)\\s*\\)"
+        description: "PHP srand with predictable seed"
+        confidence: 0.85
+      - regex: "Random\\s*\\(\\s*\\d+\\s*\\)|Random\\s*\\(\\s*DateTime\\.Now\\s*\\)"
+        description: "C# Random with predictable seed"
+        confidence: 0.85
+      - regex: "Math\\.random\\s*\\(\\s*\\).*\\*\\s*\\d+|seedrandom\\s*\\(\\s*\\d+\\s*\\)"
+        description: "JavaScript predictable random"
+        confidence: 0.8
+    fix_suggestion: "Use high-entropy seed sources, avoid predictable seeds, use cryptographic PRNGs"
+    cwe: "CWE-332"
+    owasp: "A02:2021"
+
+  # CWE-333: Improper Handling of Insufficient Entropy in TRNG
+  - id: "cwe-333-trng-entropy"
+    name: "Improper Handling of Insufficient Entropy in TRNG"
+    description: "Detects improper handling of insufficient entropy in true random number generators"
+    severity: "Medium"
+    category: "cryptography"
+    languages: ["java", "python", "php", "csharp", "ruby", "c", "cpp"]
+    patterns:
+      - regex: "/dev/random|/dev/urandom"
+        description: "Reading insufficient bytes from entropy source"
+        confidence: 0.7
+      - regex: "SecureRandom\\.getInstanceStrong\\s*\\(\\s*\\)"
+        description: "Java strong SecureRandom without exception handling"
+        confidence: 0.8
+      - regex: "os\\.urandom\\s*\\(\\s*[1-4]\\s*\\)|SystemRandom\\s*\\(\\s*\\)"
+        description: "Python insufficient entropy handling"
+        confidence: 0.7
+      - regex: "RNGCryptoServiceProvider\\.GetBytes\\s*\\(\\s*\\w+\\s*\\)"
+        description: "C# crypto provider insufficient bytes"
+        confidence: 0.7
+    fix_suggestion: "Handle entropy depletion, use sufficient byte counts, implement fallback mechanisms"
+    cwe: "CWE-333"
+    owasp: "A02:2021"
+
+  # CWE-334: Small Space of Random Values
+  - id: "cwe-334-small-random-space"
+    name: "Small Space of Random Values"
+    description: "Detects small space of random values"
+    severity: "Medium"
+    category: "cryptography"
+    languages: ["java", "python", "php", "csharp", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "Random\\s*\\(\\s*\\)\\.nextInt\\s*\\(\\s*[1-9]\\s*\\)|Math\\.random\\s*\\(\\s*\\)\\s*\\*\\s*[1-9]"
+        description: "Random values with small range"
+        confidence: 0.8
+      - regex: "random\\.randint\\s*\\(\\s*\\d+\\s*,\\s*\\d+\\s*\\)"
+        description: "Python random with small range"
+        confidence: 0.7
+      - regex: "rand\\s*\\(\\s*\\)\\s*%\\s*[1-9]\\d*|mt_rand\\s*\\(\\s*\\d+\\s*,\\s*\\d+\\s*\\)"
+        description: "PHP random with small range"
+        confidence: 0.7
+      - regex: "Random\\.Next\\s*\\(\\s*[1-9]\\s*\\)|Random\\.Next\\s*\\(\\s*\\d+\\s*,\\s*\\d+\\s*\\)"
+        description: "C# random with small range"
+        confidence: 0.7
+      - regex: "Math\\.floor\\s*\\(\\s*Math\\.random\\s*\\(\\s*\\)\\s*\\*\\s*[1-9]\\s*\\)"
+        description: "JavaScript random with small range"
+        confidence: 0.8
+    fix_suggestion: "Use larger random spaces, ensure sufficient entropy, avoid predictable ranges"
+    cwe: "CWE-334"
+    owasp: "A02:2021"
+
+  # CWE-335: Incorrect Usage of Seeds in Pseudo-Random Number Generator (PRNG)
+  - id: "cwe-335-incorrect-prng-seed"
+    name: "Incorrect Usage of Seeds in PRNG"
+    description: "Detects incorrect usage of seeds in pseudo-random number generators"
+    severity: "Medium"
+    category: "cryptography"
+    languages: ["java", "python", "php", "csharp", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "Random\\s*\\(\\s*0\\s*\\)|Random\\s*\\(\\s*1\\s*\\)|Random\\s*\\(\\s*\\d+\\s*\\)"
+        description: "Hard-coded PRNG seed"
+        confidence: 0.9
+      - regex: "random\\.seed\\s*\\(\\s*0\\s*\\)|random\\.seed\\s*\\(\\s*1\\s*\\)|random\\.seed\\s*\\(\\s*\\d+\\s*\\)"
+        description: "Python hard-coded seed"
+        confidence: 0.9
+      - regex: "srand\\s*\\(\\s*0\\s*\\)|srand\\s*\\(\\s*1\\s*\\)|mt_srand\\s*\\(\\s*\\d+\\s*\\)"
+        description: "PHP hard-coded seed"
+        confidence: 0.9
+      - regex: "Random\\s*\\(\\s*123\\s*\\)|Random\\s*\\(\\s*\\$seed\\s*\\)"
+        description: "C# predictable seed"
+        confidence: 0.85
+      - regex: "seedrandom\\s*\\(\\s*['\\\"]\\w+['\\\"]\\s*\\)|seedrandom\\s*\\(\\s*\\d+\\s*\\)"
+        description: "JavaScript predictable seed"
+        confidence: 0.9
+    fix_suggestion: "Use unpredictable seeds, entropy from secure sources, avoid hard-coded seeds"
+    cwe: "CWE-335"
+    owasp: "A02:2021"
+
+  # CWE-336: Same Seed in Pseudo-Random Number Generator (PRNG)
+  - id: "cwe-336-same-prng-seed"
+    name: "Same Seed in PRNG"
+    description: "Detects same seed usage in pseudo-random number generators"
+    severity: "Medium"
+    category: "cryptography"
+    languages: ["java", "python", "php", "csharp", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "Random\\s*\\(\\s*\\$\\w+\\s*\\).*Random\\s*\\(\\s*\\$\\w+\\s*\\)"
+        description: "Same seed used multiple times"
+        confidence: 0.7
+      - regex: "random\\.seed\\s*\\(\\s*\\w+\\s*\\).*random\\.seed\\s*\\(\\s*\\w+\\s*\\)"
+        description: "Python same seed reuse"
+        confidence: 0.7
+      - regex: "srand\\s*\\(\\s*\\$\\w+\\s*\\).*srand\\s*\\(\\s*\\$\\w+\\s*\\)"
+        description: "PHP same seed reuse"
+        confidence: 0.7
+      - regex: "static\\s+\\w+\\s+seed\\s*=|private\\s+\\w+\\s+seed\\s*="
+        description: "Static seed variable"
+        confidence: 0.8
+    fix_suggestion: "Use different seeds for each instance, avoid seed reuse, use secure seeding"
+    cwe: "CWE-336"
+    owasp: "A02:2021"
+
+  # CWE-337: Predictable Seed in Pseudo-Random Number Generator (PRNG)
+  - id: "cwe-337-predictable-prng-seed"
+    name: "Predictable Seed in PRNG"
+    description: "Detects predictable seeds in pseudo-random number generators"
+    severity: "Medium"
+    category: "cryptography"
+    languages: ["java", "python", "php", "csharp", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "Random\\s*\\(\\s*System\\.currentTimeMillis\\s*\\(\\s*\\)\\s*\\)|Random\\s*\\(\\s*new\\s+Date\\s*\\(\\s*\\)\\s*\\)"
+        description: "Java predictable time-based seed"
+        confidence: 0.85
+      - regex: "random\\.seed\\s*\\(\\s*time\\.time\\s*\\(\\s*\\)\\s*\\)|random\\.seed\\s*\\(\\s*datetime\\.now\\s*\\(\\s*\\)\\s*\\)"
+        description: "Python predictable time-based seed"
+        confidence: 0.85
+      - regex: "srand\\s*\\(\\s*time\\s*\\(\\s*\\)\\s*\\)|mt_srand\\s*\\(\\s*time\\s*\\(\\s*\\)\\s*\\)"
+        description: "PHP predictable time-based seed"
+        confidence: 0.85
+      - regex: "Random\\s*\\(\\s*DateTime\\.Now\\s*\\)|Random\\s*\\(\\s*Environment\\.TickCount\\s*\\)"
+        description: "C# predictable time-based seed"
+        confidence: 0.85
+      - regex: "seedrandom\\s*\\(\\s*Date\\.now\\s*\\(\\s*\\)\\s*\\)|seedrandom\\s*\\(\\s*new\\s+Date\\s*\\(\\s*\\)\\s*\\)"
+        description: "JavaScript predictable time-based seed"
+        confidence: 0.85
+    fix_suggestion: "Use unpredictable entropy sources, avoid time-based seeds, use cryptographic randomness"
+    cwe: "CWE-337"
+    owasp: "A02:2021"
+
+  # CWE-338: Use of Cryptographically Weak Pseudo-Random Number Generator (PRNG)
+  - id: "cwe-338-weak-prng"
+    name: "Use of Cryptographically Weak PRNG"
+    description: "Detects use of cryptographically weak pseudo-random number generators"
+    severity: "High"
+    category: "cryptography"
+    languages: ["java", "python", "php", "csharp", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "Random\\s*\\(\\s*\\)|new\\s+Random\\s*\\(\\s*\\)|Math\\.random\\s*\\(\\s*\\)"
+        description: "Weak PRNG for cryptographic use"
+        confidence: 0.8
+      - regex: "random\\.random\\s*\\(\\s*\\)|random\\.randint\\s*\\(\\s*\\)|random\\.choice\\s*\\(\\s*\\)"
+        description: "Python weak PRNG for cryptographic use"
+        confidence: 0.8
+      - regex: "rand\\s*\\(\\s*\\)|mt_rand\\s*\\(\\s*\\)|array_rand\\s*\\(\\s*\\)"
+        description: "PHP weak PRNG for cryptographic use"
+        confidence: 0.8
+      - regex: "Random\\.Next\\s*\\(\\s*\\)|Random\\.NextBytes\\s*\\(\\s*\\)"
+        description: "C# weak PRNG for cryptographic use"
+        confidence: 0.8
+      - regex: "Math\\.random\\s*\\(\\s*\\)|Math\\.floor\\s*\\(\\s*Math\\.random\\s*\\(\\s*\\)"
+        description: "JavaScript weak PRNG for cryptographic use"
+        confidence: 0.8
+    fix_suggestion: "Use cryptographically secure random number generators (SecureRandom, os.urandom, crypto.randomBytes)"
+    cwe: "CWE-338"
+    owasp: "A02:2021"
+
+  # CWE-539: Use of Persistent Cookies Containing Sensitive Information
+  - id: "cwe-539-persistent-sensitive-cookies"
+    name: "Persistent Cookies with Sensitive Information"
+    description: "Detects persistent cookies containing sensitive information"
+    severity: "Medium"
+    category: "cryptography"
+    languages: ["php", "java", "python", "csharp", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "setcookie\\s*\\(.*password.*\\)|setcookie\\s*\\(.*token.*\\)|setcookie\\s*\\(.*secret.*\\)"
+        description: "PHP sensitive data in cookies"
+        confidence: 0.9
+      - regex: "response\\.addCookie\\s*\\(.*password.*\\)|response\\.addCookie\\s*\\(.*token.*\\)"
+        description: "Java sensitive data in cookies"
+        confidence: 0.9
+      - regex: "set_cookie\\s*\\(.*password.*\\)|set_cookie\\s*\\(.*token.*\\)"
+        description: "Python/Flask sensitive data in cookies"
+        confidence: 0.9
+      - regex: "Response\\.Cookies\\.Add\\s*\\(.*password.*\\)|Response\\.Cookies\\.Add\\s*\\(.*token.*\\)"
+        description: "ASP.NET sensitive data in cookies"
+        confidence: 0.9
+      - regex: "cookies\\[.*password.*\\]|cookies\\[.*token.*\\]"
+        description: "Ruby sensitive data in cookies"
+        confidence: 0.85
+      - regex: "document\\.cookie\\s*=\\s*.*password.*|document\\.cookie\\s*=\\s*.*token.*"
+        description: "JavaScript sensitive data in cookies"
+        confidence: 0.9
+    fix_suggestion: "Avoid storing sensitive data in cookies, use secure session management, encrypt cookie data"
+    cwe: "CWE-539"
+    owasp: "A02:2021"

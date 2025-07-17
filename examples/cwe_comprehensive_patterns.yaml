@@ -1,0 +1,492 @@
+version: "1.0"
+name: "CWE Comprehensive Vulnerabilities Patterns"
+description: "Additional comprehensive regex patterns for CWE vulnerabilities including web application security, concurrency, input validation, and other critical weaknesses"
+author: "DeVAIC Security Team"
+license: "MIT"
+
+patterns:
+  # CWE-23: Relative Path Traversal
+  - id: "cwe-23-relative-path-traversal"
+    name: "Relative Path Traversal"
+    description: "Detects relative path traversal vulnerabilities"
+    severity: "High"
+    category: "path-traversal"
+    languages: ["java", "python", "php", "csharp", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "\\.\\.[\\/\\\\]|\\.\\.[\\/\\\\]\\.\\.[\\/\\\\]"
+        description: "Relative path traversal sequences"
+        confidence: 0.9
+      - regex: "%2e%2e[\\/\\\\]|%2e%2e%2f|%2e%2e%5c"
+        description: "URL-encoded path traversal"
+        confidence: 0.9
+      - regex: "\\.\\.\\\\|\\.\\./"
+        description: "Simple path traversal patterns"
+        confidence: 0.85
+      - regex: "file\\s*=\\s*.*\\.\\.[\\/\\\\]|path\\s*=\\s*.*\\.\\.[\\/\\\\]"
+        description: "File/path parameters with traversal"
+        confidence: 0.9
+    fix_suggestion: "Validate file paths, use whitelist of allowed paths, canonicalize paths"
+    cwe: "CWE-23"
+    owasp: "A01:2021"
+
+  # CWE-36: Absolute Path Traversal
+  - id: "cwe-36-absolute-path-traversal"
+    name: "Absolute Path Traversal"
+    description: "Detects absolute path traversal vulnerabilities"
+    severity: "High"
+    category: "path-traversal"
+    languages: ["java", "python", "php", "csharp", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "[\\/\\\\]etc[\\/\\\\]passwd|[\\/\\\\]windows[\\/\\\\]system32"
+        description: "Absolute paths to sensitive files"
+        confidence: 0.95
+      - regex: "C:\\\\Windows\\\\|C:\\\\Program Files\\\\|/bin/|/usr/bin/"
+        description: "Absolute system paths"
+        confidence: 0.9
+      - regex: "file\\s*=\\s*[\\/\\\\]|path\\s*=\\s*[\\/\\\\]"
+        description: "File/path parameters with absolute paths"
+        confidence: 0.8
+      - regex: "\\$_GET\\[.*\\].*[\\/\\\\]|\\$_POST\\[.*\\].*[\\/\\\\]"
+        description: "PHP user input with absolute paths"
+        confidence: 0.85
+    fix_suggestion: "Validate file paths, restrict access to system directories, use chroot jails"
+    cwe: "CWE-36"
+    owasp: "A01:2021"
+
+  # CWE-74: Improper Neutralization of Special Elements in Output Used by a Downstream Component
+  - id: "cwe-74-injection-general"
+    name: "General Injection"
+    description: "Detects general injection vulnerabilities"
+    severity: "High"
+    category: "injection"
+    languages: ["java", "python", "php", "csharp", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "\\$\\{.*\\}|\\#\\{.*\\}|<%=.*%>"
+        description: "Template injection patterns"
+        confidence: 0.8
+      - regex: "\\\\x[0-9a-fA-F]{2}|\\\\u[0-9a-fA-F]{4}|\\\\[0-7]{1,3}"
+        description: "Character escape sequences"
+        confidence: 0.7
+      - regex: "\\\\n|\\\\r|\\\\t|\\\\0"
+        description: "Control character sequences"
+        confidence: 0.6
+      - regex: "\\+.*SELECT|\\+.*INSERT|\\+.*UPDATE|\\+.*DELETE"
+        description: "SQL injection patterns"
+        confidence: 0.85
+    fix_suggestion: "Use parameterized queries, validate input, implement proper encoding"
+    cwe: "CWE-74"
+    owasp: "A03:2021"
+
+  # CWE-113: Improper Neutralization of CRLF Sequences in HTTP Headers
+  - id: "cwe-113-http-header-injection"
+    name: "HTTP Header Injection"
+    description: "Detects HTTP header injection vulnerabilities"
+    severity: "Medium"
+    category: "injection"
+    languages: ["java", "python", "php", "csharp", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "\\\\r\\\\n|\\\\n\\\\r|%0d%0a|%0a%0d|%0D%0A|%0A%0D"
+        description: "CRLF injection sequences"
+        confidence: 0.95
+      - regex: "Content-Type\\s*:\\s*.*\\\\r\\\\n|Location\\s*:\\s*.*\\\\r\\\\n"
+        description: "Header injection in response headers"
+        confidence: 0.9
+      - regex: "response\\.setHeader\\s*\\(.*\\\\r\\\\n|response\\.addHeader\\s*\\(.*\\\\r\\\\n"
+        description: "Java response header injection"
+        confidence: 0.9
+      - regex: "header\\s*\\(.*\\\\r\\\\n|setcookie\\s*\\(.*\\\\r\\\\n"
+        description: "PHP header injection"
+        confidence: 0.9
+    fix_suggestion: "Validate header values, strip CRLF characters, use safe header APIs"
+    cwe: "CWE-113"
+    owasp: "A03:2021"
+
+  # CWE-134: Use of Externally-Controlled Format String
+  - id: "cwe-134-format-string"
+    name: "Format String Vulnerability"
+    description: "Detects format string vulnerabilities"
+    severity: "High"
+    category: "injection"
+    languages: ["c", "cpp", "java", "python", "php"]
+    patterns:
+      - regex: "printf\\s*\\(\\s*\\$\\w+\\s*\\)|sprintf\\s*\\(\\s*\\w+\\s*,\\s*\\$\\w+\\s*\\)"
+        description: "C/C++ format string with user input"
+        confidence: 0.95
+      - regex: "System\\.out\\.printf\\s*\\(\\s*\\w+\\s*\\)|String\\.format\\s*\\(\\s*\\w+\\s*\\)"
+        description: "Java format string with user input"
+        confidence: 0.85
+      - regex: "\\%s|\\%d|\\%x|\\%n"
+        description: "Format specifiers in user input"
+        confidence: 0.7
+      - regex: "logging\\.(info|error|debug)\\s*\\(\\s*\\w+\\s*\\)|print\\s*\\(\\s*\\w+\\s*\\)"
+        description: "Python format string with user input"
+        confidence: 0.8
+    fix_suggestion: "Use parameterized formatting, validate format strings, avoid user-controlled format strings"
+    cwe: "CWE-134"
+    owasp: "A03:2021"
+
+  # CWE-184: Incomplete List of Disallowed Inputs
+  - id: "cwe-184-incomplete-blacklist"
+    name: "Incomplete List of Disallowed Inputs"
+    description: "Detects incomplete blacklist implementations"
+    severity: "Medium"
+    category: "validation"
+    languages: ["java", "python", "php", "csharp", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "str_replace\\s*\\(\\s*['\\\"]\\<script\\>['\\\"]\\s*,\\s*['\\\"]['\\\"]\\s*,\\s*\\$\\w+\\s*\\)"
+        description: "PHP incomplete XSS filtering"
+        confidence: 0.8
+      - regex: "filter\\s*\\(\\s*lambda\\s+\\w+\\s*:\\s*\\w+\\s*!=\\s*['\\\"]\\<script\\>['\\\"]\\s*\\)"
+        description: "Python incomplete filtering"
+        confidence: 0.7
+      - regex: "replaceAll\\s*\\(\\s*['\\\"]\\<script\\>['\\\"]\\s*,\\s*['\\\"]['\\\"]\\s*\\)"
+        description: "Java incomplete string replacement"
+        confidence: 0.8
+      - regex: "\\w+\\.replace\\s*\\(\\s*['\\\"]\\<script\\>['\\\"]\\s*,\\s*['\\\"]['\\\"]\\s*\\)"
+        description: "JavaScript incomplete string replacement"
+        confidence: 0.8
+    fix_suggestion: "Use whitelist validation, implement comprehensive filtering, avoid blacklist approaches"
+    cwe: "CWE-184"
+    owasp: "A03:2021"
+
+  # CWE-203: Observable Discrepancy
+  - id: "cwe-203-timing-attack"
+    name: "Timing Attack"
+    description: "Detects potential timing attack vulnerabilities"
+    severity: "Medium"
+    category: "information-disclosure"
+    languages: ["java", "python", "php", "csharp", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "if\\s*\\(\\s*username\\s*==\\s*['\\\"]admin['\\\"]\\s*\\)\\s*\\{[^}]*if\\s*\\(\\s*password\\s*==\\s*['\\\"][^'\\\"]*['\\\"]\\s*\\)"
+        description: "Sequential credential validation"
+        confidence: 0.7
+      - regex: "strcmp\\s*\\(\\s*password\\s*,\\s*expected\\s*\\)|memcmp\\s*\\(\\s*password\\s*,\\s*expected\\s*\\)"
+        description: "String comparison susceptible to timing attacks"
+        confidence: 0.8
+      - regex: "password\\s*==\\s*stored_password|pwd\\s*==\\s*stored_pwd"
+        description: "Direct password comparison"
+        confidence: 0.7
+      - regex: "\\w+\\.equals\\s*\\(\\s*password\\s*\\)"
+        description: "Java string comparison"
+        confidence: 0.7
+    fix_suggestion: "Use constant-time comparison functions, implement proper timing-safe validation"
+    cwe: "CWE-203"
+    owasp: "A04:2021"
+
+  # CWE-209: Information Exposure Through Error Messages
+  - id: "cwe-209-error-information-exposure"
+    name: "Information Exposure Through Error Messages"
+    description: "Detects information exposure through error messages"
+    severity: "Medium"
+    category: "information-disclosure"
+    languages: ["java", "python", "php", "csharp", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "catch\\s*\\(\\s*Exception\\s+\\w+\\s*\\)\\s*\\{[^}]*printStackTrace\\s*\\(\\s*\\)"
+        description: "Java exception stack trace exposure"
+        confidence: 0.9
+      - regex: "except\\s+\\w+\\s+as\\s+\\w+\\s*:[^:]*print\\s*\\(\\s*\\w+\\s*\\)"
+        description: "Python exception printing"
+        confidence: 0.8
+      - regex: "\\$e->getMessage\\s*\\(\\s*\\)|\\$e->getTraceAsString\\s*\\(\\s*\\)"
+        description: "PHP exception details exposure"
+        confidence: 0.9
+      - regex: "catch\\s*\\(\\s*Exception\\s+\\w+\\s*\\)\\s*\\{[^}]*Response\\.Write\\s*\\(\\s*\\w+\\s*\\)"
+        description: "ASP.NET exception details exposure"
+        confidence: 0.9
+      - regex: "console\\.error\\s*\\(\\s*error\\s*\\)|console\\.log\\s*\\(\\s*error\\s*\\)"
+        description: "JavaScript error logging"
+        confidence: 0.7
+    fix_suggestion: "Use generic error messages, log detailed errors securely, implement proper error handling"
+    cwe: "CWE-209"
+    owasp: "A09:2021"
+
+  # CWE-250: Execution with Unnecessary Privileges
+  - id: "cwe-250-unnecessary-privileges"
+    name: "Execution with Unnecessary Privileges"
+    description: "Detects execution with unnecessary privileges"
+    severity: "Medium"
+    category: "privilege-escalation"
+    languages: ["java", "python", "php", "csharp", "ruby", "c", "cpp"]
+    patterns:
+      - regex: "setuid\\s*\\(\\s*0\\s*\\)|setgid\\s*\\(\\s*0\\s*\\)|seteuid\\s*\\(\\s*0\\s*\\)"
+        description: "Setting root privileges"
+        confidence: 0.9
+      - regex: "chmod\\s*\\(.*,\\s*0777\\s*\\)|chmod\\s*\\(.*,\\s*0666\\s*\\)"
+        description: "Overly permissive file permissions"
+        confidence: 0.8
+      - regex: "runas\\s+/user:administrator|sudo\\s+.*\\$"
+        description: "Running as administrator/root"
+        confidence: 0.85
+      - regex: "Process\\.Start\\s*\\(.*\\)"
+        description: "Process execution with shell"
+        confidence: 0.6
+    fix_suggestion: "Follow principle of least privilege, drop privileges after initialization, use appropriate user contexts"
+    cwe: "CWE-250"
+    owasp: "A01:2021"
+
+  # CWE-284: Improper Access Control
+  - id: "cwe-284-improper-access-control"
+    name: "Improper Access Control"
+    description: "Detects improper access control implementations"
+    severity: "High"
+    category: "authorization"
+    languages: ["java", "python", "php", "csharp", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "if\\s*\\(\\s*\\$_SESSION\\[.*user_id.*\\]\\s*==\\s*\\$_GET\\[.*user_id.*\\]\\s*\\)"
+        description: "PHP user ID comparison from URL"
+        confidence: 0.9
+      - regex: "if\\s*\\(\\s*request\\.user\\.id\\s*==\\s*int\\s*\\(\\s*request\\.args\\.get\\s*\\(\\s*['\\\"]user_id['\\\"]\\s*\\)\\s*\\)\\s*\\)"
+        description: "Python user ID comparison from request"
+        confidence: 0.9
+      - regex: "if\\s*\\(\\s*user\\.getId\\s*\\(\\s*\\)\\.equals\\s*\\(\\s*request\\.getParameter\\s*\\(\\s*['\\\"]user_id['\\\"]\\s*\\)\\s*\\)\\s*\\)"
+        description: "Java user ID comparison from parameter"
+        confidence: 0.9
+      - regex: "if\\s*\\(\\s*User\\.Identity\\.Name\\s*==\\s*Request\\.QueryString\\[.*user.*\\]\\s*\\)"
+        description: "ASP.NET user comparison from query string"
+        confidence: 0.9
+      - regex: "if\\s*\\(\\s*req\\.user\\.id\\s*==\\s*req\\.params\\.user_id\\s*\\)"
+        description: "Express.js user ID comparison from URL"
+        confidence: 0.9
+    fix_suggestion: "Implement proper authorization checks, validate user ownership, use server-side access controls"
+    cwe: "CWE-284"
+    owasp: "A01:2021"
+
+  # CWE-311: Missing Encryption of Sensitive Data
+  - id: "cwe-311-missing-encryption"
+    name: "Missing Encryption of Sensitive Data"
+    description: "Detects missing encryption of sensitive data"
+    severity: "High"
+    category: "cryptography"
+    languages: ["java", "python", "php", "csharp", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "password\\s*=\\s*['\\\"][^'\\\"]*['\\\"]"
+        description: "Unencrypted password storage"
+        confidence: 0.9
+      - regex: "credit_card\\s*=\\s*['\\\"][^'\\\"]*['\\\"]"
+        description: "Unencrypted credit card data"
+        confidence: 0.95
+      - regex: "ssn\\s*=\\s*['\\\"][^'\\\"]*['\\\"]"
+        description: "Unencrypted SSN data"
+        confidence: 0.95
+      - regex: "api_key\\s*=\\s*['\\\"][^'\\\"]*['\\\"]"
+        description: "Unencrypted API key"
+        confidence: 0.9
+      - regex: "token\\s*=\\s*['\\\"][^'\\\"]*['\\\"]"
+        description: "Unencrypted token"
+        confidence: 0.85
+    fix_suggestion: "Encrypt sensitive data at rest and in transit, use strong encryption algorithms"
+    cwe: "CWE-311"
+    owasp: "A02:2021"
+
+  # CWE-319: Cleartext Transmission of Sensitive Information
+  - id: "cwe-319-cleartext-transmission"
+    name: "Cleartext Transmission of Sensitive Information"
+    description: "Detects cleartext transmission of sensitive information"
+    severity: "High"
+    category: "cryptography"
+    languages: ["java", "python", "php", "csharp", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "http://[^/]*password|http://[^/]*login|http://[^/]*api"
+        description: "HTTP URLs for sensitive endpoints"
+        confidence: 0.9
+      - regex: "smtp://[^/]*|ftp://[^/]*|telnet://[^/]*"
+        description: "Unencrypted protocol usage"
+        confidence: 0.9
+      - regex: "URLConnection\\s*\\(\\s*['\\\"]http://[^'\\\"]*['\\\"]\\s*\\)"
+        description: "Java HTTP connection for sensitive data"
+        confidence: 0.8
+      - regex: "requests\\.get\\s*\\(\\s*['\\\"]http://[^'\\\"]*['\\\"]\\s*\\).*password"
+        description: "Python HTTP request with password"
+        confidence: 0.9
+      - regex: "curl\\s+http://[^\\s]*.*password|wget\\s+http://[^\\s]*.*password"
+        description: "HTTP requests with credentials"
+        confidence: 0.9
+    fix_suggestion: "Use HTTPS for all sensitive communications, implement proper TLS configuration"
+    cwe: "CWE-319"
+    owasp: "A02:2021"
+
+  # CWE-362: Concurrent Execution using Shared Resource with Improper Synchronization
+  - id: "cwe-362-race-condition"
+    name: "Race Condition"
+    description: "Detects race condition vulnerabilities"
+    severity: "Medium"
+    category: "concurrency"
+    languages: ["java", "python", "csharp", "ruby", "c", "cpp"]
+    patterns:
+      - regex: "static\\s+\\w+\\s+\\w+"
+        description: "Static variable without synchronization"
+        confidence: 0.7
+      - regex: "global\\s+\\w+"
+        description: "Global variable without synchronization"
+        confidence: 0.7
+      - regex: "\\w+\\s*=\\s*\\w+\\s*\\+\\s*1"
+        description: "Increment operation without synchronization"
+        confidence: 0.6
+      - regex: "Thread\\s*\\(\\s*\\)\\s*\\{[^}]*\\w+\\s*\\+\\+[^}]*\\}"
+        description: "Thread with unsynchronized increment"
+        confidence: 0.8
+    fix_suggestion: "Use proper synchronization mechanisms, atomic operations, thread-safe data structures"
+    cwe: "CWE-362"
+    owasp: "A04:2021"
+
+  # CWE-377: Insecure Temporary File
+  - id: "cwe-377-insecure-temp-file"
+    name: "Insecure Temporary File"
+    description: "Detects insecure temporary file usage"
+    severity: "Medium"
+    category: "file-system"
+    languages: ["java", "python", "php", "csharp", "ruby", "c", "cpp"]
+    patterns:
+      - regex: "tmpfile\\s*\\(\\s*\\)|mktemp\\s*\\(\\s*\\)|tempnam\\s*\\(\\s*\\)"
+        description: "Insecure temporary file functions"
+        confidence: 0.9
+      - regex: "File\\.createTempFile\\s*\\(\\s*['\\\"][^'\\\"]*['\\\"]\\s*,\\s*['\\\"][^'\\\"]*['\\\"]\\s*\\)"
+        description: "Java temporary file creation"
+        confidence: 0.7
+      - regex: "tempfile\\.mktemp\\s*\\(\\s*\\)|tempfile\\.NamedTemporaryFile\\s*\\(\\s*\\)"
+        description: "Python temporary file creation"
+        confidence: 0.7
+      - regex: "Path\\.GetTempFileName\\s*\\(\\s*\\)|Path\\.GetTempPath\\s*\\(\\s*\\)"
+        description: "C# temporary file creation"
+        confidence: 0.7
+      - regex: "Tempfile\\.new\\s*\\(\\s*\\)|Dir\\.tmpdir\\s*\\(\\s*\\)"
+        description: "Ruby temporary file creation"
+        confidence: 0.7
+    fix_suggestion: "Use secure temporary file creation, set proper permissions, clean up temporary files"
+    cwe: "CWE-377"
+    owasp: "A06:2021"
+
+  # CWE-426: Untrusted Search Path
+  - id: "cwe-426-untrusted-search-path"
+    name: "Untrusted Search Path"
+    description: "Detects untrusted search path vulnerabilities"
+    severity: "Medium"
+    category: "file-system"
+    languages: ["java", "python", "php", "csharp", "ruby", "c", "cpp"]
+    patterns:
+      - regex: "System\\.loadLibrary\\s*\\(\\s*['\\\"][^'\\\"]*['\\\"]\\s*\\)|System\\.load\\s*\\(\\s*['\\\"][^'\\\"]*['\\\"]\\s*\\)"
+        description: "Java dynamic library loading"
+        confidence: 0.8
+      - regex: "ctypes\\.CDLL\\s*\\(\\s*['\\\"][^'\\\"]*['\\\"]\\s*\\)|ctypes\\.windll\\s*\\(\\s*['\\\"][^'\\\"]*['\\\"]\\s*\\)"
+        description: "Python dynamic library loading"
+        confidence: 0.8
+      - regex: "LoadLibrary\\s*\\(\\s*['\\\"][^'\\\"]*['\\\"]\\s*\\)|LoadLibraryEx\\s*\\(\\s*['\\\"][^'\\\"]*['\\\"]\\s*\\)"
+        description: "Windows dynamic library loading"
+        confidence: 0.8
+      - regex: "dlopen\\s*\\(\\s*['\\\"][^'\\\"]*['\\\"]\\s*\\)|dlsym\\s*\\(\\s*['\\\"][^'\\\"]*['\\\"]\\s*\\)"
+        description: "Unix dynamic library loading"
+        confidence: 0.8
+      - regex: "require\\s*\\(\\s*['\\\"][^'\\\"]*['\\\"]\\s*\\)|load\\s*\\(\\s*['\\\"][^'\\\"]*['\\\"]\\s*\\)"
+        description: "Ruby dynamic loading"
+        confidence: 0.7
+    fix_suggestion: "Use absolute paths for libraries, validate library paths, implement proper access controls"
+    cwe: "CWE-426"
+    owasp: "A06:2021"
+
+  # CWE-427: Uncontrolled Search Path Element
+  - id: "cwe-427-uncontrolled-search-path"
+    name: "Uncontrolled Search Path Element"
+    description: "Detects uncontrolled search path element vulnerabilities"
+    severity: "Medium"
+    category: "file-system"
+    languages: ["java", "python", "php", "csharp", "ruby", "c", "cpp"]
+    patterns:
+      - regex: "PATH\\s*=\\s*\\$PATH\\s*:\\s*\\$\\w+|PATH\\s*=\\s*\\$\\w+\\s*:\\s*\\$PATH"
+        description: "PATH manipulation with user input"
+        confidence: 0.8
+      - regex: "os\\.environ\\[.*PATH.*\\]\\s*=\\s*.*\\+|sys\\.path\\.insert\\s*\\(\\s*0\\s*,\\s*\\w+\\s*\\)"
+        description: "Python path manipulation"
+        confidence: 0.8
+      - regex: "System\\.setProperty\\s*\\(\\s*['\\\"]java\\.library\\.path['\\\"]\\s*,\\s*\\w+\\s*\\)"
+        description: "Java library path manipulation"
+        confidence: 0.8
+      - regex: "Environment\\.SetEnvironmentVariable\\s*\\(\\s*['\\\"]PATH['\\\"]\\s*,\\s*\\w+\\s*\\)"
+        description: "C# environment variable manipulation"
+        confidence: 0.8
+      - regex: "ENV\\[.*PATH.*\\]\\s*=\\s*.*\\+|\\$LOAD_PATH\\s*<<\\s*\\w+"
+        description: "Ruby path manipulation"
+        confidence: 0.8
+    fix_suggestion: "Use absolute paths, validate path elements, avoid user-controlled search paths"
+    cwe: "CWE-427"
+    owasp: "A06:2021"
+
+  # CWE-601: URL Redirection to Untrusted Site
+  - id: "cwe-601-open-redirect"
+    name: "Open Redirect"
+    description: "Detects open redirect vulnerabilities"
+    severity: "Medium"
+    category: "redirect"
+    languages: ["java", "python", "php", "csharp", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "header\\s*\\(\\s*['\\\"]Location:\\s*['\\\"]\\s*\\.\\s*\\$_GET\\[.*\\]\\s*\\)|header\\s*\\(\\s*['\\\"]Location:\\s*['\\\"]\\s*\\.\\s*\\$_POST\\[.*\\]\\s*\\)"
+        description: "PHP redirect with user input"
+        confidence: 0.9
+      - regex: "redirect\\s*\\(\\s*request\\.args\\.get\\s*\\(\\s*['\\\"]url['\\\"]\\s*\\)\\s*\\)|redirect\\s*\\(\\s*request\\.form\\.get\\s*\\(\\s*['\\\"]url['\\\"]\\s*\\)\\s*\\)"
+        description: "Python redirect with user input"
+        confidence: 0.9
+      - regex: "response\\.sendRedirect\\s*\\(\\s*request\\.getParameter\\s*\\(\\s*['\\\"]url['\\\"]\\s*\\)\\s*\\)"
+        description: "Java redirect with user input"
+        confidence: 0.9
+      - regex: "Response\\.Redirect\\s*\\(\\s*Request\\.QueryString\\[.*url.*\\]\\s*\\)"
+        description: "ASP.NET redirect with user input"
+        confidence: 0.9
+      - regex: "res\\.redirect\\s*\\(\\s*req\\.query\\.url\\s*\\)|res\\.redirect\\s*\\(\\s*req\\.body\\.url\\s*\\)"
+        description: "Express.js redirect with user input"
+        confidence: 0.9
+    fix_suggestion: "Validate redirect URLs, use whitelist of allowed domains, implement proper redirect validation"
+    cwe: "CWE-601"
+    owasp: "A01:2021"
+
+  # CWE-918: Server-Side Request Forgery (SSRF)
+  - id: "cwe-918-ssrf"
+    name: "Server-Side Request Forgery (SSRF)"
+    description: "Detects server-side request forgery vulnerabilities"
+    severity: "High"
+    category: "ssrf"
+    languages: ["java", "python", "php", "csharp", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "file_get_contents\\s*\\(\\s*\\$_GET\\[.*url.*\\]\\s*\\)|file_get_contents\\s*\\(\\s*\\$_POST\\[.*url.*\\]\\s*\\)"
+        description: "PHP file_get_contents with user URL"
+        confidence: 0.95
+      - regex: "requests\\.(get|post)\\s*\\(\\s*request\\.(args|form)\\.get\\s*\\(\\s*['\\\"]url['\\\"]\\s*\\)\\s*\\)"
+        description: "Python requests with user URL"
+        confidence: 0.95
+      - regex: "URL\\s*\\(\\s*request\\.getParameter\\s*\\(\\s*['\\\"]url['\\\"]\\s*\\)\\s*\\)\\.openConnection\\s*\\(\\s*\\)"
+        description: "Java URL connection with user input"
+        confidence: 0.9
+      - regex: "WebRequest\\.Create\\s*\\(\\s*Request\\.QueryString\\[.*url.*\\]\\s*\\)"
+        description: "ASP.NET web request with user input"
+        confidence: 0.9
+      - regex: "http\\.(get|post)\\s*\\(\\s*req\\.(query|body)\\.url\\s*\\)"
+        description: "Node.js HTTP request with user URL"
+        confidence: 0.9
+    fix_suggestion: "Validate URLs, use whitelist of allowed hosts, implement proper URL parsing and validation"
+    cwe: "CWE-918"
+    owasp: "A10:2021"
+
+  # CWE-942: Permissive Cross-domain Policy with Untrusted Domains
+  - id: "cwe-942-permissive-cors"
+    name: "Permissive Cross-domain Policy"
+    description: "Detects permissive cross-domain policy vulnerabilities"
+    severity: "Medium"
+    category: "cors"
+    languages: ["java", "python", "php", "csharp", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "Access-Control-Allow-Origin\\s*:\\s*\\*|Access-Control-Allow-Origin\\s*:\\s*null"
+        description: "Permissive CORS policy"
+        confidence: 0.9
+      - regex: "crossDomain\\s*:\\s*true|crossorigin\\s*=\\s*['\\\"]\\*['\\\"]"
+        description: "Permissive cross-domain settings"
+        confidence: 0.8
+      - regex: "header\\s*\\(\\s*['\\\"]Access-Control-Allow-Origin:\\s*\\*['\\\"]\\s*\\)"
+        description: "PHP permissive CORS header"
+        confidence: 0.9
+      - regex: "response\\.setHeader\\s*\\(\\s*['\\\"]Access-Control-Allow-Origin['\\\"]\\s*,\\s*['\\\"]\\*['\\\"]\\s*\\)"
+        description: "Permissive CORS header setting"
+        confidence: 0.9
+      - regex: "cors\\s*\\(\\s*\\{[^}]*origin\\s*:\\s*true[^}]*\\}\\s*\\)"
+        description: "Express.js permissive CORS middleware"
+        confidence: 0.8
+    fix_suggestion: "Restrict CORS to specific trusted domains, avoid wildcard origins, implement proper origin validation"
+    cwe: "CWE-942"
+    owasp: "A05:2021"

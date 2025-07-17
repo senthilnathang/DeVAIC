@@ -1,0 +1,474 @@
+version: "1.0"
+name: "CWE Injection Vulnerabilities Patterns"
+description: "Comprehensive regex patterns for injection vulnerabilities (CWE-77, CWE-78, CWE-79, CWE-89, CWE-90, CWE-91, CWE-93, CWE-94, CWE-95, CWE-96, CWE-97, CWE-98, CWE-99, CWE-116, CWE-117, CWE-643, CWE-644)"
+author: "DeVAIC Security Team"
+license: "MIT"
+
+patterns:
+  # CWE-77: Improper Neutralization of Special Elements used in a Command ('Command Injection')
+  - id: "cwe-77-command-injection"
+    name: "Command Injection"
+    description: "Detects command injection vulnerabilities"
+    severity: "Critical"
+    category: "injection"
+    languages: ["java", "python", "php", "csharp", "ruby", "go", "javascript", "typescript"]
+    patterns:
+      - regex: "system\\s*\\(\\s*['\\\"].*\\$\\{|system\\s*\\(\\s*['\\\"].*\\+|system\\s*\\(\\s*\\$"
+        description: "System command with variable interpolation"
+        confidence: 0.95
+      - regex: "exec\\s*\\(\\s*['\\\"].*\\$\\{|exec\\s*\\(\\s*['\\\"].*\\+|exec\\s*\\(\\s*\\$"
+        description: "Exec command with variable interpolation"
+        confidence: 0.95
+      - regex: "shell_exec\\s*\\(\\s*['\\\"].*\\$|passthru\\s*\\(\\s*['\\\"].*\\$"
+        description: "PHP shell execution with variables"
+        confidence: 0.95
+      - regex: "popen\\s*\\(\\s*['\\\"].*\\+|popen\\s*\\(\\s*\\$"
+        description: "Popen with dynamic command"
+        confidence: 0.9
+      - regex: "\\`[^\\`]*\\$\\{[^}]*\\}[^\\`]*\\`|\\`[^\\`]*\\+[^\\`]*\\`"
+        description: "Backtick command execution with variables"
+        confidence: 0.9
+    fix_suggestion: "Use parameterized commands, validate input, avoid shell metacharacters"
+    cwe: "CWE-77"
+    owasp: "A03:2021"
+
+  # CWE-78: Improper Neutralization of Special Elements used in an OS Command ('OS Command Injection')
+  - id: "cwe-78-os-command-injection"
+    name: "OS Command Injection"
+    description: "Detects OS command injection vulnerabilities"
+    severity: "Critical"
+    category: "injection"
+    languages: ["java", "python", "php", "csharp", "ruby", "go", "javascript", "typescript"]
+    patterns:
+      - regex: "Runtime\\.getRuntime\\(\\)\\.exec\\s*\\(\\s*['\\\"].*\\+|ProcessBuilder\\s*\\(\\s*['\\\"].*\\+"
+        description: "Java runtime command execution with concatenation"
+        confidence: 0.95
+      - regex: "subprocess\\.(run|call|Popen)\\s*\\(\\s*['\\\"].*\\+|os\\.system\\s*\\(\\s*['\\\"].*\\+"
+        description: "Python subprocess with concatenation"
+        confidence: 0.95
+      - regex: "Process\\.Start\\s*\\(\\s*['\\\"].*\\+|cmd\\.exe.*\\+|powershell.*\\+"
+        description: "C# process execution with concatenation"
+        confidence: 0.9
+      - regex: "child_process\\.(exec|spawn)\\s*\\(\\s*['\\\"].*\\+|execSync\\s*\\(\\s*['\\\"].*\\+"
+        description: "Node.js child process with concatenation"
+        confidence: 0.9
+      - regex: "\\|\\s*['\\\"].*\\$|;\\s*['\\\"].*\\$|&&\\s*['\\\"].*\\$"
+        description: "Command chaining with variables"
+        confidence: 0.85
+    fix_suggestion: "Use command arrays instead of strings, validate input, sanitize shell metacharacters"
+    cwe: "CWE-78"
+    owasp: "A03:2021"
+
+  # CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')
+  - id: "cwe-79-xss-comprehensive"
+    name: "Cross-site Scripting (XSS) Comprehensive"
+    description: "Comprehensive XSS vulnerability detection"
+    severity: "High"
+    category: "injection"
+    languages: ["javascript", "typescript", "php", "python", "java", "csharp", "ruby"]
+    patterns:
+      - regex: "innerHTML\\s*=\\s*['\\\"].*\\+|outerHTML\\s*=\\s*['\\\"].*\\+"
+        description: "DOM innerHTML/outerHTML with concatenation"
+        confidence: 0.9
+      - regex: "document\\.write\\s*\\(.*\\+|document\\.writeln\\s*\\(.*\\+"
+        description: "Document write with concatenation"
+        confidence: 0.95
+      - regex: "eval\\s*\\(.*\\+|setTimeout\\s*\\(.*\\+|setInterval\\s*\\(.*\\+"
+        description: "JavaScript eval/setTimeout with concatenation"
+        confidence: 0.95
+      - regex: "\\$\\(.*\\)\\.html\\s*\\(.*\\+|\\$\\(.*\\)\\.append\\s*\\(.*\\+"
+        description: "jQuery DOM manipulation with concatenation"
+        confidence: 0.9
+      - regex: "echo\\s+['\\\"].*\\$_GET|echo\\s+['\\\"].*\\$_POST|print\\s+['\\\"].*\\$_REQUEST"
+        description: "PHP direct output of user input"
+        confidence: 0.95
+      - regex: "render_template_string\\s*\\(.*\\+|Markup\\s*\\(.*\\+"
+        description: "Flask template rendering with concatenation"
+        confidence: 0.9
+      - regex: "response\\.write\\s*\\(.*\\+|HttpResponse\\s*\\(.*\\+"
+        description: "Direct response output with concatenation"
+        confidence: 0.9
+    fix_suggestion: "Use output encoding, Content Security Policy, safe DOM manipulation methods"
+    cwe: "CWE-79"
+    owasp: "A03:2021"
+
+  # CWE-89: Improper Neutralization of Special Elements used in an SQL Command ('SQL Injection')
+  - id: "cwe-89-sql-injection-comprehensive"
+    name: "SQL Injection Comprehensive"
+    description: "Comprehensive SQL injection vulnerability detection"
+    severity: "Critical"
+    category: "injection"
+    languages: ["java", "python", "php", "csharp", "ruby", "go", "javascript", "typescript"]
+    patterns:
+      - regex: "SELECT\\s+[^;]*\\+.*FROM|INSERT\\s+[^;]*\\+.*INTO|UPDATE\\s+[^;]*\\+.*SET|DELETE\\s+[^;]*\\+.*FROM"
+        description: "SQL query with string concatenation"
+        confidence: 0.95
+      - regex: "WHERE\\s+[^;]*\\+|ORDER\\s+BY\\s+[^;]*\\+|GROUP\\s+BY\\s+[^;]*\\+"
+        description: "SQL clauses with string concatenation"
+        confidence: 0.9
+      - regex: "Statement\\.executeQuery\\s*\\(\\s*['\\\"].*\\+|PreparedStatement"
+        description: "Java SQL execution with concatenation"
+        confidence: 0.9
+      - regex: "cursor\\.execute\\s*\\(\\s*['\\\"].*\\+|cursor\\.executemany\\s*\\(\\s*['\\\"].*\\+"
+        description: "Python database cursor with concatenation"
+        confidence: 0.95
+      - regex: "mysqli_query\\s*\\(\\s*\\$\\w+\\s*,\\s*['\\\"].*\\+|mysql_query\\s*\\(\\s*['\\\"].*\\+"
+        description: "PHP MySQL query with concatenation"
+        confidence: 0.95
+      - regex: "SqlCommand\\s*\\(\\s*['\\\"].*\\+|ExecuteScalar\\s*\\(\\s*['\\\"].*\\+"
+        description: "C# SQL command with concatenation"
+        confidence: 0.9
+      - regex: "\\$wpdb->query\\s*\\(\\s*['\\\"].*\\+|\\$wpdb->get_results\\s*\\(\\s*['\\\"].*\\+"
+        description: "WordPress database query with concatenation"
+        confidence: 0.9
+    fix_suggestion: "Use parameterized queries, prepared statements, ORM frameworks"
+    cwe: "CWE-89"
+    owasp: "A03:2021"
+
+  # CWE-90: Improper Neutralization of Special Elements used in an LDAP Query ('LDAP Injection')
+  - id: "cwe-90-ldap-injection"
+    name: "LDAP Injection"
+    description: "Detects LDAP injection vulnerabilities"
+    severity: "High"
+    category: "injection"
+    languages: ["java", "python", "php", "csharp", "ruby"]
+    patterns:
+      - regex: "\\(\\s*['\\\"].*\\+.*['\\\"]\\s*\\)|\\(\\s*\\$\\w+\\s*\\)"
+        description: "LDAP filter with concatenation"
+        confidence: 0.8
+      - regex: "DirContext\\.search\\s*\\(.*\\+|InitialDirContext\\s*\\(.*\\+"
+        description: "Java LDAP search with concatenation"
+        confidence: 0.9
+      - regex: "ldap_search\\s*\\(.*\\+|ldap_list\\s*\\(.*\\+"
+        description: "PHP LDAP search with concatenation"
+        confidence: 0.9
+      - regex: "DirectorySearcher\\s*\\(.*\\+|SearchScope\\s*\\(.*\\+"
+        description: "C# LDAP search with concatenation"
+        confidence: 0.9
+      - regex: "cn=.*\\+|ou=.*\\+|dc=.*\\+"
+        description: "LDAP DN construction with concatenation"
+        confidence: 0.85
+    fix_suggestion: "Use parameterized LDAP queries, validate input, escape special characters"
+    cwe: "CWE-90"
+    owasp: "A03:2021"
+
+  # CWE-91: XML Injection (aka Blind XPath Injection)
+  - id: "cwe-91-xml-injection"
+    name: "XML Injection"
+    description: "Detects XML injection vulnerabilities"
+    severity: "High"
+    category: "injection"
+    languages: ["java", "python", "php", "csharp", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "\\<\\s*['\\\"].*\\+.*['\\\"]\\s*\\>|\\<\\s*\\$\\w+\\s*\\>"
+        description: "XML tag with concatenated content"
+        confidence: 0.8
+      - regex: "XPath\\.compile\\s*\\(\\s*['\\\"].*\\+|XPath\\.evaluate\\s*\\(\\s*['\\\"].*\\+"
+        description: "XPath with concatenation"
+        confidence: 0.9
+      - regex: "DocumentBuilder\\.parse\\s*\\(.*\\+|SAXParser\\.parse\\s*\\(.*\\+"
+        description: "XML parsing with concatenated input"
+        confidence: 0.85
+      - regex: "\\$xml\\s*=\\s*['\\\"].*\\+|simplexml_load_string\\s*\\(.*\\+"
+        description: "PHP XML processing with concatenation"
+        confidence: 0.9
+      - regex: "XmlDocument\\.LoadXml\\s*\\(.*\\+|XDocument\\.Parse\\s*\\(.*\\+"
+        description: "C# XML processing with concatenation"
+        confidence: 0.9
+    fix_suggestion: "Use XML schema validation, parameterized XPath, safe XML parsing"
+    cwe: "CWE-91"
+    owasp: "A03:2021"
+
+  # CWE-93: Improper Neutralization of CRLF Sequences ('CRLF Injection')
+  - id: "cwe-93-crlf-injection"
+    name: "CRLF Injection"
+    description: "Detects CRLF injection vulnerabilities"
+    severity: "Medium"
+    category: "injection"
+    languages: ["java", "python", "php", "csharp", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "\\\\r\\\\n|\\\\n\\\\r|%0d%0a|%0a%0d"
+        description: "CRLF sequence injection"
+        confidence: 0.9
+      - regex: "response\\.addHeader\\s*\\(.*\\+|response\\.setHeader\\s*\\(.*\\+"
+        description: "HTTP header with concatenation"
+        confidence: 0.8
+      - regex: "header\\s*\\(\\s*['\\\"].*\\+|setcookie\\s*\\(.*\\+"
+        description: "PHP header/cookie with concatenation"
+        confidence: 0.9
+      - regex: "HttpServletResponse\\.addHeader\\s*\\(.*\\+|HttpServletResponse\\.setHeader\\s*\\(.*\\+"
+        description: "Java servlet header with concatenation"
+        confidence: 0.9
+      - regex: "res\\.set\\s*\\(.*\\+|res\\.header\\s*\\(.*\\+"
+        description: "Express.js header with concatenation"
+        confidence: 0.85
+    fix_suggestion: "Validate input, strip CRLF characters, use safe header manipulation"
+    cwe: "CWE-93"
+    owasp: "A03:2021"
+
+  # CWE-94: Improper Control of Generation of Code ('Code Injection')
+  - id: "cwe-94-code-injection-comprehensive"
+    name: "Code Injection Comprehensive"
+    description: "Comprehensive code injection vulnerability detection"
+    severity: "Critical"
+    category: "injection"
+    languages: ["javascript", "typescript", "python", "php", "ruby", "java"]
+    patterns:
+      - regex: "eval\\s*\\(.*\\+|Function\\s*\\(.*\\+|new\\s+Function\\s*\\(.*\\+"
+        description: "JavaScript dynamic code execution"
+        confidence: 0.95
+      - regex: "exec\\s*\\(.*\\+|compile\\s*\\(.*\\+|execfile\\s*\\(.*\\+"
+        description: "Python code execution with concatenation"
+        confidence: 0.95
+      - regex: "eval\\s*\\(\\s*\\$|assert\\s*\\(\\s*\\$|preg_replace\\s*\\(.*e.*\\$"
+        description: "PHP code evaluation with variables"
+        confidence: 0.95
+      - regex: "instance_eval\\s*\\(.*\\+|class_eval\\s*\\(.*\\+|eval\\s*\\(.*\\+"
+        description: "Ruby code evaluation with concatenation"
+        confidence: 0.95
+      - regex: "ScriptEngine\\.eval\\s*\\(.*\\+|Compiler\\.compile\\s*\\(.*\\+"
+        description: "Java script engine with concatenation"
+        confidence: 0.9
+      - regex: "setTimeout\\s*\\(.*\\+|setInterval\\s*\\(.*\\+"
+        description: "JavaScript timer with code string"
+        confidence: 0.9
+    fix_suggestion: "Avoid dynamic code execution, use safe alternatives, validate input"
+    cwe: "CWE-94"
+    owasp: "A03:2021"
+
+  # CWE-95: Improper Neutralization of Directives in Dynamically Evaluated Code ('Eval Injection')
+  - id: "cwe-95-eval-injection"
+    name: "Eval Injection"
+    description: "Detects eval injection vulnerabilities"
+    severity: "Critical"
+    category: "injection"
+    languages: ["javascript", "typescript", "python", "php", "ruby"]
+    patterns:
+      - regex: "eval\\s*\\(\\s*request\\.|eval\\s*\\(\\s*\\$_GET|eval\\s*\\(\\s*\\$_POST"
+        description: "Direct eval of user input"
+        confidence: 0.98
+      - regex: "Function\\s*\\(\\s*request\\.|new\\s+Function\\s*\\(\\s*request\\."
+        description: "Function constructor with user input"
+        confidence: 0.95
+      - regex: "exec\\s*\\(\\s*input\\(\\)|exec\\s*\\(\\s*raw_input\\(\\)"
+        description: "Python exec with user input"
+        confidence: 0.95
+      - regex: "instance_eval\\s*\\(\\s*params\\[|class_eval\\s*\\(\\s*params\\["
+        description: "Ruby eval with request parameters"
+        confidence: 0.9
+      - regex: "\\$\\{.*\\}|\\#\\{.*\\}|<%=.*%>"
+        description: "Template injection patterns"
+        confidence: 0.8
+    fix_suggestion: "Never eval user input, use safe parsing, implement input validation"
+    cwe: "CWE-95"
+    owasp: "A03:2021"
+
+  # CWE-96: Improper Neutralization of Directives in Statically Saved Code ('Static Code Injection')
+  - id: "cwe-96-static-code-injection"
+    name: "Static Code Injection"
+    description: "Detects static code injection vulnerabilities"
+    severity: "High"
+    category: "injection"
+    languages: ["php", "javascript", "typescript", "python", "ruby"]
+    patterns:
+      - regex: "file_put_contents\\s*\\(.*\\.php.*\\+|fwrite\\s*\\(.*\\.php.*\\+"
+        description: "Writing PHP code to file with concatenation"
+        confidence: 0.9
+      - regex: "\\$fp\\s*=\\s*fopen\\s*\\(.*\\.php.*\\+|file_put_contents\\s*\\(.*\\.js.*\\+"
+        description: "Dynamic file creation with code"
+        confidence: 0.85
+      - regex: "\\<?php.*\\+|\\<\\?=.*\\+|\\<script.*\\+"
+        description: "Code tag with concatenation"
+        confidence: 0.8
+      - regex: "compile\\s*\\(.*\\+.*,.*exec.*\\)|compile\\s*\\(.*\\+.*,.*eval.*\\)"
+        description: "Python compile with concatenated code"
+        confidence: 0.9
+    fix_suggestion: "Validate file content, use secure file operations, avoid dynamic code generation"
+    cwe: "CWE-96"
+    owasp: "A03:2021"
+
+  # CWE-97: Improper Neutralization of Server-Side Includes (SSI) in a Web Page
+  - id: "cwe-97-ssi-injection"
+    name: "Server-Side Includes (SSI) Injection"
+    description: "Detects SSI injection vulnerabilities"
+    severity: "High"
+    category: "injection"
+    languages: ["php", "java", "python", "csharp", "ruby"]
+    patterns:
+      - regex: "\\<!--#.*\\+|\\<!--#exec.*\\+|\\<!--#include.*\\+"
+        description: "SSI directive with concatenation"
+        confidence: 0.9
+      - regex: "\\<!--#cmd.*\\$|\\<!--#exec.*\\$|\\<!--#include.*\\$"
+        description: "SSI directive with variables"
+        confidence: 0.95
+      - regex: "\\<!--#config.*\\+|\\<!--#set.*\\+|\\<!--#echo.*\\+"
+        description: "SSI configuration with concatenation"
+        confidence: 0.85
+      - regex: "file_get_contents\\s*\\(.*\\+.*\\.shtml\\)|include\\s*\\(.*\\+.*\\.shtml\\)"
+        description: "SSI file inclusion with concatenation"
+        confidence: 0.8
+    fix_suggestion: "Disable SSI, validate input, use safe inclusion methods"
+    cwe: "CWE-97"
+    owasp: "A03:2021"
+
+  # CWE-98: Improper Control of Filename for Include/Require Statement ('PHP Remote File Inclusion')
+  - id: "cwe-98-file-inclusion"
+    name: "File Inclusion"
+    description: "Detects file inclusion vulnerabilities"
+    severity: "Critical"
+    category: "injection"
+    languages: ["php", "python", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "include\\s*\\(\\s*\\$_GET|include_once\\s*\\(\\s*\\$_GET|require\\s*\\(\\s*\\$_GET|require_once\\s*\\(\\s*\\$_GET"
+        description: "PHP include with GET parameter"
+        confidence: 0.95
+      - regex: "include\\s*\\(\\s*\\$_POST|include_once\\s*\\(\\s*\\$_POST|require\\s*\\(\\s*\\$_POST|require_once\\s*\\(\\s*\\$_POST"
+        description: "PHP include with POST parameter"
+        confidence: 0.95
+      - regex: "include\\s*\\(.*\\+|require\\s*\\(.*\\+|include_once\\s*\\(.*\\+|require_once\\s*\\(.*\\+"
+        description: "PHP include with concatenation"
+        confidence: 0.9
+      - regex: "exec\\(open\\(.*\\+|execfile\\(.*\\+|import\\s+.*\\+"
+        description: "Python file execution with concatenation"
+        confidence: 0.9
+      - regex: "require\\s*\\(.*\\+|require_relative\\s*\\(.*\\+"
+        description: "Ruby require with concatenation"
+        confidence: 0.9
+    fix_suggestion: "Use whitelist of allowed files, validate file paths, avoid dynamic includes"
+    cwe: "CWE-98"
+    owasp: "A03:2021"
+
+  # CWE-99: Improper Control of Resource Identifiers ('Resource Injection')
+  - id: "cwe-99-resource-injection"
+    name: "Resource Injection"
+    description: "Detects resource injection vulnerabilities"
+    severity: "High"
+    category: "injection"
+    languages: ["java", "python", "php", "csharp", "ruby"]
+    patterns:
+      - regex: "getResource\\s*\\(.*\\+|getResourceAsStream\\s*\\(.*\\+"
+        description: "Java resource loading with concatenation"
+        confidence: 0.9
+      - regex: "ClassLoader\\.getResource\\s*\\(.*\\+|Class\\.forName\\s*\\(.*\\+"
+        description: "Java class loading with concatenation"
+        confidence: 0.9
+      - regex: "Assembly\\.LoadFrom\\s*\\(.*\\+|Assembly\\.Load\\s*\\(.*\\+"
+        description: "C# assembly loading with concatenation"
+        confidence: 0.9
+      - regex: "import\\s+.*\\+|__import__\\s*\\(.*\\+|importlib\\.import_module\\s*\\(.*\\+"
+        description: "Python dynamic import with concatenation"
+        confidence: 0.9
+      - regex: "autoload\\s*\\(.*\\+|spl_autoload_register\\s*\\(.*\\+"
+        description: "PHP autoload with concatenation"
+        confidence: 0.85
+    fix_suggestion: "Use whitelist of allowed resources, validate resource paths, avoid dynamic loading"
+    cwe: "CWE-99"
+    owasp: "A03:2021"
+
+  # CWE-116: Improper Encoding or Escaping of Output
+  - id: "cwe-116-improper-encoding"
+    name: "Improper Encoding or Escaping of Output"
+    description: "Detects improper encoding or escaping of output"
+    severity: "Medium"
+    category: "injection"
+    languages: ["javascript", "typescript", "php", "python", "java", "csharp", "ruby"]
+    patterns:
+      - regex: "innerHTML\\s*=\\s*\\w+"
+        description: "innerHTML without encoding"
+        confidence: 0.7
+      - regex: "echo\\s+\\$\\w+"
+        description: "PHP echo without encoding"
+        confidence: 0.8
+      - regex: "print\\s+\\w+"
+        description: "Python print without encoding"
+        confidence: 0.7
+      - regex: "response\\.getWriter\\(\\)\\.write\\s*\\(\\s*\\w+"
+        description: "Java servlet output without encoding"
+        confidence: 0.8
+      - regex: "Response\\.Write\\s*\\(\\s*\\w+"
+        description: "ASP.NET output without encoding"
+        confidence: 0.8
+    fix_suggestion: "Use proper output encoding, HTML escaping, context-aware encoding"
+    cwe: "CWE-116"
+    owasp: "A03:2021"
+
+  # CWE-117: Improper Output Neutralization for Logs
+  - id: "cwe-117-log-injection"
+    name: "Log Injection"
+    description: "Detects log injection vulnerabilities"
+    severity: "Medium"
+    category: "injection"
+    languages: ["java", "python", "php", "csharp", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "log\\.info\\s*\\(.*\\+|log\\.error\\s*\\(.*\\+|log\\.debug\\s*\\(.*\\+"
+        description: "Log output with concatenation"
+        confidence: 0.8
+      - regex: "logger\\.log\\s*\\(.*\\+|System\\.out\\.println\\s*\\(.*\\+"
+        description: "Logger output with concatenation"
+        confidence: 0.8
+      - regex: "error_log\\s*\\(.*\\+|syslog\\s*\\(.*\\+"
+        description: "PHP log functions with concatenation"
+        confidence: 0.8
+      - regex: "logging\\.(info|error|debug)\\s*\\(.*\\+|print\\s*\\(.*\\+"
+        description: "Python logging with concatenation"
+        confidence: 0.7
+      - regex: "Console\\.WriteLine\\s*\\(.*\\+|EventLog\\.WriteEntry\\s*\\(.*\\+"
+        description: "C# logging with concatenation"
+        confidence: 0.8
+    fix_suggestion: "Sanitize log input, use parameterized logging, validate log data"
+    cwe: "CWE-117"
+    owasp: "A09:2021"
+
+  # CWE-643: Improper Neutralization of Data within XPath Expressions ('XPath Injection')
+  - id: "cwe-643-xpath-injection"
+    name: "XPath Injection"
+    description: "Detects XPath injection vulnerabilities"
+    severity: "High"
+    category: "injection"
+    languages: ["java", "python", "php", "csharp", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "XPath\\.compile\\s*\\(\\s*['\\\"].*\\+|XPath\\.evaluate\\s*\\(\\s*['\\\"].*\\+"
+        description: "Java XPath with concatenation"
+        confidence: 0.9
+      - regex: "xpath\\s*\\(\\s*['\\\"].*\\+|findall\\s*\\(\\s*['\\\"].*\\+"
+        description: "XPath query with concatenation"
+        confidence: 0.9
+      - regex: "XPathExpression\\.Compile\\s*\\(.*\\+|XPathNavigator\\.Evaluate\\s*\\(.*\\+"
+        description: "C# XPath with concatenation"
+        confidence: 0.9
+      - regex: "\\$xpath\\s*=\\s*['\\\"].*\\+|xpath\\s*\\(.*\\+\\)"
+        description: "XPath construction with concatenation"
+        confidence: 0.85
+      - regex: "//\\w+\\[.*\\+|//\\w+\\[@.*\\+"
+        description: "XPath predicate with concatenation"
+        confidence: 0.8
+    fix_suggestion: "Use parameterized XPath, validate input, escape XPath special characters"
+    cwe: "CWE-643"
+    owasp: "A03:2021"
+
+  # CWE-644: Improper Neutralization of HTTP Headers for Scripting Syntax
+  - id: "cwe-644-http-header-injection"
+    name: "HTTP Header Injection"
+    description: "Detects HTTP header injection vulnerabilities"
+    severity: "Medium"
+    category: "injection"
+    languages: ["java", "python", "php", "csharp", "ruby", "javascript", "typescript"]
+    patterns:
+      - regex: "response\\.addHeader\\s*\\(.*\\+|response\\.setHeader\\s*\\(.*\\+"
+        description: "HTTP header with concatenation"
+        confidence: 0.85
+      - regex: "header\\s*\\(\\s*['\\\"].*\\+|setcookie\\s*\\(.*\\+"
+        description: "PHP header manipulation with concatenation"
+        confidence: 0.9
+      - regex: "res\\.set\\s*\\(.*\\+|res\\.header\\s*\\(.*\\+"
+        description: "Express.js header with concatenation"
+        confidence: 0.85
+      - regex: "Response\\.Headers\\.Add\\s*\\(.*\\+|Response\\.AddHeader\\s*\\(.*\\+"
+        description: "ASP.NET header with concatenation"
+        confidence: 0.85
+      - regex: "response\\[.*\\]\\s*=\\s*.*\\+|headers\\[.*\\]\\s*=\\s*.*\\+"
+        description: "Header assignment with concatenation"
+        confidence: 0.8
+    fix_suggestion: "validate header values, strip CRLF sequences, use safe header manipulation"
+    cwe: "CWE-644"
+    owasp: "A03:2021"
