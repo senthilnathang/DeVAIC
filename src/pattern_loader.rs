@@ -124,15 +124,19 @@ impl PatternLoader {
     /// Get statistics about loaded patterns
     pub fn get_statistics(&self) -> PatternStatistics {
         let mut stats = PatternStatistics::new();
+        let mut seen_patterns = std::collections::HashSet::new();
         
         for patterns in self.loaded_patterns.values() {
             for pattern in patterns {
-                stats.total_patterns += 1;
-                stats.patterns_by_severity.entry(pattern.pattern.severity.clone()).and_modify(|e| *e += 1).or_insert(1);
-                stats.patterns_by_category.entry(pattern.pattern.category.clone()).and_modify(|e| *e += 1).or_insert(1);
-                
-                for lang in &pattern.pattern.languages {
-                    stats.patterns_by_language.entry(lang.clone()).and_modify(|e| *e += 1).or_insert(1);
+                // Only count each unique pattern ID once
+                if seen_patterns.insert(pattern.pattern.id.clone()) {
+                    stats.total_patterns += 1;
+                    stats.patterns_by_severity.entry(pattern.pattern.severity.clone()).and_modify(|e| *e += 1).or_insert(1);
+                    stats.patterns_by_category.entry(pattern.pattern.category.clone()).and_modify(|e| *e += 1).or_insert(1);
+                    
+                    for lang in &pattern.pattern.languages {
+                        stats.patterns_by_language.entry(lang.clone()).and_modify(|e| *e += 1).or_insert(1);
+                    }
                 }
             }
         }

@@ -7,7 +7,7 @@ use std::time::Instant;
 #[derive(Parser)]
 #[command(name = "devaic")]
 #[command(about = "DeVAIC - Static code analyzer for vulnerability detection in embedded C, Python, and SCADA programming")]
-#[command(version = "0.1.0")]
+#[command(version)]
 struct Cli {
     /// Target directory or file to analyze
     #[arg(value_name = "PATH")]

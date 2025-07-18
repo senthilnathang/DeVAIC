@@ -1,24 +1,28 @@
 [package]
 name = "devaic"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
+resolver = "2"
 authors = ["DeVAIC Team"]
-description = "Static code analyzer for vulnerability detection in embedded C, Python, and SCADA programming"
+description = "Advanced static code analyzer for comprehensive vulnerability, privacy, and memory safety detection in 15+ programming languages"
 license = "MIT"
 repository = "https://github.com/dessertlab/DeVAIC"
+keywords = ["security", "vulnerability", "static-analysis", "privacy", "sanitizer"]
+categories = ["development-tools", "command-line-utilities"]
+rust-version = "1.70"
 
 [dependencies]
 # Core dependencies
-clap = { version = "4.0", features = ["derive"] }
-serde = { version = "1.0", features = ["derive"] }
+clap = { version = "4.5", features = ["derive", "env", "wrap_help", "string"] }
+serde = { version = "1.0", features = ["derive", "rc"] }
 serde_json = "1.0"
 anyhow = "1.0"
 thiserror = "1.0"
 
-# Language parsing
+# Language parsing - Compatible versions to avoid API breaking changes
 tree-sitter = "0.20"
 tree-sitter-c = "0.20"
-tree-sitter-cpp = "0.20"
+tree-sitter-cpp = "0.20"  
 tree-sitter-python = "0.20"
 tree-sitter-java = "0.20"
 tree-sitter-javascript = "0.20"
@@ -29,52 +33,81 @@ tree-sitter-ruby = "0.20"
 tree-sitter-kotlin = "0.3"
 tree-sitter-c-sharp = "0.20"
 tree-sitter-bash = "0.20"
+tree-sitter-rust = "0.20"
 
-# Regex and pattern matching
-regex = "1.7"
-lazy_static = "1.4"
+# Regex and pattern matching - Updated with performance improvements
+regex = "1.10"
+once_cell = "1.19"  # Modern replacement for lazy_static
+lazy_static = "1.4"  # Keep for compatibility during migration
 
-# File handling and I/O
-walkdir = "2.3"
+# File handling and I/O - Enhanced performance and functionality
+walkdir = "2.5"
 glob = "0.3"
 memmap2 = "0.9"
-rayon = "1.8"
-dashmap = "5.5"
-once_cell = "1.19"
-siphasher = "0.3"
+rayon = "1.10"
+dashmap = "5.5"  # Stable version without breaking changes
+siphasher = "0.3"  # Keep stable version
+ignore = "0.4"  # Better gitignore support than custom filtering
+jwalk = { version = "0.8", optional = true }  # Faster directory walking for large projects
 
-# Logging
+# Logging - Enhanced logging capabilities
 log = "0.4"
-env_logger = "0.10"
+env_logger = "0.11"
 
-# Async runtime (if needed)
-tokio = { version = "1.0", features = ["full"], optional = true }
+# Async runtime - Updated with better performance
+tokio = { version = "1.40", features = ["full"], optional = true }
+async-trait = { version = "0.1", optional = true }
 
-# Configuration
+# Configuration - Updated versions
 config = "0.13"
 toml = "0.7"
 
-# YAML support for Semgrep rules
+# YAML support for Semgrep rules - Updated
 serde_yaml = "0.9"
 
-# Date/time for SARIF output
-chrono = { version = "0.4", features = ["serde"] }
+# Date/time for SARIF output - Updated
+chrono = { version = "0.4", features = ["serde", "clock"] }
 
-# Report generation
-tabled = "0.12"
-colored = "2.0"
-rust_xlsxwriter = "0.64"
+# Report generation - Enhanced with latest versions
+tabled = "0.14"  # Compatible version
+colored = "2.1"
+rust_xlsxwriter = "0.76"  # Latest version with more features
 printpdf = "0.7"
 
+# Performance and utility libraries - New additions
+indicatif = { version = "0.17", optional = true }  # Progress bars for long operations
+console = "0.15"  # Better terminal handling
+crossbeam-channel = { version = "0.5", optional = true }  # Better channel performance than std
+parking_lot = { version = "0.12", optional = true }  # Faster mutexes than std
+tracing = { version = "0.1", optional = true }  # Modern structured logging
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"], optional = true }
+
 [dev-dependencies]
-tempfile = "3.0"
+tempfile = "3.13"  # Latest version
 assert_cmd = "2.0"
-predicates = "3.0"
+predicates = "3.1"  # Latest version
+criterion = "0.5"  # Benchmarking framework
+proptest = "1.5"  # Property-based testing
+mockall = "0.13"  # Mocking framework
 
 [features]
-default = []
-async = ["tokio"]
+default = ["progress"]
+async = ["tokio", "async-trait"]
+progress = ["indicatif"]  # Progress bars feature
+tracing = ["dep:tracing", "tracing-subscriber"]  # Structured logging
+fast-walk = ["jwalk"]  # Fast directory walking
+performance = ["parking_lot", "crossbeam-channel"]  # Performance optimizations
 
 [[bin]]
 name = "devaic"
 path = "src/main.rs"
+
+# Compilation profiles for better performance
+[profile.release]
+lto = true          # Enable link-time optimization
+codegen-units = 1   # Better optimization
+panic = "abort"     # Smaller binaries
+strip = true        # Remove debug symbols
+
+[profile.dev]
+opt-level = 1       # Some optimization in debug mode for faster development

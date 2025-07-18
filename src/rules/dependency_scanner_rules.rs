@@ -20,6 +20,7 @@ struct VulnerablePackage {
     cve: String,
     description: String,
     recommendation: String,
+    languages: Vec<String>,
 }
 
 #[derive(Clone)]
@@ -48,6 +49,7 @@ impl DependencyScannerRules {
             cve: "CVE-2023-32681".to_string(),
             description: "Vulnerable version of requests library".to_string(),
             recommendation: "Update to requests >= 2.31.0".to_string(),
+            languages: vec!["python".to_string()],
         });
 
         vulnerable_packages.insert("jackson-databind".to_string(), VulnerablePackage {
@@ -57,6 +59,7 @@ impl DependencyScannerRules {
             cve: "CVE-2020-36518".to_string(),
             description: "Jackson Databind deserialization vulnerability".to_string(),
             recommendation: "Update to jackson-databind >= 2.12.7.1".to_string(),
+            languages: vec!["java".to_string()],
         });
 
         vulnerable_packages.insert("lodash".to_string(), VulnerablePackage {
@@ -66,6 +69,7 @@ impl DependencyScannerRules {
             cve: "CVE-2021-23337".to_string(),
             description: "Lodash prototype pollution vulnerability".to_string(),
             recommendation: "Update to lodash >= 4.17.21".to_string(),
+            languages: vec!["javascript".to_string(), "typescript".to_string()],
         });
 
         vulnerable_packages.insert("log4j-core".to_string(), VulnerablePackage {
@@ -75,6 +79,7 @@ impl DependencyScannerRules {
             cve: "CVE-2021-44228".to_string(),
             description: "Log4j remote code execution vulnerability".to_string(),
             recommendation: "Update to log4j-core >= 2.17.1".to_string(),
+            languages: vec!["java".to_string()],
         });
 
         // Package detection patterns
@@ -161,7 +166,7 @@ impl DependencyScannerRules {
                 severity: Severity::High,
                 description: "Potentially vulnerable Docker base image detected".to_string(),
                 recommendation: "Use updated base images with security patches".to_string(),
-                languages: vec!["dockerfile".to_string()],
+                languages: vec!["dockerfile".to_string(), "javascript".to_string()],
             },
             // Composer dependencies (PHP)
             PackagePattern {
@@ -198,10 +203,20 @@ impl DependencyScannerRules {
     fn check_vulnerable_packages(&self, source_file: &SourceFile) -> Result<Vec<Vulnerability>> {
         let mut vulnerabilities = Vec::new();
         let lines: Vec<&str> = source_file.content.lines().collect();
+        let source_language = source_file.language.to_string().to_lowercase();
         
         // Check for known vulnerable package versions
         for (line_index, line) in lines.iter().enumerate() {
             for (package_name, vulnerable_package) in &self.vulnerable_packages {
+                // Check if this vulnerable package applies to the source file's language
+                if !vulnerable_package.languages.is_empty() && !vulnerable_package.languages.iter().any(|lang| {
+                    lang.to_lowercase() == source_language || 
+                    (source_language == "javascript" && lang.to_lowercase() == "typescript") ||
+                    (source_language == "typescript" && lang.to_lowercase() == "javascript")
+                }) {
+                    continue;
+                }
+                
                 for vulnerable_version in &vulnerable_package.vulnerable_versions {
                     let version_pattern = format!(r"(?i){}.*{}", package_name, vulnerable_version);
                     if let Ok(regex) = Regex::new(&version_pattern) {
