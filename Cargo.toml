@@ -91,7 +91,7 @@ proptest = "1.5"  # Property-based testing
 mockall = "0.13"  # Mocking framework
 
 [features]
-default = ["progress"]
+default = ["progress", "performance"]
 async = ["tokio", "async-trait"]
 progress = ["indicatif"]  # Progress bars feature
 tracing = ["dep:tracing", "tracing-subscriber"]  # Structured logging

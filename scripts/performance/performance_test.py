@@ -12,11 +12,16 @@ def run_devaic_with_timing(args):
     start_time = time.time()
     
     try:
+        # Get the absolute path to the DeVAIC root directory
+        import os
+        devaic_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'))
+        devaic_binary = os.path.join(devaic_root, 'target/release/devaic')
+
         result = subprocess.run(
-            ['../../target/release/devaic'] + args,
+            [devaic_binary] + args,
             capture_output=True,
             text=True,
-            cwd='/home/sen/DeVAIC'
+            cwd=devaic_root
         )
         
         end_time = time.time()
@@ -101,6 +106,12 @@ def run_performance_tests():
                 print(f"{result['duration']:.2f}s, {result['vulnerabilities']} vulns")
             else:
                 print("FAILED")
+                if result.get('stderr'):
+                    print(f"  Stderr: {result['stderr']}")
+                if result.get('stdout'):
+                    print(f"  Stdout: {result['stdout']}")
+                if result.get('error'):
+                    print(f"  Error: {result['error']}")
                 break
         
         if times:
@@ -169,11 +180,16 @@ def test_directory_filtering():
 def main():
     """Main test function"""
     print("Building DeVAIC in release mode...")
+    
+    # Get the absolute path to the DeVAIC root directory
+    import os
+    devaic_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'))
+    
     build_result = subprocess.run(
         ['cargo', 'build', '--release'],
         capture_output=True,
         text=True,
-        cwd='../../'
+        cwd=devaic_root
     )
     
     if build_result.returncode != 0:

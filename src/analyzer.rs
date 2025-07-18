@@ -6,7 +6,7 @@ use crate::{
     pattern_loader::PatternLoader,
     cache::get_global_cache,
     optimized_reader::OptimizedFileReader,
-    parallel_scanner::{ParallelDirectoryScanner, SmartFileFilter},
+    parallel_scanner::{ParallelDirectoryScanner},
     Language, Vulnerability,
 };
 use std::path::Path;
@@ -16,7 +16,6 @@ pub struct Analyzer {
     config: Config,
     rule_engine: RuleEngine,
     optimized_reader: OptimizedFileReader,
-    file_filter: SmartFileFilter,
     parallel_enabled: bool,
     max_depth: usize,
 }
@@ -25,13 +24,11 @@ impl Analyzer {
     pub fn new(config: Config) -> Self {
         let rule_engine = RuleEngine::new(&config.rules);
         let optimized_reader = OptimizedFileReader::new(true); // Enable caching
-        let file_filter = SmartFileFilter::new(config.clone());
         
         Self {
             config,
             rule_engine,
             optimized_reader,
-            file_filter,
             parallel_enabled: true,
             max_depth: 100,
         }
@@ -43,13 +40,11 @@ impl Analyzer {
         rule_engine.set_custom_pattern_rules(custom_rules);
         
         let optimized_reader = OptimizedFileReader::new(true); // Enable caching
-        let file_filter = SmartFileFilter::new(config.clone());
         
         Self {
             config,
             rule_engine,
             optimized_reader,
-            file_filter,
             parallel_enabled: true,
             max_depth: 100,
         }
@@ -115,11 +110,6 @@ impl Analyzer {
             if entry.file_type().is_file() {
                 let file_path = entry.path();
                 
-                // Use smart filter to skip non-code files early
-                if !self.file_filter.should_analyze(file_path) {
-                    continue;
-                }
-                
                 log::debug!("Analyzing file: {}", file_path.display());
                 match self.analyze_file(file_path) {
                     Ok(mut file_vulns) => vulnerabilities.append(&mut file_vulns),
@@ -134,11 +124,6 @@ impl Analyzer {
     }
 
     pub fn analyze_file(&self, path: &Path) -> Result<Vec<Vulnerability>> {
-        // Use smart filter to check if file should be analyzed
-        if !self.file_filter.should_analyze(path) {
-            return Ok(Vec::new());
-        }
-
         let extension = match path.extension().and_then(|ext| ext.to_str()) {
             Some(ext) => ext,
             None => {

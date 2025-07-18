@@ -115,27 +115,7 @@ impl PerformanceBenchmark {
         }
     }
 
-    /// Benchmark fast walker performance
-    fn benchmark_fast_walker(&self, target_path: &Path, enable_cache: bool) -> BenchmarkResult {
-        let start = Instant::now();
-        
-        // Create analyzer with fast walker enabled
-        let mut analyzer = Analyzer::new(self.config.clone());
-        analyzer.set_parallel_enabled(true);
-        
-        let vulnerabilities = analyzer.analyze_directory(target_path)
-            .unwrap_or_else(|_| Vec::new());
-        
-        let duration = start.elapsed();
-        let cache_stats = analyzer.get_cache_stats();
-        
-        BenchmarkResult {
-            duration,
-            vulnerabilities_found: vulnerabilities.len(),
-            cache_enabled: enable_cache,
-            cache_entries: cache_stats.file_metadata_entries + cache_stats.directory_cache_entries,
-        }
-    }
+    
 }
 
 /// Single benchmark result

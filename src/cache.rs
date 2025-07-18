@@ -1,10 +1,11 @@
-use std::fs::Metadata;
-use std::path::{Path, PathBuf};
-use std::time::SystemTime;
+use crate::Vulnerability;
 use dashmap::DashMap;
 use once_cell::sync::Lazy;
 use siphasher::sip::SipHasher;
+use std::fs::Metadata;
 use std::hash::{Hash, Hasher};
+use std::path::{Path, PathBuf};
+use std::time::SystemTime;
 
 /// Global cache for file system metadata and analysis results
 static GLOBAL_CACHE: Lazy<FileSystemCache> = Lazy::new(|| FileSystemCache::new());
@@ -41,6 +42,8 @@ pub struct FileSystemCache {
     pattern_cache: DashMap<String, Vec<PathBuf>>,
     /// Cache for file content hashes to detect changes
     content_cache: DashMap<PathBuf, u64>,
+    /// Cache for analysis results
+    analysis_results: DashMap<PathBuf, Vec<Vulnerability>>,
 }
 
 impl FileSystemCache {
@@ -51,6 +54,7 @@ impl FileSystemCache {
             language_cache: DashMap::new(),
             pattern_cache: DashMap::new(),
             content_cache: DashMap::new(),
+            analysis_results: DashMap::new(),
         }
     }
 
@@ -70,7 +74,12 @@ impl FileSystemCache {
     }
 
     /// Cache file metadata
-    pub fn cache_file_metadata(&self, path: PathBuf, metadata: Metadata, language: Option<crate::Language>) {
+    pub fn cache_file_metadata(
+        &self,
+        path: PathBuf,
+        metadata: Metadata,
+        language: Option<crate::Language>,
+    ) {
         if let Ok(modified_time) = metadata.modified() {
             let entry = CacheEntry {
                 file_path: path.clone(),
@@ -88,7 +97,9 @@ impl FileSystemCache {
 
     /// Get cached directory listing
     pub fn get_directory_listing(&self, dir_path: &Path) -> Option<Vec<PathBuf>> {
-        self.directory_cache.get(dir_path).map(|entry| entry.clone())
+        self.directory_cache
+            .get(dir_path)
+            .map(|entry| entry.clone())
     }
 
     /// Cache directory listing
@@ -102,20 +113,24 @@ impl FileSystemCache {
     }
 
     /// Cache language for file extension
-    pub fn cache_language_for_extension(&self, extension: String, language: Option<crate::Language>) {
+    pub fn cache_language_for_extension(
+        &self,
+        extension: String,
+        language: Option<crate::Language>,
+    ) {
         self.language_cache.insert(extension, language);
     }
 
     /// Check if file content has changed using hash
     pub fn has_content_changed(&self, path: &Path, content: &str) -> bool {
         let new_hash = fast_hash(content);
-        
+
         if let Some(cached_hash) = self.content_cache.get(path) {
             if *cached_hash == new_hash {
                 return false;
             }
         }
-        
+
         self.content_cache.insert(path.to_path_buf(), new_hash);
         true
     }
@@ -127,7 +142,21 @@ impl FileSystemCache {
 
     /// Get cached pattern matching results
     pub fn get_pattern_match(&self, pattern: &str) -> Option<Vec<PathBuf>> {
-        self.pattern_cache.get(pattern).map(|results| results.clone())
+        self.pattern_cache
+            .get(pattern)
+            .map(|results| results.clone())
+    }
+    /// Get cached analysis results
+    pub fn get_analysis_result(&self, path: &Path) -> Option<Vec<Vulnerability>> {
+        self.analysis_results
+            .get(path)
+            .map(|entry| entry.clone())
+    }
+
+    /// Cache analysis results
+    pub fn cache_analysis_result(&self, path: &Path, vulnerabilities: Vec<Vulnerability>) {
+        self.analysis_results
+            .insert(path.to_path_buf(), vulnerabilities);
     }
 
     /// Clear all caches
@@ -137,6 +166,7 @@ impl FileSystemCache {
         self.language_cache.clear();
         self.pattern_cache.clear();
         self.content_cache.clear();
+        self.analysis_results.clear();
     }
 
     /// Get cache statistics
@@ -147,6 +177,7 @@ impl FileSystemCache {
             language_cache_entries: self.language_cache.len(),
             pattern_cache_entries: self.pattern_cache.len(),
             content_cache_entries: self.content_cache.len(),
+            analysis_results_entries: self.analysis_results.len(),
         }
     }
 }
@@ -159,20 +190,39 @@ pub struct CacheStats {
     pub language_cache_entries: usize,
     pub pattern_cache_entries: usize,
     pub content_cache_entries: usize,
+    pub analysis_results_entries: usize,
 }
 
 impl CacheStats {
     pub fn print_summary(&self) {
         println!("Cache Statistics:");
-        println!("  File metadata entries: {}", self.file_metadata_entries);
-        println!("  Directory cache entries: {}", self.directory_cache_entries);
-        println!("  Language cache entries: {}", self.language_cache_entries);
+        println!(
+            "  File metadata entries: {}",
+            self.file_metadata_entries
+        );
+        println!(
+            "  Directory cache entries: {}",
+            self.directory_cache_entries
+        );
+        println!(
+            "  Language cache entries: {}",
+            self.language_cache_entries
+        );
         println!("  Pattern cache entries: {}", self.pattern_cache_entries);
         println!("  Content cache entries: {}", self.content_cache_entries);
-        println!("  Total cache entries: {}", 
-            self.file_metadata_entries + self.directory_cache_entries + 
-            self.language_cache_entries + self.pattern_cache_entries + 
-            self.content_cache_entries);
+        println!(
+            "  Analysis results entries: {}",
+            self.analysis_results_entries
+        );
+        println!(
+            "  Total cache entries: {}",
+            self.file_metadata_entries
+                + self.directory_cache_entries
+                + self.language_cache_entries
+                + self.pattern_cache_entries
+                + self.content_cache_entries
+                + self.analysis_results_entries
+        );
     }
 }
 
@@ -218,7 +268,11 @@ impl CachedFileWalker {
     fn walk_directory_with_depth(&self, path: &Path, depth: usize) -> Vec<PathBuf> {
         // Limit recursion depth to prevent infinite loops and improve performance
         if depth > self.max_depth {
-            log::warn!("Maximum recursion depth ({}) reached for directory: {}", self.max_depth, path.display());
+            log::warn!(
+                "Maximum recursion depth ({}) reached for directory: {}",
+                self.max_depth,
+                path.display()
+            );
             return Vec::new();
         }
 
@@ -229,11 +283,11 @@ impl CachedFileWalker {
 
         // Collect files from directory
         let mut files = Vec::new();
-        
+
         if let Ok(entries) = std::fs::read_dir(path) {
             for entry in entries.flatten() {
                 let file_path = entry.path();
-                
+
                 if file_path.is_file() {
                     if self.should_analyze_file(&file_path) {
                         files.push(file_path);
@@ -241,10 +295,11 @@ impl CachedFileWalker {
                 } else if file_path.is_dir() {
                     // Recursively walk subdirectories
                     // Only follow symlinks if configured to do so
-                    let is_symlink = file_path.symlink_metadata()
+                    let is_symlink = file_path
+                        .symlink_metadata()
                         .map(|m| m.file_type().is_symlink())
                         .unwrap_or(false);
-                    
+
                     if !is_symlink || self.follow_symlinks {
                         let subdir_files = self.walk_directory_with_depth(&file_path, depth + 1);
                         files.extend(subdir_files);
@@ -254,7 +309,8 @@ impl CachedFileWalker {
         }
 
         // Cache results
-        self.cache.cache_directory_listing(path.to_path_buf(), files.clone());
+        self.cache
+            .cache_directory_listing(path.to_path_buf(), files.clone());
         files
     }
 
@@ -274,14 +330,15 @@ impl CachedFileWalker {
                 if metadata.len() > self.max_file_size as u64 {
                     return false;
                 }
-                
+
                 // Get language from extension with caching
                 let language = if let Some(ext) = path.extension().and_then(|e| e.to_str()) {
                     if let Some(cached_lang) = self.cache.get_language_for_extension(ext) {
                         cached_lang
                     } else {
                         let lang = crate::Language::from_extension(ext);
-                        self.cache.cache_language_for_extension(ext.to_string(), lang);
+                        self.cache
+                            .cache_language_for_extension(ext.to_string(), lang);
                         lang
                     }
                 } else {
@@ -292,7 +349,8 @@ impl CachedFileWalker {
                     return false;
                 }
 
-                self.cache.cache_file_metadata(path.to_path_buf(), metadata, language);
+                self.cache
+                    .cache_file_metadata(path.to_path_buf(), metadata, language);
             } else {
                 return false;
             }
@@ -305,7 +363,7 @@ impl CachedFileWalker {
     /// Check if file matches include/exclude patterns
     fn matches_patterns(&self, path: &Path) -> bool {
         let path_str = path.to_string_lossy();
-        
+
         // Check exclude patterns
         for pattern in &self.exclude_patterns {
             if glob::Pattern::new(pattern)

@@ -12,7 +12,6 @@ pub struct FastDirectoryWalker {
     exclude_patterns: Vec<glob::Pattern>,
     include_patterns: Vec<glob::Pattern>,
     file_counter: Arc<AtomicUsize>,
-    use_cache: bool,
 }
 
 impl FastDirectoryWalker {
@@ -20,21 +19,9 @@ impl FastDirectoryWalker {
         follow_symlinks: bool,
         max_file_size: usize,
         max_depth: usize,
-        exclude_patterns: Vec<String>,
-        include_patterns: Vec<String>,
-        use_cache: bool,
+        exclude_patterns: Vec<glob::Pattern>,
+        include_patterns: Vec<glob::Pattern>,
     ) -> Self {
-        // Pre-compile glob patterns for better performance
-        let exclude_patterns: Vec<glob::Pattern> = exclude_patterns
-            .into_iter()
-            .filter_map(|p| glob::Pattern::new(&p).ok())
-            .collect();
-        
-        let include_patterns: Vec<glob::Pattern> = include_patterns
-            .into_iter()
-            .filter_map(|p| glob::Pattern::new(&p).ok())
-            .collect();
-
         Self {
             follow_symlinks,
             max_file_size,
@@ -42,7 +29,6 @@ impl FastDirectoryWalker {
             exclude_patterns,
             include_patterns,
             file_counter: Arc::new(AtomicUsize::new(0)),
-            use_cache,
         }
     }
 
@@ -234,54 +220,6 @@ impl FastDirectoryWalker {
         true
     }
 
-    /// Optimized file analysis check
-    fn should_analyze_file(&self, file_path: &Path) -> bool {
-        // Quick file size check first
-        if let Ok(metadata) = file_path.metadata() {
-            if metadata.len() > self.max_file_size as u64 {
-                return false;
-            }
-        }
-
-        // Check if file has supported extension
-        let extension = match file_path.extension().and_then(|ext| ext.to_str()) {
-            Some(ext) => ext.to_lowercase(),
-            None => return false,
-        };
-
-        // Direct language check for better performance
-        if Language::from_extension(&extension).is_none() {
-            return false;
-        }
-
-        // Check exclude patterns
-        let path_str = file_path.to_string_lossy();
-        for pattern in &self.exclude_patterns {
-            if pattern.matches(&path_str) {
-                return false;
-            }
-        }
-
-        // Check include patterns
-        if !self.include_patterns.is_empty() {
-            let mut matches = false;
-            for pattern in &self.include_patterns {
-                if pattern.matches(&path_str) {
-                    matches = true;
-                    break;
-                }
-            }
-            if !matches {
-                return false;
-            }
-        }
-
-        // Update file counter
-        self.file_counter.fetch_add(1, Ordering::Relaxed);
-
-        true
-    }
-
     /// Get current file count
     pub fn get_file_count(&self) -> usize {
         self.file_counter.load(Ordering::Relaxed)
@@ -304,9 +242,8 @@ impl OptimizedDirectoryScanner {
         follow_symlinks: bool,
         max_file_size: usize,
         max_depth: usize,
-        exclude_patterns: Vec<String>,
-        include_patterns: Vec<String>,
-        use_cache: bool,
+        exclude_patterns: Vec<glob::Pattern>,
+        include_patterns: Vec<glob::Pattern>,
         batch_size: usize,
     ) -> Self {
         let walker = FastDirectoryWalker::new(
@@ -315,7 +252,6 @@ impl OptimizedDirectoryScanner {
             max_depth,
             exclude_patterns,
             include_patterns,
-            use_cache,
         );
 
         Self {
@@ -378,9 +314,8 @@ impl AdvancedDirectoryWalker {
         follow_symlinks: bool,
         max_file_size: usize,
         max_depth: usize,
-        exclude_patterns: Vec<String>,
-        include_patterns: Vec<String>,
-        use_cache: bool,
+        exclude_patterns: Vec<glob::Pattern>,
+        include_patterns: Vec<glob::Pattern>,
         strategy: TraversalStrategy,
     ) -> Self {
         let base_walker = FastDirectoryWalker::new(
@@ -389,7 +324,6 @@ impl AdvancedDirectoryWalker {
             max_depth,
             exclude_patterns,
             include_patterns,
-            use_cache,
         );
 
         Self {
@@ -512,7 +446,6 @@ mod tests {
             100,
             vec![],
             vec![],
-            true,
         );
 
         let files = walker.walk_directory(temp_dir.path());
@@ -539,7 +472,6 @@ mod tests {
             1,
             vec![],
             vec![],
-            true,
         );
 
         let files = walker.walk_directory(temp_dir.path());
