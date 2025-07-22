@@ -19,11 +19,18 @@ impl SwiftParser {
 
 impl Parser for SwiftParser {
     fn parse(&mut self, source_file: &SourceFile) -> Result<ParsedAst> {
+        let start_time = std::time::Instant::now();
+        
         let tree = self.parser
             .parse(&source_file.content, None)
             .ok_or_else(|| DevaicError::Parse("Failed to parse Swift source code".to_string()))?;
         
-        Ok(ParsedAst::new(tree, source_file.content.clone()))
+        let parse_time = start_time.elapsed().as_millis() as u64;
+        let mut ast = ParsedAst::new_with_language(tree, source_file.content.clone(), Language::Swift);
+        ast.set_parse_time(parse_time);
+        
+        log::debug!("Swift file parsed successfully in {}ms", parse_time);
+        Ok(ast)
     }
 
     fn language(&self) -> Language {

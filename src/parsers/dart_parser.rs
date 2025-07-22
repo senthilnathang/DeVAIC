@@ -8,13 +8,18 @@ pub struct DartParser {
 
 impl DartParser {
     pub fn new() -> Result<Self> {
-        // Due to tree-sitter version incompatibility between tree-sitter-dart 0.0.4 
-        // and tree-sitter 0.20, we'll create a basic parser without language-specific parsing
-        let parser = TreeSitterParser::new();
+        let mut parser = TreeSitterParser::new();
         
-        // Note: Full Dart AST parsing is disabled due to dependency version conflicts.
-        // The analyzer will fall back to regex-based pattern matching for Dart files.
-        log::warn!("Dart parser created without tree-sitter language support due to version incompatibility");
+        // Try to set the Dart language, fall back to basic parsing if it fails
+        match parser.set_language(tree_sitter_dart::language()) {
+            Ok(()) => {
+                log::info!("Dart parser initialized with tree-sitter language support");
+            }
+            Err(e) => {
+                log::warn!("Failed to set Dart language: {}, falling back to basic parsing", e);
+                // Continue with basic parser for compatibility
+            }
+        }
         
         Ok(Self { parser })
     }
@@ -22,15 +27,23 @@ impl DartParser {
 
 impl Parser for DartParser {
     fn parse(&mut self, source_file: &SourceFile) -> Result<ParsedAst> {
-        // Since we don't have a proper Dart language parser due to version conflicts,
-        // we'll create a minimal AST structure for compatibility
+        let start_time = std::time::Instant::now();
+        
         match self.parser.parse(&source_file.content, None) {
-            Some(tree) => Ok(ParsedAst::new(tree, source_file.content.clone())),
+            Some(tree) => {
+                let parse_time = start_time.elapsed().as_millis() as u64;
+                let mut ast = ParsedAst::new_with_language(tree, source_file.content.clone(), Language::Dart);
+                ast.set_parse_time(parse_time);
+                
+                log::debug!("Dart file parsed successfully in {}ms", parse_time);
+                Ok(ast)
+            }
             None => {
-                // Create a fallback AST when tree-sitter parsing fails
-                log::warn!("Dart parsing failed, using fallback mode for file: {:?}", source_file.path);
-                // Return an empty AST - the analyzer will fall back to regex-based detection
-                Ok(ParsedAst::new_source_only(source_file.content.clone()))
+                log::warn!("Dart parsing failed for file: {:?}, using fallback mode", source_file.path);
+                let mut ast = ParsedAst::new_source_only(source_file.content.clone());
+                ast.language = Some(Language::Dart);
+                ast.add_parse_error("Tree-sitter parsing failed, using regex-based analysis".to_string());
+                Ok(ast)
             }
         }
     }

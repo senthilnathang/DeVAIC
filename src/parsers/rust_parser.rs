@@ -26,11 +26,18 @@ impl Parser for RustParser {
             return Err(DevaicError::Analysis("File too large for parsing".to_string()));
         }
         
+        let start_time = std::time::Instant::now();
+        
         let tree = self.parser
             .parse(&source_file.content, None)
             .ok_or_else(|| DevaicError::Parse("Failed to parse Rust code - syntax error or timeout".to_string()))?;
         
-        Ok(ParsedAst::new(tree, source_file.content.clone()))
+        let parse_time = start_time.elapsed().as_millis() as u64;
+        let mut ast = ParsedAst::new_with_language(tree, source_file.content.clone(), Language::Rust);
+        ast.set_parse_time(parse_time);
+        
+        log::debug!("Rust file parsed successfully in {}ms", parse_time);
+        Ok(ast)
     }
 
     fn language(&self) -> Language {
