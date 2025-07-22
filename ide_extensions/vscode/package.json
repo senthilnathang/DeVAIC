@@ -1,0 +1,204 @@
+{
+  "name": "devaic-security",
+  "displayName": "DeVAIC Security Analyzer",
+  "description": "Real-time AI-powered security vulnerability detection for multiple programming languages",
+  "version": "1.0.0",
+  "publisher": "devaic",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dessertlab/DeVAIC.git"
+  },
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Linters",
+    "Other",
+    "Programming Languages"
+  ],
+  "keywords": [
+    "security",
+    "vulnerability",
+    "static-analysis",
+    "ai",
+    "ml",
+    "devsecops"
+  ],
+  "activationEvents": [
+    "onLanguage:rust",
+    "onLanguage:go",
+    "onLanguage:javascript",
+    "onLanguage:typescript",
+    "onLanguage:python",
+    "onLanguage:java",
+    "onLanguage:kotlin",
+    "onLanguage:swift",
+    "onLanguage:c",
+    "onLanguage:cpp",
+    "onLanguage:csharp",
+    "onLanguage:php",
+    "onLanguage:ruby",
+    "onLanguage:dart"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "devaic.analyzeFile",
+        "title": "Analyze Current File",
+        "category": "DeVAIC",
+        "icon": "$(shield)"
+      },
+      {
+        "command": "devaic.analyzeWorkspace",
+        "title": "Analyze Entire Workspace",
+        "category": "DeVAIC",
+        "icon": "$(folder)"
+      },
+      {
+        "command": "devaic.toggleRealTimeAnalysis",
+        "title": "Toggle Real-Time Analysis",
+        "category": "DeVAIC",
+        "icon": "$(eye)"
+      },
+      {
+        "command": "devaic.showSecurityReport",
+        "title": "Show Security Report",
+        "category": "DeVAIC",
+        "icon": "$(report)"
+      },
+      {
+        "command": "devaic.showImpactAnalysis",
+        "title": "Show Impact Analysis",
+        "category": "DeVAIC"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "devaic.analyzeFile",
+          "group": "devaic@1",
+          "when": "resourceExtname in .rs .go .js .ts .py .java .kt .swift .c .cpp .cs .php .rb .dart"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "devaic.analyzeWorkspace",
+          "group": "devaic@1",
+          "when": "explorerResourceIsFolder"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "devaic.analyzeFile",
+          "when": "editorIsOpen"
+        },
+        {
+          "command": "devaic.analyzeWorkspace",
+          "when": "workspaceFolderCount > 0"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "DeVAIC Security Analyzer",
+      "properties": {
+        "devaic.enableRealTimeAnalysis": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable real-time security analysis as you type"
+        },
+        "devaic.severityThreshold": {
+          "type": "string",
+          "enum": ["Critical", "High", "Medium", "Low", "Info"],
+          "default": "Medium",
+          "description": "Minimum severity level to report vulnerabilities"
+        },
+        "devaic.enableMLAnalysis": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable AI/ML-powered vulnerability detection"
+        },
+        "devaic.debounceDelay": {
+          "type": "number",
+          "default": 500,
+          "minimum": 100,
+          "maximum": 2000,
+          "description": "Delay in milliseconds before analyzing changes (debouncing)"
+        },
+        "devaic.maxAnalysisTime": {
+          "type": "number",
+          "default": 10000,
+          "minimum": 1000,
+          "maximum": 30000,
+          "description": "Maximum time in milliseconds to spend analyzing a file"
+        },
+        "devaic.showConfidenceScores": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show confidence scores for ML-detected vulnerabilities"
+        },
+        "devaic.enableQuickFixes": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable quick fix suggestions for detected vulnerabilities"
+        },
+        "devaic.autoApplySafeFixes": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically apply safe fixes without user confirmation"
+        },
+        "devaic.excludePatterns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": ["**/node_modules/**", "**/target/**", "**/build/**", "**/.git/**"],
+          "description": "File patterns to exclude from analysis"
+        },
+        "devaic.languageServerPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to the DeVAIC language server binary (leave empty for auto-detection)"
+        }
+      }
+    },
+    "languages": [
+      {
+        "id": "devaic-ignore",
+        "extensions": [".devaicignore"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "devaic-ignore",
+        "scopeName": "source.devaicignore",
+        "path": "./syntaxes/devaicignore.tmGrammar.json"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js",
+    "package": "vsce package",
+    "publish": "vsce publish"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.75.0",
+    "@types/node": "16.x",
+    "@typescript-eslint/eslint-plugin": "^5.45.0",
+    "@typescript-eslint/parser": "^5.45.0",
+    "eslint": "^8.28.0",
+    "typescript": "^4.9.4",
+    "@vscode/test-electron": "^2.2.0",
+    "vsce": "^2.15.0"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^8.0.2"
+  }
+}
