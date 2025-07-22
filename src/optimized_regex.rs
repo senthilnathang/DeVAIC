@@ -27,6 +27,33 @@ pub struct OptimizedPattern {
     complexity_score: u32,
 }
 
+impl OptimizedPattern {
+    /// Get the original pattern
+    pub fn original(&self) -> &str {
+        &self.original
+    }
+    
+    /// Get the optimized pattern
+    pub fn optimized(&self) -> &str {
+        &self.optimized
+    }
+    
+    /// Get the optimization type
+    pub fn optimization_type(&self) -> &OptimizationType {
+        &self.optimization_type
+    }
+    
+    /// Get the estimated speedup factor
+    pub fn estimated_speedup(&self) -> f32 {
+        self.estimated_speedup
+    }
+    
+    /// Get the complexity score
+    pub fn complexity_score(&self) -> u32 {
+        self.complexity_score
+    }
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum OptimizationType {
     Anchoring,          // Add ^ or $ anchors
@@ -44,6 +71,23 @@ pub struct OptimizationRule {
     pattern: Regex,
     replacer: Box<dyn Fn(&str) -> String + Send + Sync>,
     priority: u32,
+}
+
+impl OptimizationRule {
+    /// Get the rule name
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+    
+    /// Get the rule priority
+    pub fn priority(&self) -> u32 {
+        self.priority
+    }
+    
+    /// Get the pattern
+    pub fn pattern(&self) -> &Regex {
+        &self.pattern
+    }
 }
 
 #[derive(Debug, Default)]
@@ -214,6 +258,7 @@ impl OptimizedRegexEngine {
     }
 
     /// Serialize regex for caching (simplified implementation)
+    #[allow(dead_code)]
     fn serialize_regex(regex: &Regex) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
         // In a real implementation, this would properly serialize the regex
         // For now, store the pattern string
@@ -221,6 +266,7 @@ impl OptimizedRegexEngine {
     }
 
     /// Deserialize regex from cache (simplified implementation)
+    #[allow(dead_code)]
     fn deserialize_regex(data: &[u8]) -> Result<Regex, regex::Error> {
         let pattern = String::from_utf8_lossy(data);
         Regex::new(&pattern)

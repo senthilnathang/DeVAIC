@@ -63,6 +63,43 @@ pub struct ParsedAST {
     hotspots: Vec<ASTHotspot>,
 }
 
+impl ParsedAST {
+    /// Get the tree reference
+    pub fn tree(&self) -> &Arc<Tree> {
+        &self.tree
+    }
+    
+    /// Get the source hash
+    pub fn source_hash(&self) -> u64 {
+        self.source_hash
+    }
+    
+    /// Get the language
+    pub fn language(&self) -> crate::Language {
+        self.language
+    }
+    
+    /// Get the node count
+    pub fn node_count(&self) -> usize {
+        self.node_count
+    }
+    
+    /// Get the tree depth
+    pub fn depth(&self) -> usize {
+        self.depth
+    }
+    
+    /// Get the parsing time in milliseconds
+    pub fn parsing_time_ms(&self) -> u64 {
+        self.parsing_time_ms
+    }
+    
+    /// Get the detected hotspots
+    pub fn hotspots(&self) -> &[ASTHotspot] {
+        &self.hotspots
+    }
+}
+
 /// AST hotspot for targeted analysis
 #[derive(Debug, Clone)]
 pub struct ASTHotspot {
@@ -276,18 +313,37 @@ impl OptimizedASTParser {
             }
         }
 
-        // Compile query
-        let tree_sitter_lang = self.get_tree_sitter_language(language)?;
-        let query = Query::new(tree_sitter_lang, query_str)
+        // Check language-specific cache
+        if let Some(cached_parser) = self.parsers.get(&language) {
+            let cache = cached_parser.compiled_queries.read();
+            if let Some(cached_query) = cache.get(query_str) {
+                return Ok(Arc::clone(cached_query));
+            }
+        }
+
+        // Compile query using the cached parser's language
+        let cached_parser = self.parsers.get(&language)
+            .ok_or_else(|| crate::DevaicError::Analysis(
+                format!("No parser available for language: {:?}", language)
+            ))?;
+        
+        let query = Query::new(cached_parser.language, query_str)
             .map_err(|e| crate::DevaicError::Analysis(format!("Failed to compile query: {}", e)))?;
 
         let arc_query = Arc::new(query);
         
-        // Cache the compiled query
+        // Cache in both global and language-specific caches
         {
-            let mut cache = self.query_cache.write();
-            if cache.len() < self.optimization_config.max_cache_size {
-                cache.insert(query_str.to_string(), Arc::clone(&arc_query));
+            let mut global_cache = self.query_cache.write();
+            if global_cache.len() < self.optimization_config.max_cache_size {
+                global_cache.insert(query_str.to_string(), Arc::clone(&arc_query));
+            }
+        }
+        
+        {
+            let mut lang_cache = cached_parser.compiled_queries.write();
+            if lang_cache.len() < self.optimization_config.max_cache_size {
+                lang_cache.insert(query_str.to_string(), Arc::clone(&arc_query));
             }
         }
 
@@ -500,6 +556,11 @@ impl OptimizedASTParser {
     pub fn clear_caches(&self) {
         self.query_cache.write().clear();
         self.parse_cache.write().clear();
+        
+        // Clear language-specific compiled query caches
+        for parser in self.parsers.values() {
+            parser.compiled_queries.write().clear();
+        }
     }
 }
 

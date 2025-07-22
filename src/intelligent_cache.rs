@@ -108,6 +108,43 @@ pub struct CacheMetadata {
     version: u32,
 }
 
+impl CacheMetadata {
+    /// Get creation timestamp
+    pub fn created_at(&self) -> u64 {
+        self.created_at
+    }
+    
+    /// Get last access timestamp
+    pub fn last_accessed(&self) -> u64 {
+        self.last_accessed
+    }
+    
+    /// Get access count
+    pub fn access_count(&self) -> u64 {
+        self.access_count
+    }
+    
+    /// Get size in bytes
+    pub fn size_bytes(&self) -> usize {
+        self.size_bytes
+    }
+    
+    /// Get TTL in seconds
+    pub fn ttl_seconds(&self) -> u64 {
+        self.ttl_seconds
+    }
+    
+    /// Get tags
+    pub fn tags(&self) -> &HashMap<String, String> {
+        &self.tags
+    }
+    
+    /// Get version
+    pub fn version(&self) -> u32 {
+        self.version
+    }
+}
+
 impl CacheEntry {
     pub fn new(data: CacheData, ttl_seconds: u64) -> Self {
         let now = SystemTime::now()
@@ -130,6 +167,21 @@ impl CacheEntry {
             },
             compressed: false,
         }
+    }
+    
+    /// Get the cached data
+    pub fn data(&self) -> &CacheData {
+        &self.data
+    }
+    
+    /// Check if the entry is compressed
+    pub fn is_compressed(&self) -> bool {
+        self.compressed
+    }
+    
+    /// Get the metadata
+    pub fn metadata(&self) -> &CacheMetadata {
+        &self.metadata
     }
     
     pub fn is_expired(&self) -> bool {
@@ -506,11 +558,35 @@ impl CacheAnalytics {
         self.misses += 1;
     }
     
+    pub fn record_prefetch_hit(&mut self) {
+        self.prefetch_hits += 1;
+    }
+    
+    pub fn record_prefetch_miss(&mut self) {
+        self.prefetch_misses += 1;
+    }
+    
     pub fn hit_rate(&self) -> f64 {
         if self.total_requests == 0 {
             return 0.0;
         }
         (self.l1_hits + self.l2_hits + self.l3_hits) as f64 / self.total_requests as f64
+    }
+    
+    pub fn prefetch_hit_rate(&self) -> f64 {
+        let total_prefetch = self.prefetch_hits + self.prefetch_misses;
+        if total_prefetch == 0 {
+            return 0.0;
+        }
+        self.prefetch_hits as f64 / total_prefetch as f64
+    }
+    
+    pub fn prefetch_hits(&self) -> u64 {
+        self.prefetch_hits
+    }
+    
+    pub fn prefetch_misses(&self) -> u64 {
+        self.prefetch_misses
     }
     
     pub fn get_stats(&self) -> CacheStats {
