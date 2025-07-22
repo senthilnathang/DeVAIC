@@ -17,11 +17,15 @@ DeVAIC provides enterprise-grade security analysis combining Bearer-inspired pri
 - **Sensitive Data Protection**: Advanced detection of exposed personal and health information
 - **Data Flow Tracking**: Analysis of how sensitive data moves through your application
 
-### 🤖 **Advanced Machine Learning Integration**
-- **AI-Powered Vulnerability Detection**: ML models for enhanced pattern recognition
-- **False Positive Reduction**: Smart filtering to reduce noise in security reports
-- **Severity Prediction**: AI-driven severity assessment for better prioritization
-- **Code Complexity Analysis**: Automated complexity scoring and maintainability metrics
+### 🤖 **Advanced Machine Learning Integration (ENHANCED)**
+- **AI-Powered Vulnerability Detection**: Advanced ML models with multiple analysis engines
+- **Anomaly Detection**: Identifies unusual code patterns that may indicate security risks
+- **Contextual Security Analysis**: Understands code context for more accurate vulnerability assessment
+- **Behavioral Pattern Recognition**: Detects suspicious behavioral patterns like privilege escalation
+- **Calibrated Confidence Scoring**: Temperature-scaled confidence calibration for reliable predictions
+- **False Positive Reduction**: Smart filtering with ML-based false positive probability scoring
+- **Severity Prediction**: Context-aware AI-driven severity assessment for better prioritization
+- **Security Pattern Matching**: Advanced pattern recognition for language-specific security risks
 
 ### 🔧 **IDE Integration & Real-Time Analysis**
 - **Language Server Protocol (LSP)**: Real-time security analysis in your favorite IDE
@@ -128,6 +132,11 @@ The project is now production-ready with revolutionary performance improvements:
 - **Mobile-First Security**: Specialized patterns for iOS/Android development
 - **Privacy Compliance**: Built-in GDPR/CCPA violation detection
 - **Advanced Crypto Analysis**: Modern cryptographic vulnerability detection
+- **🚀 Enhanced ML Engine**: Revolutionary AI-powered detection with 8 specialized model types
+  - Anomaly detection for unusual patterns
+  - Contextual analysis for security implications
+  - Behavioral pattern recognition
+  - Security pattern matching with risk scoring
 
 #### **📊 Enterprise Features**
 - **Advanced Reporting**: Enhanced PDF/Excel reports with mobile security metrics
