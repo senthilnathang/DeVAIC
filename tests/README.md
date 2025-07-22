@@ -4,8 +4,17 @@ This directory contains test files and testing utilities for DeVAIC.
 
 ## Structure
 
+- `fixtures/` - Test fixture files including vulnerable code samples for testing
 - `samples/` - Sample vulnerable code files for testing
 - `integration/` - Integration test files and data
+
+## Test Fixtures (`fixtures/`)
+
+The main test files are located in the `fixtures/` directory, which contains:
+- Sample code files in various languages
+- Nested directory structures for testing directory traversal
+- Vulnerable code patterns for security testing
+- OWASP test cases and examples
 
 ## Sample Files (`samples/`)
 
@@ -15,21 +24,14 @@ This directory contains test files and testing utilities for DeVAIC.
 
 Integration tests and test data will be placed here.
 
-## Test Files Directory
-
-The main test files are located in the root `test_files/` directory, which contains:
-- Sample code files in various languages
-- Nested directory structures for testing directory traversal
-- Vulnerable code patterns for security testing
-
 ## Running Tests
 
 ```bash
 # Run DeVAIC on test samples
 devaic tests/samples/
 
-# Run on main test files
-devaic test_files/
+# Run on test fixtures
+devaic tests/fixtures/
 
 # Test specific vulnerabilities
 devaic tests/samples/test_java_vulnerable.java

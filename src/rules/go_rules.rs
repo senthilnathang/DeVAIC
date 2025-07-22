@@ -48,6 +48,41 @@ lazy_static! {
         Regex::new(r#"(?i)(password|secret|key|token)\s*:?=\s*"[^"]{8,100}""#).expect("Invalid secret detection regex"),
         Regex::new(r#"(?i)(api_key|apikey)\s*:?=\s*"[^"]{20,200}""#).expect("Invalid API key detection regex"),
     ];
+    
+    // Enhanced Go security patterns
+    static ref GOROUTINE_PATTERNS: Vec<Regex> = vec![
+        Regex::new(r#"go\s+func\s*\([^)]*\)\s*\{"#).unwrap(),
+        Regex::new(r#"go\s+[a-zA-Z_][a-zA-Z0-9_]*\s*\("#).unwrap(),
+    ];
+    
+    static ref RACE_CONDITION_PATTERNS: Vec<Regex> = vec![
+        Regex::new(r#"var\s+\w+\s+\w+.*//.*shared"#).unwrap(),
+        Regex::new(r#"map\[[^\]]+\][^{]*\{[^}]*\}.*//.*concurrent"#).unwrap(),
+    ];
+    
+    static ref UNSAFE_PATTERNS: Vec<Regex> = vec![
+        Regex::new(r#"unsafe\."#).unwrap(),
+        Regex::new(r#"reflect\.UnsafeAddr"#).unwrap(),
+        Regex::new(r#"uintptr\("#).unwrap(),
+    ];
+    
+    static ref NETWORK_SECURITY_PATTERNS: Vec<Regex> = vec![
+        Regex::new(r#"InsecureSkipVerify:\s*true"#).unwrap(),
+        Regex::new(r#"http\.DefaultTransport"#).unwrap(),
+        Regex::new(r#"tls\.Config\{[^}]*InsecureSkipVerify:\s*true[^}]*\}"#).unwrap(),
+    ];
+    
+    static ref PERFORMANCE_PATTERNS: Vec<Regex> = vec![
+        Regex::new(r#"fmt\.Sprintf\s*\(\s*"[^"]*%s[^"]*"\s*,\s*[^)]+\)"#).unwrap(), // String concatenation
+        Regex::new(r#"strings\.Join\s*\(\[\]string\{[^}]+\},"#).unwrap(), // Inefficient join
+        Regex::new(r#"time\.Sleep\s*\(\s*time\.(Second|Minute)"#).unwrap(), // Long sleeps
+    ];
+    
+    static ref MEMORY_PATTERNS: Vec<Regex> = vec![
+        Regex::new(r#"make\s*\(\[\]byte,\s*[0-9]{6,}\)"#).unwrap(), // Large allocations
+        Regex::new(r#"runtime\.GC\(\)"#).unwrap(), // Manual GC calls
+        Regex::new(r#"runtime\.KeepAlive"#).unwrap(), // Memory management
+    ];
 }
 
 impl RuleSet for GoRules {
@@ -175,6 +210,120 @@ impl RuleSet for GoRules {
                         0,
                         line,
                         "Store secrets in environment variables or secure configuration files",
+                    ));
+                }
+            }
+
+            // Goroutine Safety Issues
+            for pattern in GOROUTINE_PATTERNS.iter() {
+                if pattern.is_match(line) {
+                    vulnerabilities.push(create_vulnerability(
+                        "GO-GOROUTINE-001",
+                        Some("CWE-362"),
+                        "Goroutine Safety",
+                        Severity::Medium,
+                        "concurrency",
+                        "Goroutine usage detected - ensure proper synchronization",
+                        &source_file.path.to_string_lossy(),
+                        line_num,
+                        0,
+                        line,
+                        "Use channels, mutexes, or sync package for safe concurrent access",
+                    ));
+                }
+            }
+
+            // Race Condition Detection
+            for pattern in RACE_CONDITION_PATTERNS.iter() {
+                if pattern.is_match(line) {
+                    vulnerabilities.push(create_vulnerability(
+                        "GO-RACE-001",
+                        Some("CWE-362"),
+                        "Race Condition",
+                        Severity::High,
+                        "concurrency",
+                        "Potential race condition detected in Go code",
+                        &source_file.path.to_string_lossy(),
+                        line_num,
+                        0,
+                        line,
+                        "Use proper synchronization mechanisms to prevent race conditions",
+                    ));
+                }
+            }
+
+            // Unsafe Operations
+            for pattern in UNSAFE_PATTERNS.iter() {
+                if pattern.is_match(line) {
+                    vulnerabilities.push(create_vulnerability(
+                        "GO-UNSAFE-001",
+                        Some("CWE-119"),
+                        "Unsafe Operation",
+                        Severity::High,
+                        "memory",
+                        "Unsafe operation detected in Go code",
+                        &source_file.path.to_string_lossy(),
+                        line_num,
+                        0,
+                        line,
+                        "Avoid unsafe operations or ensure proper memory safety",
+                    ));
+                }
+            }
+
+            // Network Security Issues
+            for pattern in NETWORK_SECURITY_PATTERNS.iter() {
+                if pattern.is_match(line) {
+                    vulnerabilities.push(create_vulnerability(
+                        "GO-TLS-001",
+                        Some("CWE-295"),
+                        "TLS Security Issue",
+                        Severity::High,
+                        "network",
+                        "Insecure TLS configuration detected",
+                        &source_file.path.to_string_lossy(),
+                        line_num,
+                        0,
+                        line,
+                        "Enable proper certificate verification and use secure TLS settings",
+                    ));
+                }
+            }
+
+            // Performance Issues
+            for pattern in PERFORMANCE_PATTERNS.iter() {
+                if pattern.is_match(line) {
+                    vulnerabilities.push(create_vulnerability(
+                        "GO-PERF-001",
+                        Some("CWE-400"),
+                        "Performance Issue",
+                        Severity::Low,
+                        "performance",
+                        "Performance anti-pattern detected in Go code",
+                        &source_file.path.to_string_lossy(),
+                        line_num,
+                        0,
+                        line,
+                        "Optimize code for better performance and resource usage",
+                    ));
+                }
+            }
+
+            // Memory Management Issues
+            for pattern in MEMORY_PATTERNS.iter() {
+                if pattern.is_match(line) {
+                    vulnerabilities.push(create_vulnerability(
+                        "GO-MEMORY-001",
+                        Some("CWE-401"),
+                        "Memory Management",
+                        Severity::Medium,
+                        "memory",
+                        "Memory management issue detected in Go code",
+                        &source_file.path.to_string_lossy(),
+                        line_num,
+                        0,
+                        line,
+                        "Review memory allocation patterns and avoid unnecessary allocations",
                     ));
                 }
             }

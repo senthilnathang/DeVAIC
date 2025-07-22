@@ -1,0 +1,116 @@
+rules:
+  - id: insecure-app-transport-security-dart
+    message: "Insecure App Transport Security configuration"
+    severity: error
+    languages:
+      - Dart
+    patterns:
+      - pattern-regex: 'NSAppTransportSecurity.*NSAllowsArbitraryLoads.*true'
+      - pattern-regex: 'android:usesCleartextTraffic\s*=\s*["\']true["\']'
+    metadata:
+      cwe: "CWE-319"
+      owasp: "A02:2021 – Cryptographic Failures"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "transport-security"
+
+  - id: root-jailbreak-detection-bypass-dart
+    message: "Root/Jailbreak detection bypass detected"
+    severity: warning
+    languages:
+      - Dart
+    patterns:
+      - pattern-regex: 'RootBeer\(\)\.isRooted\(\).*false'
+      - pattern-regex: 'JailbreakDetection\.jailbroken.*false'
+      - pattern-regex: 'SafetyNet\.attest\s*\([^)]*nonce:\s*null'
+    metadata:
+      cwe: "CWE-693"
+      owasp: "A04:2021 – Insecure Design"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "device-integrity"
+
+  - id: insecure-deep-link-handling-dart
+    message: "Insecure deep link handling without validation"
+    severity: error
+    languages:
+      - Dart
+    patterns:
+      - pattern-regex: 'intent\.getStringExtra\s*\([^)]*\).*Uri\.parse'
+      - pattern-regex: 'getIntent\(\)\.getData\(\).*toString\(\)'
+      - pattern-regex: 'Navigator\.pushNamed\s*\([^,]*,\s*[^)]*\$\{[^}]*\}[^)]*\)'
+    metadata:
+      cwe: "CWE-20"
+      owasp: "A03:2021 – Injection"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "deep-link-security"
+
+  - id: insecure-backup-configuration-dart
+    message: "Insecure backup configuration allows data exposure"
+    severity: warning
+    languages:
+      - Dart
+    patterns:
+      - pattern-regex: 'android:allowBackup\s*=\s*["\']true["\']'
+      - pattern-regex: 'android:fullBackupContent\s*=\s*["\']true["\']'
+    metadata:
+      cwe: "CWE-200"
+      owasp: "A01:2021 – Broken Access Control"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "backup-security"
+
+  - id: certificate-pinning-bypass-dart
+    message: "Certificate pinning bypass detected"
+    severity: error
+    languages:
+      - Dart
+    patterns:
+      - pattern-regex: 'CertificatePinner\.Builder\(\)\.build\(\).*null'
+      - pattern-regex: 'TrustManager.*checkServerTrusted.*return'
+      - pattern-regex: 'badCertificateCallback.*true'
+    metadata:
+      cwe: "CWE-295"
+      owasp: "A02:2021 – Cryptographic Failures"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "certificate-validation"
+
+  - id: insecure-inter-app-communication-dart
+    message: "Insecure inter-app communication with unvalidated input"
+    severity: warning
+    languages:
+      - Dart
+    patterns:
+      - pattern-regex: 'MethodChannel\s*\([^)]*\)\.invokeMethod\s*\([^)]*\$\{[^}]*\}'
+      - pattern-regex: 'EventChannel\s*\([^)]*\)\.receiveBroadcastStream\s*\([^)]*\$\{[^}]*\}'
+      - pattern-regex: 'MethodChannel\s*\(\s*["\'][^"\']*\$\{[^}]*\}[^"\']*["\']'
+    metadata:
+      cwe: "CWE-926"
+      owasp: "A04:2021 – Insecure Design"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "inter-app-communication"
+
+  - id: insecure-keystore-usage-dart
+    message: "Insecure keystore/secure storage configuration"
+    severity: error
+    languages:
+      - Dart
+    patterns:
+      - pattern-regex: 'FlutterSecureStorage\s*\([^)]*aOptions:\s*AndroidOptions\s*\([^)]*encryptedSharedPreferences:\s*false'
+      - pattern-regex: 'KeychainAccess\s*\([^)]*accessibility:\s*\.whenUnlocked'
+    metadata:
+      cwe: "CWE-312"
+      owasp: "A02:2021 – Cryptographic Failures"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "secure-storage"

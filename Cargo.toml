@@ -34,6 +34,8 @@ tree-sitter-kotlin = "0.3"
 tree-sitter-c-sharp = "0.20"
 tree-sitter-bash = "0.20"
 tree-sitter-rust = "0.20"
+tree-sitter-dart = "0.0.4"
+tree-sitter-swift = "0.4"
 
 # Regex and pattern matching - Updated with performance improvements
 regex = "1.10"
@@ -57,6 +59,20 @@ env_logger = "0.11"
 # Async runtime - Updated with better performance
 tokio = { version = "1.40", features = ["full"], optional = true }
 async-trait = { version = "0.1", optional = true }
+
+# Machine Learning dependencies
+candle-core = { version = "0.3", optional = true }
+candle-nn = { version = "0.3", optional = true }
+tokenizers = { version = "0.15", optional = true }
+
+# IDE Integration dependencies
+tower-lsp = { version = "0.20", optional = true }
+
+# Visualization dependencies (lightweight alternatives)
+plotters = { version = "0.3", optional = true, default-features = false, features = ["svg_backend"] }
+plotters-svg = { version = "0.3", optional = true }
+# Use a lighter image library or make it truly optional
+image = { version = "0.24", optional = true, default-features = false, features = ["png"] }
 
 # Configuration - Updated versions
 config = "0.13"
@@ -97,6 +113,11 @@ progress = ["indicatif"]  # Progress bars feature
 tracing = ["dep:tracing", "tracing-subscriber"]  # Structured logging
 fast-walk = ["jwalk"]  # Fast directory walking
 performance = ["parking_lot", "crossbeam-channel"]  # Performance optimizations
+ml = ["candle-core", "candle-nn", "tokenizers"]  # Machine learning features
+ide = ["tower-lsp", "async"]  # IDE integration features
+visualization = ["plotters"]  # Visualization features (minimal)
+visualization-full = ["plotters", "plotters-svg", "image"]  # Full visualization features
+full = ["ml", "ide", "visualization", "async", "progress", "tracing", "fast-walk", "performance"]
 
 [[bin]]
 name = "devaic"
@@ -111,3 +132,161 @@ strip = true        # Remove debug symbols
 
 [profile.dev]
 opt-level = 1       # Some optimization in debug mode for faster development
+
+# DeVAIC Application Configuration
+# Default runtime configuration for DeVAIC analysis
+[package.metadata.devaic]
+
+[package.metadata.devaic.rules]
+# Categories of vulnerabilities to analyze
+enabled_categories = [
+    "injection", "authentication", "authorization", "cryptographic",
+    "deserialization", "logging", "validation", "privacy", "security",
+    "vulnerability", "sanitizer", "dependency", "configuration",
+    "llm_security", "web_security"
+]
+
+# Minimum severity level to report (CRITICAL, HIGH, MEDIUM, LOW, INFO)
+severity_threshold = "LOW"
+
+# Build break thresholds
+[package.metadata.devaic.rules.build_break_rules]
+max_critical = 0
+max_high = 2
+max_medium = 5
+max_low = 10
+fail_on_timeout = true
+require_all_tests_pass = false
+
+[package.metadata.devaic.output]
+# Output format: table, json, sarif, pdf, excel, csv
+format = "table"
+verbose = false
+colors = true
+include_source_code = true
+include_recommendations = true
+
+# Supported output formats and their options
+[package.metadata.devaic.output.formats]
+json = { pretty = true, minified = false }
+sarif = { version = "2.1.0", include_snippets = true }
+pdf = { include_charts = false, executive_summary = false }
+excel = { multiple_sheets = true, formatting = true }
+csv = { delimiter = ",", include_headers = true }
+
+[package.metadata.devaic.analysis]
+# Maximum file size to analyze (in bytes)
+max_file_size = 10485760  # 10MB
+follow_symlinks = false
+parallel_threads = 0  # 0 = auto-detect
+enable_performance_mode = true
+enable_cache = true
+
+# File patterns to exclude from analysis
+exclude_patterns = [
+    ".git/*", ".svn/*", ".hg/*", ".bzr/*",
+    "target/*", "build/*", "dist/*", "out/*",
+    "**/target/**", "**/build/**", "**/dist/**",
+    "node_modules/*", "**/node_modules/**",
+    "vendor/*", "**/vendor/**", "third_party/*", "**/third_party/**",
+    ".gradle/*", ".m2/*",
+    "*.min.js", "*.bundle.js", "*.min.css",
+    "*.class", "*.jar", "*.war", "*.ear",
+    "*.exe", "*.dll", "*.so", "*.dylib",
+    "*.o", "*.obj", "*.a", "*.lib",
+    ".vscode/*", ".idea/*", "*.swp", "*.swo", ".vs/*", "*.user", "*.suo",
+    ".cache/*", "*.tmp", "*.temp", "*.log",
+    ".pytest_cache/*", "__pycache__/*", "*.pyc",
+    ".tox/*", ".coverage", "htmlcov/*",
+    "ios/Pods/*", "android/.gradle/*",
+    "*.xcworkspace/*", "*.xcodeproj/*",
+    ".flutter-plugins", ".flutter-plugins-dependencies",
+    "coverage/*", "test-results/*", "reports/*",
+    "*.lcov", "*.gcov", "*.gcno", "*.gcda"
+]
+
+# File patterns to include in analysis
+include_patterns = [
+    "*.c", "*.h", "*.cpp", "*.cc", "*.cxx", "*.c++", "*.hpp", "*.hxx", "*.h++",
+    "*.py", "*.rb", "*.php", "*.sh", "*.bash",
+    "*.java", "*.cs", "*.go", "*.rs",
+    "*.kt", "*.swift", "*.dart",
+    "*.js", "*.jsx", "*.mjs", "*.cjs", "*.ts", "*.tsx",
+    "*.html", "*.htm", "*.vue",
+    "*.st", "*.sl", "*.scl", "*.fbd", "*.ld", "*.il",
+    "*.cob", "*.cobol", "*.pas", "*.pp",
+    "*.yaml", "*.yml", "*.json", "*.toml", "*.ini", "*.cfg",
+    "*.tf", "*.dockerfile", "Dockerfile",
+    "requirements.txt", "package.json", "package-lock.json",
+    "pom.xml", "build.gradle", "build.gradle.kts",
+    "Gemfile", "Gemfile.lock", "go.mod", "go.sum",
+    "composer.json", "composer.lock", "Cargo.toml", "Cargo.lock",
+    "pubspec.yaml", "pubspec.lock"
+]
+
+[package.metadata.devaic.privacy]
+detect_pii = true
+detect_phi = true
+detect_financial = true
+compliance_frameworks = ["gdpr", "ccpa", "hipaa"]
+
+[package.metadata.devaic.memory_safety]
+enable_address_sanitizer_patterns = true
+enable_thread_sanitizer_patterns = true
+enable_memory_sanitizer_patterns = true
+enable_undefined_behavior_patterns = true
+enable_leak_sanitizer_patterns = true
+
+[package.metadata.devaic.mobile_security]
+enable_android_security = true
+enable_ios_security = true
+enable_flutter_security = true
+check_deep_links = true
+check_certificate_pinning = true
+check_biometric_authentication = true
+check_device_fingerprinting = true
+
+[package.metadata.devaic.owasp]
+enable_top10_2021 = true
+enable_llm_top10 = true
+enable_mobile_top10 = true
+enable_api_security_top10 = true
+
+[package.metadata.devaic.performance]
+enable_benchmarking = false
+benchmark_iterations = 3
+max_analysis_time_seconds = 300
+memory_limit_mb = 1024
+
+[package.metadata.devaic.advanced_features]
+# Machine learning features (requires --features ml)
+enable_ml_analysis = false
+ml_confidence_threshold = 0.7
+# IDE integration features (requires --features ide)
+enable_ide_integration = false
+lsp_server_port = 7878
+# Visualization features (requires --features visualization)
+enable_visualization = false
+generate_html_reports = false
+generate_charts = false
+
+[package.metadata.devaic.compliance]
+enable_compliance_checking = true
+
+[package.metadata.devaic.compliance.frameworks]
+owasp = { enabled = true, strict_mode = false }
+nist = { enabled = true, strict_mode = false }
+pci_dss = { enabled = false, strict_mode = false }
+iso27001 = { enabled = false, strict_mode = false }
+sox = { enabled = false, strict_mode = false }
+
+[package.metadata.devaic.logging]
+log_level = "info"
+enable_structured_logging = false
+log_file = "devaic.log"
+
+[package.metadata.devaic.custom_rules]
+enable_custom_rules = true
+custom_rules_directory = "rules/custom"
+enable_yaml_patterns = true
+enable_semgrep_rules = true

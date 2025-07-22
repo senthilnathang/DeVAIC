@@ -1,0 +1,50 @@
+rules:
+  - id: sql-injection-dart
+    message: "Potential SQL injection vulnerability in Dart code"
+    severity: error
+    languages:
+      - Dart
+    patterns:
+      - pattern-regex: 'rawQuery\s*\(\s*["\'].*\$\{[^}]*\}.*["\']'
+      - pattern-regex: 'execute\s*\(\s*["\'].*\$\{[^}]*\}.*["\']'
+      - pattern-regex: 'query\s*\(\s*["\'].*\$\{[^}]*\}.*["\']'
+    metadata:
+      cwe: "CWE-89"
+      owasp: "A03:2021 – Injection"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "sql-injection"
+
+  - id: command-injection-dart
+    message: "Potential command injection vulnerability in Dart code"
+    severity: error
+    languages:
+      - Dart
+    patterns:
+      - pattern-regex: 'Process\.run\s*\(\s*["\'].*\$\{[^}]*\}.*["\']'
+      - pattern-regex: 'Process\.start\s*\(\s*["\'].*\$\{[^}]*\}.*["\']'
+      - pattern-regex: 'shell\.run\s*\(\s*["\'].*\$\{[^}]*\}.*["\']'
+    metadata:
+      cwe: "CWE-78"
+      owasp: "A03:2021 – Injection"
+      category: "security"
+      confidence: high
+      subcategory:
+        - "command-injection"
+
+  - id: http-injection-dart
+    message: "Potential HTTP injection vulnerability in Dart code"
+    severity: warning
+    languages:
+      - Dart
+    patterns:
+      - pattern-regex: 'http\.get\s*\(\s*Uri\.parse\s*\(\s*["\'].*\$\{[^}]*\}.*["\']'
+      - pattern-regex: 'http\.post\s*\(\s*Uri\.parse\s*\(\s*["\'].*\$\{[^}]*\}.*["\']'
+    metadata:
+      cwe: "CWE-20"
+      owasp: "A03:2021 – Injection"
+      category: "security"
+      confidence: medium
+      subcategory:
+        - "http-injection"

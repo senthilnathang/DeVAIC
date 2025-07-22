@@ -1,0 +1,115 @@
+rules:
+  - id: kotlin-unprotected-broadcast
+    message: |
+      Unprotected broadcast detected in Kotlin Android code.
+      Sending broadcasts without permissions can leak sensitive data.
+    type: security
+    severity: medium
+    languages: [kotlin]
+    pattern: sendBroadcast($INTENT)
+    fix: |
+      Use sendBroadcast with permission:
+      sendBroadcast(intent, "com.example.CUSTOM_PERMISSION")
+      Or use LocalBroadcastManager for internal communication
+
+  - id: kotlin-world-readable-files
+    message: |
+      World-readable file permissions detected.
+      Files with world-readable permissions can be accessed by other apps.
+    type: security
+    severity: high
+    languages: [kotlin]
+    pattern: $FILE.setReadable(true, false)
+    fix: |
+      Use restrictive file permissions:
+      file.setReadable(true, true) // Owner only
+
+  - id: kotlin-javascript-enabled-webview
+    message: |
+      JavaScript enabled in WebView without proper security measures.
+      Enabling JavaScript in WebView can lead to XSS vulnerabilities.
+    type: security
+    severity: medium
+    languages: [kotlin]
+    pattern: $SETTINGS.javaScriptEnabled = true
+    fix: |
+      Only enable JavaScript if necessary and implement proper security:
+      - Validate all content loaded in WebView
+      - Use HTTPS only
+      - Implement Content Security Policy
+
+  - id: kotlin-http-url-usage
+    message: |
+      HTTP URL detected - should use HTTPS for security.
+      HTTP connections are not encrypted and can be intercepted.
+    type: security
+    severity: medium
+    languages: [kotlin]
+    pattern: "http://$URL"
+    fix: |
+      Use HTTPS instead: "https://..."
+      Configure Network Security Config to enforce HTTPS
+
+  - id: kotlin-hostname-verification-bypass
+    message: |
+      Hostname verification bypass detected.
+      Disabling hostname verification allows man-in-the-middle attacks.
+    type: security
+    severity: high
+    languages: [kotlin]
+    pattern: HttpsURLConnection.setDefaultHostnameVerifier { _, _ -> true }
+    fix: |
+      Implement proper hostname verification or use certificate pinning
+
+  - id: kotlin-weak-random-seed
+    message: |
+      Weak random number generation with predictable seed.
+      Using currentTimeMillis as seed makes random numbers predictable.
+    type: security
+    severity: medium
+    languages: [kotlin]
+    pattern: Random(System.currentTimeMillis())
+    fix: |
+      Use SecureRandom for cryptographic purposes:
+      val secureRandom = SecureRandom()
+
+  - id: kotlin-math-random-usage
+    message: |
+      Math.random() usage detected for security-sensitive operations.
+      Math.random() is not cryptographically secure.
+    type: security
+    severity: medium
+    languages: [kotlin]
+    pattern: Math.random()
+    fix: |
+      Use SecureRandom for security-sensitive random number generation:
+      val secureRandom = SecureRandom()
+      val randomValue = secureRandom.nextDouble()
+
+  - id: kotlin-path-traversal-file
+    message: |
+      Path traversal vulnerability detected in file operations.
+      User input in file paths can lead to directory traversal attacks.
+    type: security
+    severity: high
+    languages: [kotlin]
+    pattern: File($PATH, $USER_INPUT)
+    fix: |
+      Validate and sanitize file paths:
+      - Check for ".." sequences
+      - Use canonical paths
+      - Restrict access to specific directories
+
+  - id: kotlin-command-injection
+    message: |
+      Command injection vulnerability detected.
+      User input in system commands can lead to command injection.
+    type: security
+    severity: critical
+    languages: [kotlin]
+    pattern: Runtime.getRuntime().exec($COMMAND)
+    fix: |
+      Avoid system commands with user input or use ProcessBuilder with validation:
+      - Validate all input parameters
+      - Use allowlists for permitted commands
+      - Escape special characters

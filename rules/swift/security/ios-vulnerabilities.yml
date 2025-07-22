@@ -1,0 +1,106 @@
+rules:
+  - id: swift-sql-injection
+    message: |
+      SQL injection vulnerability detected in Swift code.
+      User input is directly interpolated into SQL queries.
+    type: security
+    severity: high
+    languages: [swift]
+    pattern-either:
+      - pattern: sqlite3_exec($DB, "...$VAR...", ...)
+      - pattern: sqlite3_prepare_v2($DB, "...$VAR...", ...)
+    fix: |
+      Use parameterized queries with sqlite3_bind_* functions
+
+  - id: swift-url-injection
+    message: |
+      URL injection vulnerability detected in Swift networking code.
+      User input is directly interpolated into URLs.
+    type: security
+    severity: medium
+    languages: [swift]
+    pattern-either:
+      - pattern: URL(string: "...$VAR...")
+      - pattern: URLRequest(url: URL(string: "...$VAR...")!)
+    fix: |
+      Validate and sanitize URL inputs before use
+
+  - id: swift-webview-xss
+    message: |
+      WebView XSS vulnerability detected in Swift iOS code.
+      User input is directly interpolated into HTML or JavaScript.
+    type: security
+    severity: medium
+    languages: [swift]
+    pattern-either:
+      - pattern: $WEBVIEW.loadHTMLString("...$VAR...", ...)
+      - pattern: $WEBVIEW.evaluateJavaScript("...$VAR...")
+    fix: |
+      Sanitize HTML content and escape JavaScript strings
+
+  - id: swift-weak-crypto
+    message: |
+      Weak cryptographic algorithm detected in Swift code.
+      MD5 and SHA1 are cryptographically broken.
+    type: security
+    severity: medium
+    languages: [swift]
+    pattern-either:
+      - pattern: CC_MD5(...)
+      - pattern: CC_SHA1(...)
+      - pattern: Insecure.MD5.hash(...)
+      - pattern: Insecure.SHA1.hash(...)
+    fix: |
+      Use strong cryptographic algorithms like SHA-256, AES, or CryptoKit
+
+  - id: swift-insecure-keychain
+    message: |
+      Insecure keychain accessibility detected in Swift code.
+      kSecAttrAccessibleAlways allows access without authentication.
+    type: security
+    severity: medium
+    languages: [swift]
+    pattern: kSecAttrAccessibleAlways
+    fix: |
+      Use more secure keychain accessibility options like kSecAttrAccessibleWhenUnlockedThisDeviceOnly
+
+  - id: swift-hardcoded-secrets
+    message: |
+      Hardcoded secret detected in Swift code.
+      Secrets should not be embedded in source code.
+    type: security
+    severity: high
+    languages: [swift]
+    pattern-either:
+      - pattern: let $VAR = "$SECRET"
+      - pattern: var $VAR = "$SECRET"
+    metavariable-regex:
+      metavariable: $SECRET
+      regex: (sk-[a-zA-Z0-9]{32,}|[a-zA-Z0-9]{20,})
+    fix: |
+      Store secrets in iOS Keychain or secure configuration
+
+  - id: swift-unsafe-pointers
+    message: |
+      Unsafe pointer usage detected in Swift code.
+      Manual memory management can lead to crashes and security issues.
+    type: security
+    severity: medium
+    languages: [swift]
+    pattern-either:
+      - pattern: UnsafePointer<$TYPE>
+      - pattern: UnsafeMutablePointer<$TYPE>
+      - pattern: withUnsafePointer(...)
+    fix: |
+      Use safe Swift alternatives or ensure proper bounds checking
+
+  - id: swift-force-unwrapping
+    message: |
+      Force unwrapping detected in Swift code.
+      This can cause runtime crashes if the optional is nil.
+    type: reliability
+    severity: low
+    languages: [swift]
+    pattern: $VAR!
+    fix: |
+      Use optional binding (if let) or guard statements instead of force unwrapping

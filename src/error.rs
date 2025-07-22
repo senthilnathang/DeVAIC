@@ -43,3 +43,9 @@ impl From<printpdf::Error> for DevaicError {
         DevaicError::Pdf(err.to_string())
     }
 }
+
+impl From<serde_yaml::Error> for DevaicError {
+    fn from(err: serde_yaml::Error) -> Self {
+        DevaicError::Config(err.to_string())
+    }
+}

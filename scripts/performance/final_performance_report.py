@@ -61,13 +61,13 @@ def main():
     
     test_sets = [
         {
-            'name': 'Small Directory (test_files/)',
-            'path': 'test_files/',
+            'name': 'Small Directory (tests/fixtures/)',
+            'path': 'tests/fixtures/',
             'timeout': 30
         },
         {
-            'name': 'Large Directory (large_test_files/)',
-            'path': 'large_test_files/',
+            'name': 'Large Directory (large_tests/fixtures/)',
+            'path': 'large_tests/fixtures/',
             'timeout': 60
         }
     ]

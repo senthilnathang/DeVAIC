@@ -21,17 +21,17 @@ pub struct Analyzer {
 }
 
 impl Analyzer {
-    pub fn new(config: Config) -> Self {
+    pub fn new(config: Config) -> Result<Self> {
         let rule_engine = RuleEngine::new(&config.rules);
         let optimized_reader = OptimizedFileReader::new(true); // Enable caching
         
-        Self {
+        Ok(Self {
             config,
             rule_engine,
             optimized_reader,
             parallel_enabled: true,
             max_depth: 100,
-        }
+        })
     }
 
     pub fn new_with_custom_patterns(config: Config, pattern_loader: PatternLoader) -> Self {

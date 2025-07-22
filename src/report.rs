@@ -22,6 +22,37 @@ pub struct Summary {
     pub by_severity: HashMap<String, usize>,
     pub by_category: HashMap<String, usize>,
     pub by_language: HashMap<String, usize>,
+    pub mobile_security: Option<MobileSecurity>,
+    pub performance_metrics: Option<PerformanceMetrics>,
+    pub security_score: Option<SecurityScore>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MobileSecurity {
+    pub platform_specific_issues: HashMap<String, usize>, // iOS, Android
+    pub crypto_issues: usize,
+    pub network_security_issues: usize,
+    pub data_storage_issues: usize,
+    pub authentication_issues: usize,
+    pub privacy_violations: usize,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PerformanceMetrics {
+    pub memory_issues: usize,
+    pub performance_anti_patterns: usize,
+    pub concurrency_issues: usize,
+    pub resource_leaks: usize,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SecurityScore {
+    pub overall_score: f64, // 0-100
+    pub critical_issues: usize,
+    pub high_issues: usize,
+    pub medium_issues: usize,
+    pub low_issues: usize,
+    pub recommendations: Vec<String>,
 }
 
 #[derive(Tabled)]
@@ -375,11 +406,24 @@ impl Summary {
             *by_language.entry(language.to_string()).or_insert(0) += 1;
         }
         
+        // Calculate mobile security metrics
+        // Placeholder for mobile security (to be implemented)
+        let _mobile_security = 0;
+        
+        // Placeholder for performance metrics (to be implemented)
+        let _performance_metrics = 0;
+        
+        // Placeholder for security score (to be implemented)
+        let _security_score = 0;
+
         Self {
             total_vulnerabilities,
             by_severity,
             by_category,
             by_language,
+            mobile_security: None,
+            performance_metrics: None,
+            security_score: None,
         }
     }
 }

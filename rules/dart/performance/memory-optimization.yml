@@ -1,0 +1,84 @@
+rules:
+  - id: memory-leak-risk-dart
+    message: "Potential memory leak - controller not properly disposed"
+    severity: warning
+    languages:
+      - Dart
+    patterns:
+      - pattern-regex: 'StreamController\s*\([^)]*\)'
+      - pattern-regex: 'AnimationController\s*\([^)]*\)'
+      - pattern-regex: 'Timer\.periodic\s*\([^)]*\)'
+      - pattern-regex: 'StreamSubscription\s*[^;]*'
+    metadata:
+      category: "performance"
+      confidence: medium
+      subcategory:
+        - "memory-management"
+
+  - id: inefficient-state-management-dart
+    message: "Inefficient state management - async operation in setState"
+    severity: info
+    languages:
+      - Dart
+    patterns:
+      - pattern-regex: 'setState\s*\(\s*\(\)\s*\{\s*[^}]*Future\.'
+    metadata:
+      category: "performance"
+      confidence: medium
+      subcategory:
+        - "state-management"
+
+  - id: inefficient-list-rendering-dart
+    message: "Inefficient list rendering - use ListView.builder for large lists"
+    severity: warning
+    languages:
+      - Dart
+    patterns:
+      - pattern-regex: 'ListView\s*\([^)]*children:\s*\[[^]]*\.map\s*\([^)]*\)\s*\.toList\(\)'
+    metadata:
+      category: "performance"
+      confidence: high
+      subcategory:
+        - "widget-optimization"
+
+  - id: inefficient-network-calls-dart
+    message: "Inefficient network calls - avoid sequential requests in loops"
+    severity: warning
+    languages:
+      - Dart
+    patterns:
+      - pattern-regex: 'http\.get\s*\([^)]*\).*await.*for\s*\('
+      - pattern-regex: 'Dio\(\)\.get\s*\([^)]*\).*await.*while\s*\('
+    metadata:
+      category: "performance"
+      confidence: medium
+      subcategory:
+        - "network-optimization"
+
+  - id: unoptimized-image-loading-dart
+    message: "Unoptimized image loading - use cacheWidth/cacheHeight"
+    severity: info
+    languages:
+      - Dart
+    patterns:
+      - pattern-regex: 'Image\.network\s*\([^)]*\)'
+      - pattern-regex: 'Image\.file\s*\([^)]*\)'
+    metadata:
+      category: "performance"
+      confidence: low
+      subcategory:
+        - "image-optimization"
+
+  - id: inefficient-database-operations-dart
+    message: "Inefficient database operations detected"
+    severity: warning
+    languages:
+      - Dart
+    patterns:
+      - pattern-regex: 'database\.query\s*\([^)]*\).*for\s*\([^)]*in'
+      - pattern-regex: 'sqflite\.openDatabase\s*\([^)]*\)(?!.*readOnly:)'
+    metadata:
+      category: "performance"
+      confidence: medium
+      subcategory:
+        - "database-optimization"

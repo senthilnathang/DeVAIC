@@ -1,0 +1,115 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: devaic-analyzer
+  labels:
+    app: devaic
+    component: analyzer
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: devaic
+      component: analyzer
+  template:
+    metadata:
+      labels:
+        app: devaic
+        component: analyzer
+    spec:
+      containers:
+      - name: devaic
+        image: devaic/devaic:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: DEVAIC_OUTPUT_DIR
+          value: "/app/reports"
+        - name: DEVAIC_LOG_LEVEL
+          value: "info"
+        volumeMounts:
+        - name: reports-volume
+          mountPath: /app/reports
+        - name: rules-volume
+          mountPath: /app/rules
+          readOnly: true
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+        livenessProbe:
+          exec:
+            command:
+            - devaic
+            - --version
+          initialDelaySeconds: 30
+          periodSeconds: 30
+        readinessProbe:
+          exec:
+            command:
+            - devaic
+            - --version
+          initialDelaySeconds: 5
+          periodSeconds: 10
+      volumes:
+      - name: reports-volume
+        persistentVolumeClaim:
+          claimName: devaic-reports-pvc
+      - name: rules-volume
+        configMap:
+          name: devaic-rules-config
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: devaic-service
+spec:
+  selector:
+    app: devaic
+    component: analyzer
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8080
+  type: LoadBalancer
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: devaic-reports-pvc
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: devaic-rules-config
+data:
+  rules/custom.yaml: |
+    name: "Production Security Rules"
+    version: "1.0.0"
+    description: "Production security rules for DeVAIC"
+    rules:
+      - id: "PROD-001"
+        name: "Hardcoded API Key"
+        description: "Detects hardcoded API keys"
+        severity: "High"
+        category: "secrets"
+        languages: ["python", "javascript", "java"]
+        pattern_type: "Regex"
+        patterns:
+          - 'api[_-]?key\s*=\s*["''][a-zA-Z0-9]{20,}["'']'
+        cwe: "CWE-798"
+        recommendation: "Store API keys in environment variables"
+        enabled: true
+        confidence: 0.9

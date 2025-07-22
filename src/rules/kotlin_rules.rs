@@ -46,6 +46,46 @@ lazy_static! {
         Regex::new(r#"Class\.forName\s*\([^)]*\$\{[^}]*\}[^)]*\)"#).unwrap(),
         Regex::new(r#"\.newInstance\s*\(\s*\)"#).unwrap(),
     ];
+    
+    // Android-specific security patterns
+    static ref ANDROID_SECURITY_PATTERNS: Vec<Regex> = vec![
+        Regex::new(r#"sendBroadcast\s*\([^)]*\)"#).unwrap(),
+        Regex::new(r#"setReadable\s*\(\s*true\s*,\s*false\s*\)"#).unwrap(),
+        Regex::new(r#"javaScriptEnabled\s*=\s*true"#).unwrap(),
+    ];
+    
+    static ref NETWORK_SECURITY_PATTERNS: Vec<Regex> = vec![
+        Regex::new(r#"http://[^"]*"#).unwrap(),
+        Regex::new(r#"HttpsURLConnection\.setDefaultHostnameVerifier"#).unwrap(),
+        Regex::new(r#"checkServerTrusted.*\{\s*\}"#).unwrap(),
+    ];
+    
+    static ref BIOMETRIC_PATTERNS: Vec<Regex> = vec![
+        Regex::new(r#"BiometricPrompt\.Builder"#).unwrap(),
+        Regex::new(r#"setNegativeButton"#).unwrap(),
+    ];
+    
+    // Performance patterns
+    static ref PERFORMANCE_PATTERNS: Vec<Regex> = vec![
+        Regex::new(r#"for\s*\(\s*\w+\s+in\s+\w+\.indices\s*\)"#).unwrap(),
+        Regex::new(r#"\.map\s*\{[^}]*\}\.filter\s*\{[^}]*\}\.map\s*\{[^}]*\}"#).unwrap(),
+        Regex::new(r#"\w+\s*\+=\s*"[^"]*\$\{[^}]*\}[^"]*""#).unwrap(),
+    ];
+    
+    static ref MEMORY_PATTERNS: Vec<Regex> = vec![
+        Regex::new(r#"companion\s+object\s*\{[^}]*var\s+\w*[Cc]ontext"#).unwrap(),
+        Regex::new(r#"Handler\s*\([^)]*\)\.postDelayed"#).unwrap(),
+    ];
+    
+    static ref RANDOM_PATTERNS: Vec<Regex> = vec![
+        Regex::new(r#"Random\s*\(\s*System\.currentTimeMillis\(\)\s*\)"#).unwrap(),
+        Regex::new(r#"Math\.random\(\)"#).unwrap(),
+    ];
+    
+    static ref INPUT_VALIDATION_PATTERNS: Vec<Regex> = vec![
+        Regex::new(r#"File\s*\([^)]*\$\{[^}]*\}[^)]*\)"#).unwrap(),
+        Regex::new(r#"Runtime\.getRuntime\(\)\.exec\s*\([^)]*\$\{[^}]*\}[^)]*\)"#).unwrap(),
+    ];
 }
 
 impl RuleSet for KotlinRules {
@@ -167,6 +207,120 @@ impl RuleSet for KotlinRules {
                         0,
                         line,
                         "Validate class names against a whitelist before using reflection",
+                    ));
+                }
+            }
+
+            // Android Security Issues
+            for pattern in ANDROID_SECURITY_PATTERNS.iter() {
+                if pattern.is_match(line) {
+                    vulnerabilities.push(create_vulnerability(
+                        "KOTLIN-ANDROID-001",
+                        Some("CWE-200"),
+                        "Android Security Issue",
+                        Severity::Medium,
+                        "configuration",
+                        "Android security configuration issue detected",
+                        &source_file.path.to_string_lossy(),
+                        line_num,
+                        0,
+                        line,
+                        "Review Android security settings and permissions",
+                    ));
+                }
+            }
+
+            // Network Security Issues
+            for pattern in NETWORK_SECURITY_PATTERNS.iter() {
+                if pattern.is_match(line) {
+                    vulnerabilities.push(create_vulnerability(
+                        "KOTLIN-NETWORK-001",
+                        Some("CWE-295"),
+                        "Network Security Issue",
+                        Severity::High,
+                        "network",
+                        "Network security vulnerability detected",
+                        &source_file.path.to_string_lossy(),
+                        line_num,
+                        0,
+                        line,
+                        "Use HTTPS and implement proper certificate validation",
+                    ));
+                }
+            }
+
+            // Performance Issues
+            for pattern in PERFORMANCE_PATTERNS.iter() {
+                if pattern.is_match(line) {
+                    vulnerabilities.push(create_vulnerability(
+                        "KOTLIN-PERF-001",
+                        Some("CWE-400"),
+                        "Performance Issue",
+                        Severity::Low,
+                        "performance",
+                        "Performance anti-pattern detected in Kotlin code",
+                        &source_file.path.to_string_lossy(),
+                        line_num,
+                        0,
+                        line,
+                        "Optimize code for better performance - avoid inefficient operations",
+                    ));
+                }
+            }
+
+            // Memory Management Issues
+            for pattern in MEMORY_PATTERNS.iter() {
+                if pattern.is_match(line) {
+                    vulnerabilities.push(create_vulnerability(
+                        "KOTLIN-MEMORY-001",
+                        Some("CWE-401"),
+                        "Memory Leak Risk",
+                        Severity::Medium,
+                        "memory",
+                        "Potential memory leak detected in Kotlin code",
+                        &source_file.path.to_string_lossy(),
+                        line_num,
+                        0,
+                        line,
+                        "Avoid static references to Context and use weak references for callbacks",
+                    ));
+                }
+            }
+
+            // Weak Random Number Generation
+            for pattern in RANDOM_PATTERNS.iter() {
+                if pattern.is_match(line) {
+                    vulnerabilities.push(create_vulnerability(
+                        "KOTLIN-RANDOM-001",
+                        Some("CWE-338"),
+                        "Weak Random Generation",
+                        Severity::Medium,
+                        "cryptography",
+                        "Weak random number generation detected",
+                        &source_file.path.to_string_lossy(),
+                        line_num,
+                        0,
+                        line,
+                        "Use SecureRandom for cryptographically secure random numbers",
+                    ));
+                }
+            }
+
+            // Input Validation Issues
+            for pattern in INPUT_VALIDATION_PATTERNS.iter() {
+                if pattern.is_match(line) {
+                    vulnerabilities.push(create_vulnerability(
+                        "KOTLIN-INPUT-001",
+                        Some("CWE-20"),
+                        "Input Validation Issue",
+                        Severity::High,
+                        "validation",
+                        "Input validation vulnerability detected",
+                        &source_file.path.to_string_lossy(),
+                        line_num,
+                        0,
+                        line,
+                        "Validate and sanitize all user inputs",
                     ));
                 }
             }

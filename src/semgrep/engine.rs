@@ -285,7 +285,7 @@ impl RuleStatistics {
 mod tests {
     use super::*;
     use crate::semgrep::{pattern::PatternOperator, rule::SemgrepSeverity};
-    use std::collections::HashMap;
+    
     
     #[test]
     fn test_engine_creation() {

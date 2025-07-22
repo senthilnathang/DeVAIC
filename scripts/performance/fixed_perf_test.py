@@ -47,8 +47,8 @@ def main():
     
     # Test on both small and large directories
     test_dirs = [
-        ("Small Directory", "test_files/", 30),
-        ("Large Directory", "large_test_files/", 120),
+        ("Small Directory", "tests/fixtures/", 30),
+        ("Large Directory", "large_tests/fixtures/", 120),
     ]
     
     for dir_name, test_dir, timeout in test_dirs:

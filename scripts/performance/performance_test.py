@@ -52,32 +52,32 @@ def run_performance_tests():
     test_cases = [
         {
             'name': 'Fast Walker (default)',
-            'args': ['large_test_files/'],
+            'args': ['large_tests/fixtures/'],
             'description': 'Using optimized fast walker with directory filtering'
         },
         {
             'name': 'Legacy Walker',
-            'args': ['--legacy-walker', 'large_test_files/'],
+            'args': ['--legacy-walker', 'large_tests/fixtures/'],
             'description': 'Using legacy cached walker'
         },
         {
             'name': 'Sequential Mode',
-            'args': ['--no-parallel', 'large_test_files/'],
+            'args': ['--no-parallel', 'large_tests/fixtures/'],
             'description': 'Sequential processing with fast walker'
         },
         {
             'name': 'Max Depth 3',
-            'args': ['--max-depth', '3', 'large_test_files/'],
+            'args': ['--max-depth', '3', 'large_tests/fixtures/'],
             'description': 'Limited depth scanning'
         },
         {
             'name': 'Max Depth 1',
-            'args': ['--max-depth', '1', 'large_test_files/'],
+            'args': ['--max-depth', '1', 'large_tests/fixtures/'],
             'description': 'Shallow scanning'
         },
         {
             'name': 'No Cache',
-            'args': ['--no-cache', 'large_test_files/'],
+            'args': ['--no-cache', 'large_tests/fixtures/'],
             'description': 'Fast walker without caching'
         },
     ]
@@ -162,8 +162,8 @@ def test_directory_filtering():
     print("=" * 60)
     
     # Test with and without filtering
-    with_filtering = run_devaic_with_timing(['large_test_files/'])
-    without_filtering = run_devaic_with_timing(['--legacy-walker', 'large_test_files/'])
+    with_filtering = run_devaic_with_timing(['large_tests/fixtures/'])
+    without_filtering = run_devaic_with_timing(['--legacy-walker', 'large_tests/fixtures/'])
     
     print(f"With directory filtering: {with_filtering['duration']:.2f}s")
     print(f"Without directory filtering: {without_filtering['duration']:.2f}s")

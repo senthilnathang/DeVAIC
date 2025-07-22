@@ -13,6 +13,9 @@ pub mod bash_rules;
 pub mod scada_rules;
 pub mod cobol_rules;
 pub mod pascal_rules;
+pub mod dart_rules;
+pub mod swift_rules;
+pub mod rust_rules;
 pub mod owasp_llm_rules;
 pub mod owasp_web_rules;
 pub mod privacy_rules;
@@ -41,11 +44,14 @@ pub struct RuleEngine {
     php_rules: php_rules::PhpRules,
     ruby_rules: ruby_rules::RubyRules,
     kotlin_rules: kotlin_rules::KotlinRules,
+    swift_rules: swift_rules::SwiftRules,
+    rust_rules: rust_rules::RustRules,
     csharp_rules: csharp_rules::CSharpRules,
     bash_rules: bash_rules::BashRules,
     scada_rules: scada_rules::ScadaRules,
     cobol_rules: cobol_rules::CobolRules,
     pascal_rules: pascal_rules::PascalRules,
+    dart_rules: dart_rules::DartRules,
     owasp_llm_rules: owasp_llm_rules::OwaspLlmRules,
     owasp_web_rules: owasp_web_rules::OwaspWebRules,
     privacy_rules: privacy_rules::PrivacyRules,
@@ -70,11 +76,14 @@ impl RuleEngine {
             php_rules: php_rules::PhpRules::new(),
             ruby_rules: ruby_rules::RubyRules::new(),
             kotlin_rules: kotlin_rules::KotlinRules::new(),
+            swift_rules: swift_rules::SwiftRules::new(),
+            rust_rules: rust_rules::RustRules::new(),
             csharp_rules: csharp_rules::CSharpRules::new(),
             bash_rules: bash_rules::BashRules::new(),
             scada_rules: scada_rules::ScadaRules::new(),
             cobol_rules: cobol_rules::CobolRules::new(),
             pascal_rules: pascal_rules::PascalRules::new(),
+            dart_rules: dart_rules::DartRules::new(),
             owasp_llm_rules: owasp_llm_rules::OwaspLlmRules::new(),
             owasp_web_rules: owasp_web_rules::OwaspWebRules::new(),
             privacy_rules: privacy_rules::PrivacyRules::new(),
@@ -138,6 +147,15 @@ impl RuleEngine {
             }
             Language::Pascal => {
                 vulnerabilities.extend(self.pascal_rules.analyze(source_file, ast)?);
+            }
+            Language::Dart => {
+                vulnerabilities.extend(self.dart_rules.analyze(source_file, ast)?);
+            }
+            Language::Swift => {
+                vulnerabilities.extend(self.swift_rules.analyze(source_file, ast)?);
+            }
+            Language::Rust => {
+                vulnerabilities.extend(self.rust_rules.analyze(source_file, ast)?);
             }
         }
 

@@ -159,6 +159,12 @@ impl FileSystemCache {
             .insert(path.to_path_buf(), vulnerabilities);
     }
 
+    /// Update content hash for file
+    pub fn update_content_hash(&self, path: &Path, content: &str) {
+        let hash = fast_hash(content);
+        self.content_cache.insert(path.to_path_buf(), hash);
+    }
+
     /// Clear all caches
     pub fn clear_all(&self) {
         self.file_metadata.clear();

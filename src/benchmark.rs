@@ -13,7 +13,7 @@ impl PerformanceBenchmark {
     }
 
     /// Run comprehensive benchmark comparing different scanning strategies
-    pub fn run_benchmark(&self, target_path: &Path) -> BenchmarkResults {
+    pub fn run_benchmark(&self, target_path: &Path) -> crate::Result<BenchmarkResults> {
         println!("Running performance benchmark on: {}", target_path.display());
         
         // Clear cache before benchmarking
@@ -48,28 +48,21 @@ impl PerformanceBenchmark {
         println!("5. Parallel scanning with cache (second run)...");
         let par_cache_hit = self.benchmark_parallel(target_path, true);
 
-        BenchmarkResults {
-            sequential_no_cache: seq_no_cache,
-            sequential_with_cache: seq_with_cache,
-            parallel_no_cache: par_no_cache,
-            parallel_with_cache: par_with_cache,
-            parallel_cache_hit: par_cache_hit,
-        }
+        Ok(BenchmarkResults {
+            sequential_no_cache: seq_no_cache?,
+            sequential_with_cache: seq_with_cache?,
+            parallel_no_cache: par_no_cache?,
+            parallel_with_cache: par_with_cache?,
+            parallel_cache_hit: par_cache_hit?,
+        })
     }
 
     /// Benchmark sequential scanning
-    fn benchmark_sequential(&self, target_path: &Path, enable_cache: bool) -> BenchmarkResult {
+    fn benchmark_sequential(&self, target_path: &Path, enable_cache: bool) -> crate::Result<BenchmarkResult> {
         let start = Instant::now();
         
         // Create analyzer with sequential mode
-        let mut analyzer = if enable_cache {
-            Analyzer::new(self.config.clone())
-        } else {
-            let mut analyzer = Analyzer::new(self.config.clone());
-            analyzer.set_parallel_enabled(false);
-            analyzer
-        };
-        
+        let mut analyzer = Analyzer::new(self.config.clone())?;
         analyzer.set_parallel_enabled(false);
         
         let vulnerabilities = analyzer.analyze_directory(target_path)
@@ -78,27 +71,20 @@ impl PerformanceBenchmark {
         let duration = start.elapsed();
         let cache_stats = analyzer.get_cache_stats();
         
-        BenchmarkResult {
+        Ok(BenchmarkResult {
             duration,
             vulnerabilities_found: vulnerabilities.len(),
             cache_enabled: enable_cache,
             cache_entries: cache_stats.file_metadata_entries + cache_stats.directory_cache_entries,
-        }
+        })
     }
 
     /// Benchmark parallel scanning
-    fn benchmark_parallel(&self, target_path: &Path, enable_cache: bool) -> BenchmarkResult {
+    fn benchmark_parallel(&self, target_path: &Path, enable_cache: bool) -> crate::Result<BenchmarkResult> {
         let start = Instant::now();
         
         // Create analyzer with parallel mode
-        let mut analyzer = if enable_cache {
-            Analyzer::new(self.config.clone())
-        } else {
-            let mut analyzer = Analyzer::new(self.config.clone());
-            analyzer.set_parallel_enabled(true);
-            analyzer
-        };
-        
+        let mut analyzer = Analyzer::new(self.config.clone())?;
         analyzer.set_parallel_enabled(true);
         
         let vulnerabilities = analyzer.analyze_directory(target_path)
@@ -107,12 +93,12 @@ impl PerformanceBenchmark {
         let duration = start.elapsed();
         let cache_stats = analyzer.get_cache_stats();
         
-        BenchmarkResult {
+        Ok(BenchmarkResult {
             duration,
             vulnerabilities_found: vulnerabilities.len(),
             cache_enabled: enable_cache,
             cache_entries: cache_stats.file_metadata_entries + cache_stats.directory_cache_entries,
-        }
+        })
     }
 
     

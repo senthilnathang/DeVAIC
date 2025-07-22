@@ -13,6 +13,9 @@ pub mod bash_parser;
 pub mod scada_parser;
 pub mod cobol_parser;
 pub mod pascal_parser;
+pub mod dart_parser;
+pub mod swift_parser;
+pub mod rust_parser;
 
 use crate::{error::Result, Language};
 use std::path::PathBuf;
@@ -94,6 +97,9 @@ impl ParserFactory {
             Language::Scada => Ok(Box::new(scada_parser::ScadaParser::new()?)),
             Language::Cobol => Ok(Box::new(cobol_parser::CobolParser::new()?)),
             Language::Pascal => Ok(Box::new(pascal_parser::PascalParser::new()?)),
+            Language::Dart => Ok(Box::new(dart_parser::DartParser::new()?)),
+            Language::Swift => Ok(Box::new(swift_parser::SwiftParser::new()?)),
+            Language::Rust => Ok(Box::new(rust_parser::RustParser::new()?)),
         }
     }
 }

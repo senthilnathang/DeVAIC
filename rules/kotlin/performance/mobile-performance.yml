@@ -1,0 +1,72 @@
+rules:
+  - id: kotlin-inefficient-indexing
+    message: |
+      Inefficient array/list indexing detected in Kotlin code.
+      Using indices with indexing is less efficient than direct iteration.
+    type: performance
+    severity: low
+    languages: [kotlin]
+    pattern: for ($VAR in $LIST.indices) { ... $LIST[$VAR] ... }
+    fix: |
+      Use direct iteration: for (item in list) { ... }
+      Or use forEachIndexed: list.forEachIndexed { index, item -> ... }
+
+  - id: kotlin-chained-operations
+    message: |
+      Multiple chained operations detected that could be optimized.
+      Chaining map/filter/map operations creates intermediate collections.
+    type: performance
+    severity: low
+    languages: [kotlin]
+    pattern-either:
+      - pattern: $LIST.map { ... }.filter { ... }.map { ... }
+      - pattern: $LIST.filter { ... }.map { ... }.filter { ... }
+    fix: |
+      Combine operations or use sequences for large datasets:
+      list.asSequence().map { ... }.filter { ... }.toList()
+
+  - id: kotlin-string-concatenation
+    message: |
+      Inefficient string concatenation in loop detected.
+      String concatenation with += creates new string objects.
+    type: performance
+    severity: medium
+    languages: [kotlin]
+    pattern: |
+      for (...) {
+        ...
+        $VAR += "..."
+        ...
+      }
+    fix: |
+      Use StringBuilder for multiple concatenations:
+      val builder = StringBuilder()
+      for (...) { builder.append("...") }
+      val result = builder.toString()
+
+  - id: kotlin-memory-leak-handler
+    message: |
+      Potential memory leak detected with Handler usage.
+      Handler callbacks can hold references to outer class.
+    type: performance
+    severity: medium
+    languages: [kotlin]
+    pattern: Handler(...).postDelayed({ ... }, ...)
+    fix: |
+      Use WeakReference or static inner class to avoid memory leaks
+
+  - id: kotlin-static-context-reference
+    message: |
+      Static reference to Context detected - potential memory leak.
+      Static references prevent garbage collection of Context.
+    type: performance
+    severity: high
+    languages: [kotlin]
+    pattern: |
+      companion object {
+        ...
+        var $VAR: Context
+        ...
+      }
+    fix: |
+      Use Application context or WeakReference for static references

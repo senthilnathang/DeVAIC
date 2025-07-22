@@ -13,12 +13,40 @@ pub mod optimized_reader;
 pub mod parallel_scanner;
 pub mod benchmark;
 pub mod fast_walker;
+pub mod ast_analyzer;
+pub mod ml_engine;
+pub mod ide_integration;
+pub mod custom_rules;
+pub mod compliance;
+pub mod visualization;
+pub mod performance_optimizer;
+#[cfg(feature = "async")]
+pub mod async_scanner;
+pub mod memory_pool;
+pub mod optimized_ast_parser;
+pub mod performance_monitor;
+pub mod intelligent_cache;
+pub mod optimized_regex;
+pub mod simd_optimizations;
 
 pub use analyzer::Analyzer;
 pub use build_break::{BuildBreakAnalyzer, BuildBreakResult};
 pub use error::{DevaicError, Result};
 pub use report::Report;
 pub use config::Config;
+pub use ml_engine::{MLEngine, MLModel, MLPrediction};
+pub use ide_integration::{IDEIntegration, DevaicLanguageServer};
+pub use custom_rules::{CustomRuleEngine, CustomRule};
+pub use compliance::{ComplianceEngine, ComplianceReport};
+pub use visualization::{VisualizationEngine, SecurityDashboard};
+pub use performance_optimizer::{PerformanceOptimizer, WorkloadType};
+#[cfg(feature = "async")]
+pub use async_scanner::{AsyncFileScanner, StreamingVulnerabilityCollector};
+pub use memory_pool::{MemoryPool, get_global_memory_pools};
+pub use performance_monitor::PerformanceMonitor;
+pub use intelligent_cache::{IntelligentCache, CacheKey, CacheEntry};
+pub use optimized_regex::{OptimizedRegexEngine, simd_ops};
+pub use simd_optimizations::{SIMDPatternMatcher, CharClass, benchmark_simd_operations};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize, Copy)]
 pub enum Language {
@@ -37,6 +65,9 @@ pub enum Language {
     Scada,
     Cobol,
     Pascal,
+    Dart,
+    Swift,
+    Rust,
 }
 
 impl Language {
@@ -57,6 +88,9 @@ impl Language {
             "st" | "sl" | "scl" | "fbd" | "ld" | "il" => Some(Language::Scada),
             "cob" | "cbl" | "cpy" | "cobol" => Some(Language::Cobol),
             "pas" | "pp" | "pascal" | "inc" => Some(Language::Pascal),
+            "dart" => Some(Language::Dart),
+            "swift" => Some(Language::Swift),
+            "rs" => Some(Language::Rust),
             _ => None,
         }
     }
@@ -78,6 +112,9 @@ impl Language {
             Language::Scada,
             Language::Cobol,
             Language::Pascal,
+            Language::Dart,
+            Language::Swift,
+            Language::Rust,
         ]
     }
 }
@@ -100,6 +137,9 @@ impl std::fmt::Display for Language {
             Language::Scada => write!(f, "scada"),
             Language::Cobol => write!(f, "cobol"),
             Language::Pascal => write!(f, "pascal"),
+            Language::Dart => write!(f, "dart"),
+            Language::Swift => write!(f, "swift"),
+            Language::Rust => write!(f, "rust"),
         }
     }
 }

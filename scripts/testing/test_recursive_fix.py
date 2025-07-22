@@ -41,12 +41,12 @@ def test_recursive_scanning():
     print("-" * 30)
     
     # Sequential mode
-    success, seq_output, seq_err = run_devaic(['--no-parallel', 'test_files/'])
+    success, seq_output, seq_err = run_devaic(['--no-parallel', 'tests/fixtures/'])
     seq_nested_count = seq_output.count('nested')
     seq_total_vulns = count_vulnerabilities_in_output(seq_output)
     
     # Parallel mode
-    success, par_output, par_err = run_devaic(['test_files/'])
+    success, par_output, par_err = run_devaic(['tests/fixtures/'])
     par_nested_count = par_output.count('nested')
     par_total_vulns = count_vulnerabilities_in_output(par_output)
     
@@ -65,7 +65,7 @@ def test_recursive_scanning():
     
     depth_results = {}
     for depth in [0, 1, 2, 10, 100]:
-        success, output, err = run_devaic(['--max-depth', str(depth), 'test_files/'])
+        success, output, err = run_devaic(['--max-depth', str(depth), 'tests/fixtures/'])
         nested_count = output.count('nested')
         total_vulns = count_vulnerabilities_in_output(output)
         depth_results[depth] = {'nested': nested_count, 'total': total_vulns}
@@ -84,13 +84,13 @@ def test_recursive_scanning():
     print("\n3. Testing Specific Nested File Detection")
     print("-" * 30)
     
-    success, output, err = run_devaic(['test_files/'])
+    success, output, err = run_devaic(['tests/fixtures/'])
     
     expected_files = [
-        'test_files/nested/nested.py',
-        'test_files/nested/nested.c',
-        'test_files/nested/deep/deep.py',
-        'test_files/nested/deep/deeper/deeper.py'
+        'tests/fixtures/nested/nested.py',
+        'tests/fixtures/nested/nested.c',
+        'tests/fixtures/nested/deep/deep.py',
+        'tests/fixtures/nested/deep/deeper/deeper.py'
     ]
     
     found_files = []
@@ -111,7 +111,7 @@ def test_recursive_scanning():
     print("\n4. Testing Performance with Nested Files")
     print("-" * 30)
     
-    success, output, err = run_devaic(['--benchmark', 'test_files/'])
+    success, output, err = run_devaic(['--benchmark', 'tests/fixtures/'])
     
     if success and 'Performance Benchmark Results' in output:
         print("✅ PASS: Performance benchmark completed successfully")

@@ -1,0 +1,103 @@
+rules:
+  - id: pii-collection-without-consent-dart
+    message: "PII collection without explicit user consent in Flutter app"
+    severity: error
+    languages:
+      - Dart
+    patterns:
+      - pattern-regex: 'TextField\s*\([^)]*decoration:\s*InputDecoration\s*\([^)]*hintText:\s*["\'][^"\']*email[^"\']*["\']'
+      - pattern-regex: 'TextField\s*\([^)]*decoration:\s*InputDecoration\s*\([^)]*hintText:\s*["\'][^"\']*phone[^"\']*["\']'
+      - pattern-regex: 'TextField\s*\([^)]*decoration:\s*InputDecoration\s*\([^)]*hintText:\s*["\'][^"\']*address[^"\']*["\']'
+      - pattern-regex: 'TextField\s*\([^)]*decoration:\s*InputDecoration\s*\([^)]*hintText:\s*["\'][^"\']*ssn[^"\']*["\']'
+    metadata:
+      cwe: "CWE-359"
+      owasp: "A04:2021 – Insecure Design"
+      category: "privacy"
+      confidence: high
+      subcategory:
+        - "pii-collection"
+
+  - id: device-fingerprinting-dart
+    message: "Device fingerprinting detected without user consent"
+    severity: warning
+    languages:
+      - Dart
+    patterns:
+      - pattern-regex: 'DeviceInfoPlugin\(\)\.androidInfo.*androidId'
+      - pattern-regex: 'DeviceInfoPlugin\(\)\.iosInfo.*identifierForVendor'
+      - pattern-regex: 'Platform\.operatingSystemVersion'
+      - pattern-regex: 'PackageInfo\.fromPlatform\(\).*buildSignature'
+    metadata:
+      cwe: "CWE-200"
+      owasp: "A04:2021 – Insecure Design"
+      category: "privacy"
+      confidence: medium
+      subcategory:
+        - "device-fingerprinting"
+
+  - id: location-tracking-without-consent-dart
+    message: "Location tracking without explicit user consent"
+    severity: error
+    languages:
+      - Dart
+    patterns:
+      - pattern-regex: 'Geolocator\.getPositionStream\s*\([^)]*distanceFilter:\s*0'
+      - pattern-regex: 'location\.onLocationChanged\.listen'
+      - pattern-regex: 'BackgroundLocation\.startLocationService'
+      - pattern-regex: 'Geolocator\.getCurrentPosition\s*\([^)]*desiredAccuracy:\s*LocationAccuracy\.best'
+    metadata:
+      cwe: "CWE-359"
+      owasp: "A04:2021 – Insecure Design"
+      category: "privacy"
+      confidence: high
+      subcategory:
+        - "location-tracking"
+
+  - id: contact-access-without-purpose-dart
+    message: "Contact access without clear purpose or consent"
+    severity: warning
+    languages:
+      - Dart
+    patterns:
+      - pattern-regex: 'ContactsService\.getContacts\(\)'
+      - pattern-regex: 'FlutterContacts\.getContacts\(\)'
+    metadata:
+      cwe: "CWE-359"
+      owasp: "A04:2021 – Insecure Design"
+      category: "privacy"
+      confidence: medium
+      subcategory:
+        - "contact-access"
+
+  - id: biometric-data-collection-dart
+    message: "Biometric data collection requires special handling"
+    severity: error
+    languages:
+      - Dart
+    patterns:
+      - pattern-regex: 'LocalAuthentication\(\)\.getAvailableBiometrics\(\)'
+      - pattern-regex: 'BiometricStorage\.getStorage\s*\([^)]*storageFile:\s*["\'][^"\']*biometric[^"\']*["\']'
+    metadata:
+      cwe: "CWE-359"
+      owasp: "A04:2021 – Insecure Design"
+      category: "privacy"
+      confidence: high
+      subcategory:
+        - "biometric-data"
+
+  - id: analytics-tracking-dart
+    message: "User tracking in analytics without consent"
+    severity: warning
+    languages:
+      - Dart
+    patterns:
+      - pattern-regex: 'FirebaseAnalytics\.instance\.setUserId\s*\([^)]*\$\{[^}]*\}'
+      - pattern-regex: 'GoogleAnalytics\.instance\.setUserId\s*\([^)]*\$\{[^}]*\}'
+      - pattern-regex: 'MixpanelAnalytics\.instance\.identify\s*\([^)]*\$\{[^}]*\}'
+    metadata:
+      cwe: "CWE-359"
+      owasp: "A04:2021 – Insecure Design"
+      category: "privacy"
+      confidence: medium
+      subcategory:
+        - "user-tracking"

@@ -1,0 +1,72 @@
+rules:
+  - id: swift-inefficient-enumeration
+    message: |
+      Inefficient enumeration detected in Swift code.
+      Using enumerated() when only index or value is needed is inefficient.
+    type: performance
+    severity: low
+    languages: [swift]
+    pattern: for ($INDEX, $VALUE) in $ARRAY.enumerated() { ... }
+    fix: |
+      If only index needed: for index in array.indices { ... }
+      If only value needed: for value in array { ... }
+      Use enumerated() only when both index and value are required
+
+  - id: swift-chained-operations
+    message: |
+      Chained map/filter operations detected that could be optimized.
+      Multiple chained operations create intermediate arrays.
+    type: performance
+    severity: low
+    languages: [swift]
+    pattern-either:
+      - pattern: $ARRAY.map { ... }.filter { ... }
+      - pattern: $ARRAY.filter { ... }.map { ... }
+    fix: |
+      Consider using lazy evaluation or combining operations:
+      array.lazy.map { ... }.filter { ... }
+
+  - id: swift-string-interpolation-format
+    message: |
+      String(format:) usage detected - consider string interpolation.
+      String interpolation is more efficient and readable in Swift.
+    type: performance
+    severity: low
+    languages: [swift]
+    pattern: String(format: $FORMAT, ...)
+    fix: |
+      Use string interpolation instead: "Value: \(value)"
+
+  - id: swift-memory-leak-timer
+    message: |
+      Potential memory leak detected with Timer usage.
+      Timer callbacks can create retain cycles.
+    type: performance
+    severity: medium
+    languages: [swift]
+    pattern: Timer.scheduledTimer(...)
+    fix: |
+      Use [weak self] in timer callbacks to prevent retain cycles:
+      Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in ... }
+
+  - id: swift-retain-cycle-closure
+    message: |
+      Potential retain cycle detected in closure.
+      Strong reference to self in closure can cause memory leaks.
+    type: performance
+    severity: medium
+    languages: [swift]
+    pattern-either:
+      - pattern: |
+          DispatchQueue.main.async {
+            self.$METHOD(...)
+          }
+      - pattern: |
+          URLSession.shared.dataTask(...) { ... in
+            self.$METHOD(...)
+          }
+    fix: |
+      Use [weak self] or [unowned self] to break retain cycles:
+      DispatchQueue.main.async { [weak self] in
+        self?.$METHOD(...)
+      }

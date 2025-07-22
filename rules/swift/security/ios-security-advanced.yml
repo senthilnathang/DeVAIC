@@ -1,0 +1,143 @@
+rules:
+  - id: swift-insecure-keychain-accessibility
+    message: |
+      Insecure keychain accessibility detected in Swift code.
+      kSecAttrAccessibleAlways allows access without authentication.
+    type: security
+    severity: medium
+    languages: [swift]
+    pattern: kSecAttrAccessibleAlways
+    fix: |
+      Use more secure keychain accessibility options:
+      kSecAttrAccessibleWhenUnlockedThisDeviceOnly or
+      kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly
+
+  - id: swift-arbitrary-network-loads
+    message: |
+      Arbitrary network loads configuration detected.
+      NSAllowsArbitraryLoads bypasses App Transport Security.
+    type: security
+    severity: high
+    languages: [swift]
+    pattern-either:
+      - pattern: NSAllowsArbitraryLoads
+      - pattern: allowsArbitraryLoads = true
+    fix: |
+      Remove arbitrary network loads and use HTTPS with proper certificates.
+      Configure specific exceptions if needed instead of blanket bypass.
+
+  - id: swift-weak-biometric-policy
+    message: |
+      Weak biometric authentication policy detected.
+      deviceOwnerAuthentication allows passcode fallback.
+    type: security
+    severity: medium
+    languages: [swift]
+    pattern: LAPolicy.deviceOwnerAuthentication
+    fix: |
+      Use LAPolicy.deviceOwnerAuthenticationWithBiometrics for biometric-only auth:
+      context.evaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, ...)
+
+  - id: swift-certificate-validation-bypass
+    message: |
+      Certificate validation bypass detected in URLSessionDelegate.
+      performDefaultHandling accepts all certificates without validation.
+    type: security
+    severity: high
+    languages: [swift]
+    pattern: completionHandler(.performDefaultHandling, nil)
+    fix: |
+      Implement proper certificate validation:
+      - Validate certificate chain
+      - Check certificate pinning
+      - Verify hostname
+
+  - id: swift-jailbreak-detection-paths
+    message: |
+      Hardcoded jailbreak detection paths detected.
+      These paths can be used to detect jailbroken devices.
+    type: security
+    severity: low
+    languages: [swift]
+    pattern-either:
+      - pattern: "/Applications/Cydia.app"
+      - pattern: "/usr/sbin/sshd"
+      - pattern: "/bin/bash"
+      - pattern: "/etc/apt"
+    fix: |
+      Use dynamic jailbreak detection methods and obfuscate detection logic
+
+  - id: swift-unsafe-pointer-allocation
+    message: |
+      Unsafe pointer allocation detected without proper deallocation.
+      Manual memory management can lead to memory leaks or crashes.
+    type: security
+    severity: medium
+    languages: [swift]
+    pattern-either:
+      - pattern: UnsafePointer<$TYPE>.allocate(capacity: $SIZE)
+      - pattern: UnsafeMutablePointer<$TYPE>.allocate(capacity: $SIZE)
+    fix: |
+      Ensure proper deallocation with defer or use safer alternatives:
+      defer { pointer.deallocate() }
+
+  - id: swift-force-unwrap-crash-risk
+    message: |
+      Force unwrapping detected - potential crash risk.
+      Force unwrapping nil values causes runtime crashes.
+    type: reliability
+    severity: low
+    languages: [swift]
+    pattern: $VAR!
+    fix: |
+      Use safe unwrapping techniques:
+      - Optional binding: if let value = optional { ... }
+      - Guard statements: guard let value = optional else { return }
+      - Nil coalescing: optional ?? defaultValue
+
+  - id: swift-weak-crypto-md5
+    message: |
+      MD5 hash algorithm usage detected.
+      MD5 is cryptographically broken and should not be used.
+    type: security
+    severity: medium
+    languages: [swift]
+    pattern-either:
+      - pattern: CC_MD5(...)
+      - pattern: Insecure.MD5.hash(...)
+    fix: |
+      Use secure hash algorithms:
+      - SHA-256: SHA256.hash(data: data)
+      - SHA-512: SHA512.hash(data: data)
+
+  - id: swift-weak-crypto-sha1
+    message: |
+      SHA-1 hash algorithm usage detected.
+      SHA-1 is cryptographically weak and should be avoided.
+    type: security
+    severity: medium
+    languages: [swift]
+    pattern-either:
+      - pattern: CC_SHA1(...)
+      - pattern: Insecure.SHA1.hash(...)
+    fix: |
+      Use secure hash algorithms like SHA-256 or SHA-512
+
+  - id: swift-hardcoded-api-keys
+    message: |
+      Hardcoded API key or secret detected in Swift code.
+      Secrets should not be embedded in source code.
+    type: security
+    severity: high
+    languages: [swift]
+    pattern-either:
+      - pattern: let $VAR = "$SECRET"
+      - pattern: var $VAR = "$SECRET"
+    metavariable-regex:
+      metavariable: $SECRET
+      regex: (sk-[a-zA-Z0-9]{32,}|[a-zA-Z0-9]{20,})
+    fix: |
+      Store secrets securely:
+      - Use iOS Keychain for sensitive data
+      - Load from secure configuration files
+      - Use environment variables for development

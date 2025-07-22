@@ -10,7 +10,7 @@ from pathlib import Path
 
 def main():
     if len(sys.argv) < 2:
-        print("Usage: python3 run_script.py <script_path> [args...]")
+        print("Usage: python3 scripts/run_script.py <script_path> [args...]")
         print("\nAvailable scripts:")
         print("Performance testing:")
         print("  scripts/performance/quick_perf_test.py")
@@ -20,15 +20,15 @@ def main():
         print("  scripts/testing/create_large_test.py")
         print("  scripts/testing/test_enhanced.py")
         print("\nExamples:")
-        print("  python3 run_script.py scripts/performance/quick_perf_test.py")
-        print("  python3 run_script.py scripts/testing/create_large_test.py")
+        print("  python3 scripts/run_script.py scripts/performance/quick_perf_test.py")
+        print("  python3 scripts/run_script.py scripts/testing/create_large_test.py")
         return 1
     
     script_path = sys.argv[1]
     script_args = sys.argv[2:]
     
-    # Get the project root directory
-    project_root = Path(__file__).parent.absolute()
+    # Get the project root directory (parent of scripts directory)
+    project_root = Path(__file__).parent.parent.absolute()
     full_script_path = project_root / script_path
     
     if not full_script_path.exists():
