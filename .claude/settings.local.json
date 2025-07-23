@@ -38,7 +38,10 @@
       "Bash(python3:*)",
       "Bash(time:*)",
       "Bash(/dev/null)",
-      "Bash(echo:*)"
+      "Bash(echo:*)",
+      "Bash(npm:*)",
+      "Bash(./build.sh)",
+      "Bash(code:*)"
     ],
     "deny": []
   }

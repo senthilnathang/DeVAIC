@@ -1,199 +1,89 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { LanguageClient, LanguageClientOptions, ServerOptions } from 'vscode-languageclient/node';
+import { DeVAICLanguageServer } from './languageServer';
+import { CodeActionProvider } from './codeActionProvider';
+import { HoverProvider } from './hoverProvider';
+import { DiagnosticProvider } from './diagnosticProvider';
 
-let client: LanguageClient | undefined;
+let languageServer: DeVAICLanguageServer | undefined;
+let codeActionProvider: CodeActionProvider | undefined;
+let hoverProvider: HoverProvider | undefined;
+let diagnosticProvider: DiagnosticProvider | undefined;
 
 export function activate(context: vscode.ExtensionContext) {
     console.log('DeVAIC Security Analyzer is now active!');
 
-    // Initialize Language Server
-    initializeLanguageServer(context);
+    // Initialize enhanced language server
+    languageServer = new DeVAICLanguageServer(context);
+    
+    // Initialize providers
+    codeActionProvider = new CodeActionProvider();
+    hoverProvider = new HoverProvider();
+    diagnosticProvider = new DiagnosticProvider();
+    
+    // Register providers
+    registerProviders(context);
     
     // Register commands
     registerCommands(context);
     
-    // Setup status bar
-    setupStatusBar(context);
-    
-    // Setup configuration change listener
-    setupConfigurationListener(context);
+    // Start language server
+    languageServer.start().catch(error => {
+        console.error('Failed to start DeVAIC Language Server:', error);
+        vscode.window.showErrorMessage(`Failed to start DeVAIC Language Server: ${error.message}`);
+    });
 }
 
-function initializeLanguageServer(context: vscode.ExtensionContext) {
-    const config = vscode.workspace.getConfiguration('devaic');
-    
-    // Determine language server path
-    let serverPath = config.get<string>('languageServerPath');
-    if (!serverPath) {
-        // Auto-detect based on platform
-        const platform = process.platform;
-        const extension = platform === 'win32' ? '.exe' : '';
-        serverPath = path.join(context.extensionPath, 'server', `devaic-lsp${extension}`);
+function registerProviders(context: vscode.ExtensionContext) {
+    if (!codeActionProvider || !hoverProvider || !diagnosticProvider) {
+        return;
     }
-    
-    // Server options
-    const serverOptions: ServerOptions = {
-        run: { command: serverPath, args: ['--lsp'] },
-        debug: { command: serverPath, args: ['--lsp', '--verbose'] }
-    };
-    
-    // Client options
-    const clientOptions: LanguageClientOptions = {
-        documentSelector: [
-            { scheme: 'file', language: 'rust' },
-            { scheme: 'file', language: 'go' },
-            { scheme: 'file', language: 'javascript' },
-            { scheme: 'file', language: 'typescript' },
-            { scheme: 'file', language: 'python' },
-            { scheme: 'file', language: 'java' },
-            { scheme: 'file', language: 'kotlin' },
-            { scheme: 'file', language: 'swift' },
-            { scheme: 'file', language: 'c' },
-            { scheme: 'file', language: 'cpp' },
-            { scheme: 'file', language: 'csharp' },
-            { scheme: 'file', language: 'php' },
-            { scheme: 'file', language: 'ruby' },
-            { scheme: 'file', language: 'dart' }
-        ],
-        synchronize: {
-            fileEvents: vscode.workspace.createFileSystemWatcher('**/.{rs,go,js,ts,py,java,kt,swift,c,cpp,cs,php,rb,dart}')
-        }
-    };
-    
-    // Create language client
-    client = new LanguageClient(
-        'devaic-lsp',
-        'DeVAIC Language Server',
-        serverOptions,
-        clientOptions
+
+    const supportedLanguages = [
+        'rust', 'go', 'javascript', 'typescript', 'python', 'java',
+        'kotlin', 'swift', 'c', 'cpp', 'csharp', 'php', 'ruby', 'dart'
+    ];
+
+    // Register code action provider for quick fixes
+    context.subscriptions.push(
+        vscode.languages.registerCodeActionsProvider(supportedLanguages, codeActionProvider)
     );
-    
-    // Start the client
-    client.start().then(() => {
-        console.log('DeVAIC Language Server started successfully');
-        updateStatusBar('$(shield) DeVAIC: Active');
-    }).catch(err => {
-        console.error('Failed to start DeVAIC Language Server:', err);
-        updateStatusBar('$(error) DeVAIC: Error');
-        vscode.window.showErrorMessage(`Failed to start DeVAIC Language Server: ${err.message}`);
-    });
+
+    // Register hover provider for vulnerability details
+    context.subscriptions.push(
+        vscode.languages.registerHoverProvider(supportedLanguages, hoverProvider)
+    );
+
+    // Register diagnostic provider
+    context.subscriptions.push(diagnosticProvider);
 }
 
 function registerCommands(context: vscode.ExtensionContext) {
     // Analyze current file
     const analyzeFileCommand = vscode.commands.registerCommand('devaic.analyzeFile', async () => {
-        const editor = vscode.window.activeTextEditor;
-        if (!editor) {
-            vscode.window.showWarningMessage('No active editor found');
+        if (!languageServer) {
+            vscode.window.showErrorMessage('DeVAIC Language Server not initialized');
             return;
         }
-        
-        updateStatusBar('$(loading~spin) DeVAIC: Analyzing...');
-        
-        try {
-            // Trigger analysis through language server
-            await vscode.commands.executeCommand('vscode.executeDocumentDiagnostics', editor.document.uri);
-            
-            const diagnostics = vscode.languages.getDiagnostics(editor.document.uri);
-            const securityIssues = diagnostics.filter(d => d.source === 'DeVAIC Enhanced');
-            
-            if (securityIssues.length > 0) {
-                const message = `Found ${securityIssues.length} security issue(s)`;
-                vscode.window.showInformationMessage(message, 'Show Problems').then(selection => {
-                    if (selection === 'Show Problems') {
-                        vscode.commands.executeCommand('workbench.panel.markers.view.focus');
-                    }
-                });
-            } else {
-                vscode.window.showInformationMessage('No security issues found! 🎉');
-            }
-            
-            updateStatusBar('$(shield) DeVAIC: Active');
-        } catch (error) {
-            console.error('Analysis failed:', error);
-            vscode.window.showErrorMessage('Analysis failed. Check the output panel for details.');
-            updateStatusBar('$(error) DeVAIC: Error');
-        }
+        await languageServer.analyzeCurrentFile();
     });
     
     // Analyze workspace
     const analyzeWorkspaceCommand = vscode.commands.registerCommand('devaic.analyzeWorkspace', async () => {
-        const workspaceFolders = vscode.workspace.workspaceFolders;
-        if (!workspaceFolders) {
-            vscode.window.showWarningMessage('No workspace folder found');
+        if (!languageServer) {
+            vscode.window.showErrorMessage('DeVAIC Language Server not initialized');
             return;
         }
-        
-        updateStatusBar('$(loading~spin) DeVAIC: Analyzing workspace...');
-        
-        // Show progress
-        vscode.window.withProgress({
-            location: vscode.ProgressLocation.Notification,
-            title: 'DeVAIC Security Analysis',
-            cancellable: true
-        }, async (progress, token) => {
-            progress.report({ increment: 0, message: 'Scanning files...' });
-            
-            try {
-                // Get all supported files in workspace
-                const files = await vscode.workspace.findFiles(
-                    '**/*.{rs,go,js,ts,py,java,kt,swift,c,cpp,cs,php,rb,dart}',
-                    '**/node_modules/**'
-                );
-                
-                progress.report({ increment: 25, message: `Found ${files.length} files to analyze` });
-                
-                let analyzed = 0;
-                for (const file of files) {
-                    if (token.isCancellationRequested) {
-                        break;
-                    }
-                    
-                    await vscode.commands.executeCommand('vscode.executeDocumentDiagnostics', file);
-                    analyzed++;
-                    
-                    const percentage = Math.floor((analyzed / files.length) * 75);
-                    progress.report({ 
-                        increment: percentage / files.length, 
-                        message: `Analyzed ${analyzed}/${files.length} files` 
-                    });
-                }
-                
-                progress.report({ increment: 100, message: 'Analysis complete!' });
-                
-                // Show results
-                const allDiagnostics = files.flatMap(file => 
-                    vscode.languages.getDiagnostics(file).filter(d => d.source === 'DeVAIC Enhanced')
-                );
-                
-                const message = `Workspace analysis complete! Found ${allDiagnostics.length} security issues.`;
-                vscode.window.showInformationMessage(message, 'Show Problems').then(selection => {
-                    if (selection === 'Show Problems') {
-                        vscode.commands.executeCommand('workbench.panel.markers.view.focus');
-                    }
-                });
-                
-                updateStatusBar('$(shield) DeVAIC: Active');
-            } catch (error) {
-                console.error('Workspace analysis failed:', error);
-                vscode.window.showErrorMessage('Workspace analysis failed. Check the output panel for details.');
-                updateStatusBar('$(error) DeVAIC: Error');
-            }
-        });
+        await languageServer.analyzeWorkspace();
     });
     
     // Toggle real-time analysis
     const toggleRealTimeCommand = vscode.commands.registerCommand('devaic.toggleRealTimeAnalysis', async () => {
-        const config = vscode.workspace.getConfiguration('devaic');
-        const currentValue = config.get<boolean>('enableRealTimeAnalysis', true);
-        
-        await config.update('enableRealTimeAnalysis', !currentValue, vscode.ConfigurationTarget.Global);
-        
-        const status = !currentValue ? 'enabled' : 'disabled';
-        vscode.window.showInformationMessage(`Real-time analysis ${status}`);
-        
-        updateStatusBar(!currentValue ? '$(shield) DeVAIC: Active (Real-time)' : '$(shield) DeVAIC: Active');
+        if (!languageServer) {
+            vscode.window.showErrorMessage('DeVAIC Language Server not initialized');
+            return;
+        }
+        languageServer.toggleRealTimeAnalysis();
     });
     
     // Show security report
@@ -229,38 +119,6 @@ function registerCommands(context: vscode.ExtensionContext) {
     );
 }
 
-let statusBarItem: vscode.StatusBarItem;
-
-function setupStatusBar(context: vscode.ExtensionContext) {
-    statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
-    statusBarItem.command = 'devaic.analyzeFile';
-    statusBarItem.tooltip = 'Click to analyze current file with DeVAIC';
-    statusBarItem.text = '$(shield) DeVAIC: Initializing...';
-    statusBarItem.show();
-    
-    context.subscriptions.push(statusBarItem);
-}
-
-function updateStatusBar(text: string) {
-    if (statusBarItem) {
-        statusBarItem.text = text;
-    }
-}
-
-function setupConfigurationListener(context: vscode.ExtensionContext) {
-    const configListener = vscode.workspace.onDidChangeConfiguration(event => {
-        if (event.affectsConfiguration('devaic')) {
-            // Restart language server if necessary
-            if (client) {
-                client.stop().then(() => {
-                    initializeLanguageServer(context);
-                });
-            }
-        }
-    });
-    
-    context.subscriptions.push(configListener);
-}
 
 function generateSecurityReportHTML(): string {
     return `
@@ -357,8 +215,8 @@ function generateImpactAnalysisHTML(impactAnalysis: any): string {
 }
 
 export function deactivate(): Thenable<void> | undefined {
-    if (!client) {
+    if (!languageServer) {
         return undefined;
     }
-    return client.stop();
+    return languageServer.stop();
 }

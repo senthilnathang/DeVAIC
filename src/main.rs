@@ -145,14 +145,8 @@ fn main() -> Result<()> {
     let cli = Cli::parse();
     
     // Handle IDE language server mode
-    #[cfg(feature = "ide")]
     if cli.lsp_server {
-        return tokio::runtime::Runtime::new()?.block_on(start_language_server());
-    }
-    #[cfg(not(feature = "ide"))]
-    if cli.lsp_server {
-        eprintln!("Error: IDE integration features not enabled. Recompile with --features ide");
-        return Ok(());
+        return devaic::lsp_server::run_lsp_server();
     }
     
     // Initialize pattern loader

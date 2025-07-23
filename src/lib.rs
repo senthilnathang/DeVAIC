@@ -16,6 +16,7 @@ pub mod fast_walker;
 pub mod ast_analyzer;
 pub mod ml_engine;
 pub mod ide_integration;
+pub mod lsp_server;
 pub mod custom_rules;
 pub mod compliance;
 pub mod visualization;
