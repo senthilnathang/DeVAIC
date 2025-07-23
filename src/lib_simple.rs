@@ -60,6 +60,7 @@ pub enum Language {
     Dart,
     Swift,
     Rust,
+    Delphi,
 }
 
 impl Language {
@@ -79,10 +80,11 @@ impl Language {
             "sh" | "bash" | "zsh" | "fish" => Some(Language::Bash),
             "st" | "sl" | "scl" | "fbd" | "ld" | "il" => Some(Language::Scada),
             "cob" | "cbl" | "cpy" | "cobol" => Some(Language::Cobol),
-            "pas" | "pp" | "pascal" | "inc" => Some(Language::Pascal),
+            "pp" | "pascal" | "inc" => Some(Language::Pascal),
             "dart" => Some(Language::Dart),
             "swift" => Some(Language::Swift),
             "rs" => Some(Language::Rust),
+            "pas" | "dpr" | "dpk" | "dfm" | "fmx" | "dcu" => Some(Language::Delphi),
             _ => None,
         }
     }
@@ -107,6 +109,7 @@ impl Language {
             Language::Dart,
             Language::Swift,
             Language::Rust,
+            Language::Delphi,
         ]
     }
 }
@@ -132,6 +135,7 @@ impl std::fmt::Display for Language {
             Language::Dart => write!(f, "dart"),
             Language::Swift => write!(f, "swift"),
             Language::Rust => write!(f, "rust"),
+            Language::Delphi => write!(f, "delphi"),
         }
     }
 }

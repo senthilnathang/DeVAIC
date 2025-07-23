@@ -16,6 +16,7 @@ pub mod pascal_rules;
 pub mod dart_rules;
 pub mod swift_rules;
 pub mod rust_rules;
+pub mod delphi_rules;
 pub mod owasp_llm_rules;
 pub mod owasp_web_rules;
 pub mod privacy_rules;
@@ -52,6 +53,7 @@ pub struct RuleEngine {
     cobol_rules: cobol_rules::CobolRules,
     pascal_rules: pascal_rules::PascalRules,
     dart_rules: dart_rules::DartRules,
+    delphi_rules: delphi_rules::DelphiRules,
     owasp_llm_rules: owasp_llm_rules::OwaspLlmRules,
     owasp_web_rules: owasp_web_rules::OwaspWebRules,
     privacy_rules: privacy_rules::PrivacyRules,
@@ -84,6 +86,7 @@ impl RuleEngine {
             cobol_rules: cobol_rules::CobolRules::new(),
             pascal_rules: pascal_rules::PascalRules::new(),
             dart_rules: dart_rules::DartRules::new(),
+            delphi_rules: delphi_rules::DelphiRules::new(),
             owasp_llm_rules: owasp_llm_rules::OwaspLlmRules::new(),
             owasp_web_rules: owasp_web_rules::OwaspWebRules::new(),
             privacy_rules: privacy_rules::PrivacyRules::new(),
@@ -156,6 +159,9 @@ impl RuleEngine {
             }
             Language::Rust => {
                 vulnerabilities.extend(self.rust_rules.analyze(source_file, ast)?);
+            }
+            Language::Delphi => {
+                vulnerabilities.extend(self.delphi_rules.analyze(source_file, ast)?);
             }
         }
 
