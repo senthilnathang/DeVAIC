@@ -43,11 +43,11 @@ def main():
     print("=" * 40)
     
     tests = [
-        ("Fast Walker", ['tests/fixtures/']),
-        ("Legacy Walker", ['--legacy-walker', 'tests/fixtures/']),
-        ("Depth 1", ['--max-depth', '1', 'tests/fixtures/']),
-        ("Depth 2", ['--max-depth', '2', 'tests/fixtures/']),
-        ("Sequential", ['--no-parallel', 'tests/fixtures/']),
+        ("Fast Walker", ['test_suite/unit/fixtures/']),
+        ("Legacy Walker", ['--legacy-walker', 'test_suite/unit/fixtures/']),
+        ("Depth 1", ['--max-depth', '1', 'test_suite/unit/fixtures/']),
+        ("Depth 2", ['--max-depth', '2', 'test_suite/unit/fixtures/']),
+        ("Sequential", ['--no-parallel', 'test_suite/unit/fixtures/']),
     ]
     
     results = []

@@ -41,7 +41,8 @@
       "Bash(echo:*)",
       "Bash(npm:*)",
       "Bash(./build.sh)",
-      "Bash(code:*)"
+      "Bash(code:*)",
+      "Bash(true)"
     ],
     "deny": []
   }

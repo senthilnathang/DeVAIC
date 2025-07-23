@@ -51,7 +51,7 @@ if [ $? -eq 0 ]; then
         
         # Test ML engine
         echo "  - Testing ML engine..."
-        if ./target/release/devaic tests/fixtures/ --enable-ml --verbose --dry-run 2>/dev/null; then
+        if ./target/release/devaic test_suite/unit/fixtures/ --enable-ml --verbose --dry-run 2>/dev/null; then
             echo "    ✅ ML engine: OK"
         else
             echo "    ⚠️  ML engine: Feature may need additional setup"
@@ -59,7 +59,7 @@ if [ $? -eq 0 ]; then
         
         # Test custom rules
         echo "  - Testing custom rules engine..."
-        if ./target/release/devaic tests/fixtures/ --custom-rules-dir rules/custom --verbose --dry-run 2>/dev/null; then
+        if ./target/release/devaic test_suite/unit/fixtures/ --custom-rules-dir rules/custom --verbose --dry-run 2>/dev/null; then
             echo "    ✅ Custom rules: OK"
         else
             echo "    ⚠️  Custom rules: Directory empty (expected)"
@@ -67,7 +67,7 @@ if [ $? -eq 0 ]; then
         
         # Test compliance reporting
         echo "  - Testing compliance reporting..."
-        if ./target/release/devaic tests/fixtures/ --compliance owasp --output-dir reports --verbose --dry-run 2>/dev/null; then
+        if ./target/release/devaic test_suite/unit/fixtures/ --compliance owasp --output-dir reports --verbose --dry-run 2>/dev/null; then
             echo "    ✅ Compliance reporting: OK"
         else
             echo "    ⚠️  Compliance reporting: May need test files"
@@ -75,7 +75,7 @@ if [ $? -eq 0 ]; then
         
         # Test visualization
         echo "  - Testing visualization..."
-        if ./target/release/devaic tests/fixtures/ --visualize --output-dir reports --verbose --dry-run 2>/dev/null; then
+        if ./target/release/devaic test_suite/unit/fixtures/ --visualize --output-dir reports --verbose --dry-run 2>/dev/null; then
             echo "    ✅ Visualization: OK"
         else
             echo "    ⚠️  Visualization: May need test files"

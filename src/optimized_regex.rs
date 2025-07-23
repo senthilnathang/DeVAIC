@@ -510,8 +510,8 @@ mod tests {
         let set = engine.compile_set(&patterns).unwrap();
         let matches: Vec<usize> = set.matches("Test123").into_iter().collect();
         
-        // Should match pattern 0 (digits) and pattern 2 (uppercase)
-        assert_eq!(matches.len(), 2);
+        // Should match pattern 0 (digits), pattern 1 (lowercase), and pattern 2 (uppercase)
+        assert_eq!(matches.len(), 3);
     }
 
     #[test]
@@ -521,12 +521,12 @@ mod tests {
         // First compilation should be slow(er)
         let start = std::time::Instant::now();
         let _regex1 = engine.compile_optimized(r"test\d+").unwrap();
-        let first_time = start.elapsed();
+        let _first_time = start.elapsed();
         
         // Second compilation should be fast (cached)
         let start = std::time::Instant::now();
         let _regex2 = engine.compile_optimized(r"test\d+").unwrap();
-        let second_time = start.elapsed();
+        let _second_time = start.elapsed();
         
         // Cache should make it faster (though the test might be too fast to measure)
         let stats = engine.get_stats();

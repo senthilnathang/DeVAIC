@@ -31,3 +31,10 @@ ide_extensions/vscode/node_modules/
 ide_extensions/vscode/out/
 ide_extensions/vscode/*.vsix
 ide_extensions/vscode/package-lock.json
+
+# Test Suite - Generated Files
+test_suite/performance/generated/
+test_suite/*/coverage/
+test_suite/*/reports/
+test_suite/*/target/
+test_suite/*/node_modules/

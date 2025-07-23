@@ -15,7 +15,7 @@
 ## 🔍 **REAL-TIME ANALYSIS VERIFICATION**
 
 ### JavaScript Test Results
-**File**: `test-files/vulnerable_sample.js`
+**File**: `test_suite/vscode_extension/vulnerable_sample.js`
 - **Total Vulnerabilities**: 12
 - **Critical**: 4 (Hardcoded credentials, SQL injection, eval injection)  
 - **High**: 4 (Weak cryptography, prototype pollution)
@@ -24,7 +24,7 @@
 - **Lines Analyzed**: 192
 
 ### Python Test Results  
-**File**: `test-files/vulnerable_sample.py`
+**File**: `test_suite/vscode_extension/vulnerable_sample.py`
 - **Total Vulnerabilities**: 13
 - **Critical**: 7 (Hardcoded credentials, SQL injection, unsafe deserialization)
 - **High**: 4 (Command injection, weak hash algorithms)
@@ -92,7 +92,7 @@ code --install-extension devaic-security-extension.vsix
 
 ### Test Real-Time Linting
 1. Open VS Code and navigate to test files
-2. Open `test-files/vulnerable_sample.js` or `vulnerable_sample.py`
+2. Open `test_suite/vscode_extension/vulnerable_sample.js` or `vulnerable_sample.py`
 3. **Expected Results**:
    - 🔍 Red squiggly lines under vulnerabilities
    - ⚠️ Problems panel shows security issues

@@ -492,6 +492,9 @@ mod tests {
         let ast = ParsedAst {
             tree: None, // We'll use the source directly for this test
             source: source_file.content.clone(),
+            language: Some(source_file.language),
+            parse_errors: Vec::new(),
+            metadata: crate::parsers::AstMetadata::default(),
         };
         
         let matches = matcher.match_exact_pattern("eval", &source_file, &ast).unwrap();
@@ -514,6 +517,9 @@ mod tests {
         let ast = ParsedAst {
             tree: None,
             source: source_file.content.clone(),
+            language: Some(source_file.language),
+            parse_errors: Vec::new(),
+            metadata: crate::parsers::AstMetadata::default(),
         };
         
         let matches = matcher.match_regex_pattern(r"Math\.\w+\(\)", &source_file, &ast).unwrap();

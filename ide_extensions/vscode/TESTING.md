@@ -34,7 +34,7 @@ Add to VS Code settings (Ctrl+,):
 
 **Test File 1: Python SQL Injection**
 ```python
-# test-files/vulnerable_sample.py
+# test_suite/vscode_extension/vulnerable_sample.py
 import sqlite3
 
 def get_user(user_id):
@@ -56,7 +56,7 @@ def get_user(user_id):
 
 **Test File 2: JavaScript XSS**
 ```javascript
-// test-files/vulnerable_sample.js
+// test_suite/vscode_extension/vulnerable_sample.js
 app.get('/search', (req, res) => {
     const query = req.query.q;
     

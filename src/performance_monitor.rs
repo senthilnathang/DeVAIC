@@ -486,6 +486,8 @@ mod tests {
         let monitor = PerformanceMonitor::new(MonitorConfig::default());
         
         let (result, duration) = time_it!(monitor, "test_op", {
+            // Add a small delay to ensure measurable time
+            std::thread::sleep(std::time::Duration::from_nanos(1));
             42
         });
         

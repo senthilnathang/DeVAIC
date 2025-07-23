@@ -24,7 +24,6 @@ pub struct LSPServer {
     config: Arc<Mutex<Config>>,
     capabilities: ServerCapabilities,
     documents: Arc<Mutex<HashMap<String, DocumentInfo>>>,
-    request_id: Arc<Mutex<u64>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -177,7 +176,6 @@ impl LSPServer {
                 }),
             },
             documents: Arc::new(Mutex::new(HashMap::new())),
-            request_id: Arc::new(Mutex::new(0)),
         })
     }
 
@@ -558,11 +556,6 @@ impl LSPServer {
         Ok(())
     }
 
-    fn get_next_request_id(&self) -> u64 {
-        let mut id = self.request_id.lock().unwrap();
-        *id += 1;
-        *id
-    }
 }
 
 // CLI entry point for LSP server

@@ -52,32 +52,32 @@ def run_performance_tests():
     test_cases = [
         {
             'name': 'Fast Walker (default)',
-            'args': ['large_tests/fixtures/'],
+            'args': ['test_suite/performance/'],
             'description': 'Using optimized fast walker with directory filtering'
         },
         {
             'name': 'Legacy Walker',
-            'args': ['--legacy-walker', 'large_tests/fixtures/'],
+            'args': ['--legacy-walker', 'test_suite/performance/'],
             'description': 'Using legacy cached walker'
         },
         {
             'name': 'Sequential Mode',
-            'args': ['--no-parallel', 'large_tests/fixtures/'],
+            'args': ['--no-parallel', 'test_suite/performance/'],
             'description': 'Sequential processing with fast walker'
         },
         {
             'name': 'Max Depth 3',
-            'args': ['--max-depth', '3', 'large_tests/fixtures/'],
+            'args': ['--max-depth', '3', 'test_suite/performance/'],
             'description': 'Limited depth scanning'
         },
         {
             'name': 'Max Depth 1',
-            'args': ['--max-depth', '1', 'large_tests/fixtures/'],
+            'args': ['--max-depth', '1', 'test_suite/performance/'],
             'description': 'Shallow scanning'
         },
         {
             'name': 'No Cache',
-            'args': ['--no-cache', 'large_tests/fixtures/'],
+            'args': ['--no-cache', 'test_suite/performance/'],
             'description': 'Fast walker without caching'
         },
     ]
