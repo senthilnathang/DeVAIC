@@ -61,6 +61,7 @@ pub enum Language {
     Swift,
     Rust,
     Delphi,
+    Wasm,
 }
 
 impl Language {
@@ -70,7 +71,7 @@ impl Language {
             "cpp" | "cc" | "cxx" | "c++" | "hpp" | "hxx" | "h++" => Some(Language::Cpp),
             "py" => Some(Language::Python),
             "java" => Some(Language::Java),
-            "js" | "jsx" | "mjs" | "cjs" => Some(Language::Javascript),
+            "js" | "jsx" | "mjs" | "cjs" | "svelte" | "astro" => Some(Language::Javascript),
             "ts" | "tsx" => Some(Language::TypeScript),
             "go" => Some(Language::Go),
             "php" | "php3" | "php4" | "php5" | "phtml" => Some(Language::Php),
@@ -85,6 +86,7 @@ impl Language {
             "swift" => Some(Language::Swift),
             "rs" => Some(Language::Rust),
             "pas" | "dpr" | "dpk" | "dfm" | "fmx" | "dcu" => Some(Language::Delphi),
+            "wasm" | "wat" | "wast" => Some(Language::Wasm),
             _ => None,
         }
     }
@@ -110,6 +112,7 @@ impl Language {
             Language::Swift,
             Language::Rust,
             Language::Delphi,
+            Language::Wasm,
         ]
     }
 }
@@ -136,6 +139,7 @@ impl std::fmt::Display for Language {
             Language::Swift => write!(f, "swift"),
             Language::Rust => write!(f, "rust"),
             Language::Delphi => write!(f, "delphi"),
+            Language::Wasm => write!(f, "wasm"),
         }
     }
 }

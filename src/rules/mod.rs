@@ -17,6 +17,9 @@ pub mod dart_rules;
 pub mod swift_rules;
 pub mod rust_rules;
 pub mod delphi_rules;
+pub mod wasm_rules;
+pub mod svelte_rules;
+pub mod astro_rules;
 pub mod owasp_llm_rules;
 pub mod owasp_web_rules;
 pub mod privacy_rules;
@@ -54,6 +57,9 @@ pub struct RuleEngine {
     pascal_rules: pascal_rules::PascalRules,
     dart_rules: dart_rules::DartRules,
     delphi_rules: delphi_rules::DelphiRules,
+    wasm_rules: wasm_rules::WasmRules,
+    svelte_rules: svelte_rules::SvelteRules,
+    astro_rules: astro_rules::AstroRules,
     owasp_llm_rules: owasp_llm_rules::OwaspLlmRules,
     owasp_web_rules: owasp_web_rules::OwaspWebRules,
     privacy_rules: privacy_rules::PrivacyRules,
@@ -87,6 +93,9 @@ impl RuleEngine {
             pascal_rules: pascal_rules::PascalRules::new(),
             dart_rules: dart_rules::DartRules::new(),
             delphi_rules: delphi_rules::DelphiRules::new(),
+            wasm_rules: wasm_rules::WasmRules::new(),
+            svelte_rules: svelte_rules::SvelteRules::new(),
+            astro_rules: astro_rules::AstroRules::new(),
             owasp_llm_rules: owasp_llm_rules::OwaspLlmRules::new(),
             owasp_web_rules: owasp_web_rules::OwaspWebRules::new(),
             privacy_rules: privacy_rules::PrivacyRules::new(),
@@ -120,6 +129,20 @@ impl RuleEngine {
             }
             Language::Javascript => {
                 vulnerabilities.extend(self.javascript_rules.analyze(source_file, ast)?);
+                // Also run Svelte rules for .svelte files or files with Svelte patterns
+                if source_file.path.extension().and_then(|s| s.to_str()).unwrap_or("").to_lowercase() == "svelte" 
+                   || source_file.content.contains("@html") 
+                   || source_file.content.contains("$:") 
+                   || source_file.content.contains("SvelteKit") {
+                    vulnerabilities.extend(self.svelte_rules.analyze(source_file, ast)?);
+                }
+                // Also run Astro rules for .astro files or files with Astro patterns
+                if source_file.path.extension().and_then(|s| s.to_str()).unwrap_or("").to_lowercase() == "astro"
+                   || source_file.content.contains("---") && source_file.content.contains("Astro.")
+                   || source_file.content.contains("set:html")
+                   || source_file.content.contains("client:") {
+                    vulnerabilities.extend(self.astro_rules.analyze(source_file, ast)?);
+                }
             }
             Language::TypeScript => {
                 vulnerabilities.extend(self.typescript_rules.analyze(source_file, ast)?);
@@ -162,6 +185,9 @@ impl RuleEngine {
             }
             Language::Delphi => {
                 vulnerabilities.extend(self.delphi_rules.analyze(source_file, ast)?);
+            }
+            Language::Wasm => {
+                vulnerabilities.extend(self.wasm_rules.analyze(source_file, ast)?);
             }
         }
 

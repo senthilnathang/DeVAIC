@@ -1,6 +1,6 @@
 # DeVAIC - Advanced Vulnerability Analysis with Bearer-Inspired Privacy & Google Sanitizers Memory Safety Detection
 
-A high-performance static code analyzer for comprehensive vulnerability, security risk, privacy detection, and memory safety analysis in 19+ programming languages including C, C++, Java, JavaScript, TypeScript, Python, Go, PHP, Ruby, Kotlin, Swift, C#, Bash, SCADA, COBOL, Pascal, Rust, **Delphi/Object Pascal**, and **Dart/Flutter**, built in Rust.
+A high-performance static code analyzer for comprehensive vulnerability, security risk, privacy detection, and memory safety analysis in 22+ programming languages including C, C++, Java, JavaScript, TypeScript, Python, Go, PHP, Ruby, Kotlin, Swift, C#, Bash, SCADA, COBOL, Pascal, Rust, **Delphi/Object Pascal**, **Dart/Flutter**, **WebAssembly (WASM)**, **Astro**, and **Svelte/SvelteKit**, built in Rust.
 
 [![Build Status](https://github.com/dessertlab/DeVAIC/workflows/CI/badge.svg)](https://github.com/dessertlab/DeVAIC/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -58,7 +58,7 @@ DeVAIC provides enterprise-grade security analysis combining Bearer-inspired pri
 - **LeakSanitizer Integration**: Memory and resource leak identification
 
 ### 🎯 **Enhanced Multi-Language Vulnerability Detection (EXPANDED 2024)**
-- **19+ Language Support**: Complete coverage including C, C++, Java, JavaScript, TypeScript, Python, Go, PHP, Ruby, Kotlin, Swift, C#, Bash, SCADA, COBOL, Pascal, Rust, **Delphi/Object Pascal**, and **Dart/Flutter**
+- **22+ Language Support**: Complete coverage including C, C++, Java, JavaScript, TypeScript, Python, Go, PHP, Ruby, Kotlin, Swift, C#, Bash, SCADA, COBOL, Pascal, Rust, **Delphi/Object Pascal**, **Dart/Flutter**, **WebAssembly (WASM)**, **Astro**, and **Svelte/SvelteKit**
 - **Advanced Mobile Security**: Comprehensive iOS (Swift) and Android/Flutter (Dart) security analysis
 - **Enhanced AST Parsing**: Tree-sitter integration with language-specific metadata and performance metrics
 - **Mobile-First Security Patterns**: Biometric authentication, keychain security, certificate pinning, privacy compliance
@@ -95,7 +95,7 @@ The project is now production-ready with comprehensive improvements and enhanced
 - ✅ **Memory Efficiency**: **60% memory reduction** through intelligent pooling and caching
 - ✅ **Advanced Architecture**: Multi-level caching, SIMD acceleration, async processing
 - ✅ **Enhanced Structure**: Organized test_suite/, deployment/, docs/, and examples/ directories
-- ✅ **All Language Support**: 18+ languages with optimized parsers and rules
+- ✅ **All Language Support**: 22+ languages with optimized parsers and rules
 - ✅ **Enterprise Features**: Advanced reporting, compliance checking, visualization
 - ✅ **Production Monitoring**: Built-in performance analytics and benchmarking
 - ✅ **Deployment Ready**: Docker, Kubernetes, and comprehensive deployment guides
@@ -171,6 +171,26 @@ The project is now production-ready with comprehensive improvements and enhanced
 - **Parse Performance Monitoring**: Built-in metrics for parse times, AST complexity, and error handling
 - **Language-Aware Processing**: Automatic detection with graceful fallback modes for compatibility
 
+#### **🚀 New Language Support (LATEST 2024)**
+- **WebAssembly (WASM) Security**: Comprehensive security analysis for WebAssembly modules and WAT files
+  - Memory safety vulnerabilities (growth without limits, unsafe operations)
+  - Import/export security (dangerous host imports, memory exports)
+  - Timing attacks and cryptographic weaknesses detection
+  - Control flow vulnerabilities (indirect calls, table manipulation)
+  - Hardcoded secrets and configuration security issues
+- **Astro Framework Support**: Complete security analysis for modern static site generation
+  - Server-side rendering (SSR) security vulnerabilities
+  - API endpoint validation and input sanitization
+  - Client-side hydration security patterns
+  - Content collections and middleware security analysis
+  - Image optimization and path traversal protection
+- **Svelte/SvelteKit Security**: Advanced security analysis for reactive web applications
+  - XSS vulnerabilities in templates and reactive statements
+  - Store security and data validation patterns
+  - SvelteKit-specific vulnerabilities (form actions, API endpoints, hooks)
+  - SSR security and environment variable exposure
+  - WebSocket and real-time feature security analysis
+
 #### **📊 Enterprise Features**
 - **Advanced Reporting**: Enhanced PDF/Excel reports with mobile security metrics and ML insights
 - **Compliance Integration**: Multi-framework compliance checking with mobile security standards
@@ -184,12 +204,15 @@ The project is now production-ready with comprehensive improvements and enhanced
 | **Privacy Risk Detection** | ✅ Full PII/PHI | ✅ Privacy-focused | ❌ | ⚠️ Limited | ⚠️ Basic |
 | **Memory Safety Analysis** | ✅ Full Sanitizers | ❌ | ✅ Runtime Only | ⚠️ Limited | ⚠️ Basic |
 | **OWASP Top 10 Coverage** | ✅ Complete | ⚠️ Partial | ❌ | ✅ Complete | ✅ Complete |
-| **Multi-language Support** | ✅ 19+ Languages | ⚠️ Limited | ✅ Native Code | ✅ 20+ Languages | ✅ 25+ Languages |
+| **Multi-language Support** | ✅ 22+ Languages | ⚠️ Limited | ✅ Native Code | ✅ 20+ Languages | ✅ 25+ Languages |
 | **Mobile Security (iOS/Android)** | ✅ **Advanced 400+ patterns** | ❌ | ❌ | ⚠️ Limited | ⚠️ Basic |
 | **Flutter/Dart Support** | ✅ **Comprehensive** | ❌ | ❌ | ⚠️ Limited | ⚠️ Basic |
 | **Swift/iOS Security** | ✅ **Enterprise-grade** | ❌ | ❌ | ⚠️ Limited | ⚠️ Basic |
 | **Rust/Systems Programming** | ✅ **Enhanced Analysis** | ❌ | ✅ Runtime Only | ⚠️ Limited | ⚠️ Basic |
 | **Delphi/Object Pascal** | ✅ **Comprehensive sonar-delphi inspired** | ❌ | ❌ | ❌ | ⚠️ Basic |
+| **WebAssembly (WASM)** | ✅ **Complete WAT/WASM Analysis** | ❌ | ❌ | ❌ | ❌ |
+| **Astro Framework** | ✅ **Modern SSG Security** | ❌ | ❌ | ❌ | ❌ |
+| **Svelte/SvelteKit** | ✅ **Reactive Framework Security** | ❌ | ❌ | ❌ | ❌ |
 | **SCADA/Industrial** | ✅ Specialized | ❌ | ❌ | ❌ | ❌ |
 | **Machine Learning** | ✅ **8 Model Types** | ❌ | ❌ | ❌ | ⚠️ Basic |
 | **IDE Integration** | ✅ **Enhanced LSP + VS Code** | ❌ | ❌ | ✅ Limited | ✅ Full |
@@ -344,6 +367,86 @@ The project is now production-ready with comprehensive improvements and enhanced
 - **Network Optimization**: Sequential request detection, batch operation suggestions
 - **Image Optimization**: Cache configuration, memory usage optimization
 - **Database Efficiency**: Query optimization, connection management
+
+### WebAssembly (WASM) Language
+
+**✅ Comprehensive Security Analysis for Binary and Text Formats**
+
+*Complete WebAssembly security analysis supporting .wasm (binary), .wat (WebAssembly Text), and .wast (WebAssembly Script) files with comprehensive security vulnerability patterns.*
+
+**🎯 WASM-Specific Security Analysis**
+- **Memory Safety**: Memory growth without bounds checking, unsafe memory operations, buffer overflow risks
+- **Import/Export Security**: Dangerous host function imports, filesystem access, network operations, memory exports
+- **Control Flow Vulnerabilities**: Unrestricted indirect calls, function table manipulation, element segment security
+- **Timing Attack Prevention**: Variable-time cryptographic operations, high-resolution timing detection
+- **Data Security**: Hardcoded secrets in data sections, sensitive information exposure
+- **Host Interface Validation**: Input validation for host function bindings, CORS wildcard configurations
+- **Resource Management**: Large memory allocations, infinite loop detection, recursion depth limits
+
+**🔒 Enterprise WASM Patterns**
+- **Cryptographic Security**: Weak random number generation, constant-time violation detection
+- **Performance Security**: Resource exhaustion attacks, denial of service prevention
+- **Binary Analysis**: Both binary WASM and WebAssembly Text Format support
+- **Runtime Security**: Host environment validation, sandbox escape prevention
+
+**📋 Supported File Extensions**
+- `.wasm` - WebAssembly binary format
+- `.wat` - WebAssembly Text format
+- `.wast` - WebAssembly Script format
+
+### Astro Framework Language
+
+**✅ Modern Static Site Generation Security Analysis**
+
+*Complete Astro framework security analysis for .astro files with comprehensive SSR, API endpoint, and client-side security patterns.*
+
+**🎯 Astro-Specific Security Analysis**
+- **Server-Side Rendering (SSR)**: Environment variable exposure, server-side code injection risks
+- **API Endpoint Security**: Input validation, unsafe response generation, CORS wildcard detection
+- **Component Security**: Unsafe HTML fragments, user input in set:html, dangerous component props
+- **Client-Side Hydration**: Unsafe client directives, hydration XSS risks, dynamic content injection
+- **Content Collections**: Unsafe content queries, XSS in content rendering
+- **Middleware Security**: Missing authorization, unsafe redirects, authentication bypass
+- **Image Security**: Dynamic image sources, path traversal in image paths
+- **Configuration Security**: Hardcoded secrets in config, unsafe integration configurations
+
+**🔒 Astro Framework Patterns**
+- **Frontmatter Security**: Code injection in component scripts, hardcoded credentials detection
+- **View Transitions**: XSS in transition names and animations
+- **Dynamic Imports**: Module injection through dynamic imports
+- **Route Security**: Parameter injection, validation bypass
+
+**📋 Supported File Extensions**
+- `.astro` - Astro component files
+
+### Svelte/SvelteKit Language
+
+**✅ Reactive Framework Security Analysis**
+
+*Complete Svelte and SvelteKit security analysis for .svelte files with comprehensive reactive statement, store, and SSR security patterns.*
+
+**🎯 Svelte-Specific Security Analysis**
+- **XSS Prevention**: Unsafe HTML binding detection, unescaped user input, template injection
+- **Reactive Security**: Eval risks in reactive statements, unsafe DOM manipulation
+- **Store Security**: Writable stores without validation, derived store unsafe transformations
+- **Component Security**: Unsafe component props, dangerous action usage, context sharing risks
+- **Event Handling**: Unsafe event handlers, XSS in event handler attributes
+- **Navigation Security**: Unsafe goto usage, route parameter injection
+
+**🔒 SvelteKit-Specific Security Analysis**
+- **Form Actions**: Validation bypass, input sanitization failures
+- **API Endpoints**: Request data processing without validation
+- **Hooks Security**: Authentication bypass, authorization failures
+- **SSR Security**: Server data leakage, environment variable exposure
+- **Load Functions**: Code injection in load functions, unsafe data processing
+
+**🌐 Real-Time & WebSocket Security**
+- **WebSocket Security**: Origin validation bypass, connection security
+- **Server-Sent Events**: Authentication failures, unauthorized access
+- **Environment Variables**: Public environment secrets, configuration exposure
+
+**📋 Supported File Extensions**
+- `.svelte` - Svelte component files
 
 ### C/C++ Language
 
@@ -586,7 +689,7 @@ The project is now production-ready with comprehensive improvements and enhanced
 The `examples/` directory contains comprehensive vulnerable code samples and pattern definitions for testing and demonstration:
 
 ### **🎯 Vulnerable Code Samples**
-- **`examples/vulnerable.*`**: Complete vulnerable code samples across all 19+ supported languages
+- **`examples/vulnerable.*`**: Complete vulnerable code samples across all 22+ supported languages
   - `vulnerable.c/cpp`: Memory safety, buffer overflows, sanitizer patterns
   - `vulnerable.py`: Injection, crypto, privacy violations, sanitizer patterns
   - `vulnerable.java`: Enterprise security, deserialization, injection vulnerabilities
@@ -599,11 +702,25 @@ The `examples/` directory contains comprehensive vulnerable code samples and pat
   - `vulnerable.sh`: Shell injection, system administration security
   - `vulnerable.pas`: Delphi/Object Pascal Windows security, database vulnerabilities, memory safety
   - `vulnerable.dart`: Flutter/Dart mobile security and privacy patterns
+  - `vulnerable.wat`: WebAssembly security, memory safety, host interface vulnerabilities
+  - `vulnerable.astro`: Astro framework SSR security, API endpoints, hydration risks
+  - `vulnerable.svelte`: Svelte/SvelteKit reactive security, store vulnerabilities, SSR issues
 
 ### **📱 Mobile Security Testing**
 - **`examples/flutter_mobile_security_test.dart`**: Mobile security vulnerabilities and platform-specific issues
 - **`examples/flutter_privacy_test.dart`**: Privacy violations, PII collection, GDPR/CCPA compliance testing
 - **`examples/flutter_performance_test.dart`**: Performance optimization patterns and memory leak detection
+
+### **🌐 Modern Framework Security (NEW 2024)**
+- **`test_suite/samples/vulnerable.wat`**: WebAssembly comprehensive security test suite
+  - Memory safety vulnerabilities, host interface security, timing attacks
+  - Import/export validation, resource management, cryptographic weaknesses
+- **`test_suite/samples/vulnerable.astro`**: Astro framework complete security analysis
+  - SSR security issues, API endpoint validation, client hydration risks
+  - Content collections security, middleware authentication, image security
+- **`test_suite/samples/vulnerable.svelte`**: Svelte/SvelteKit security test coverage  
+  - Reactive XSS vulnerabilities, store security, SvelteKit form actions
+  - WebSocket security, environment variable exposure, navigation security
 
 ### **⚡ Performance & Advanced Examples**
 - **`examples/advanced_usage.rs`**: Advanced analyzer usage patterns and configuration
@@ -702,7 +819,7 @@ test_suite/
 │   ├── integration_test.rs
 │   └── fixtures/              # Test fixtures and samples
 ├── integration/               # End-to-end integration tests  
-├── samples/                   # Sample vulnerable files (18+ languages)
+├── samples/                   # Sample vulnerable files (22+ languages)
 │   ├── vulnerable.py         # Python security issues
 │   ├── vulnerable.js         # JavaScript vulnerabilities
 │   └── vulnerable.*          # All supported languages
@@ -741,7 +858,7 @@ code test_suite/vscode_extension/vulnerable_sample.js
 - ✅ **Total Coverage**: 133/133 tests passing
 - ✅ **VS Code Extension**: Verified working with 12-13 vulnerability detection
 - ✅ **Performance Tests**: All benchmarks passing
-- ✅ **Multi-language Support**: 18+ languages tested
+- ✅ **Multi-language Support**: 22+ languages tested
 
 ### Command Line Options
 
@@ -1033,7 +1150,7 @@ security_analysis:
 **Language Processors**
 - Language-specific parsers with optimized AST traversal
 - Context-aware analysis with framework detection
-- 18+ language support with enhanced detection algorithms
+- 22+ language support with enhanced detection algorithms
 - Async processing with streaming analysis capabilities
 
 **Rule Engine**
@@ -1081,6 +1198,9 @@ DeVAIC uses Tree-sitter parsers for accurate AST-based analysis across all suppo
 - **Pascal**: System programming security patterns
 - **Delphi/Object Pascal**: Windows application security, database vulnerabilities, and memory safety analysis
 - **Dart/Flutter**: Mobile app security, privacy compliance, and performance optimization
+- **WebAssembly (WASM)**: Binary format security analysis with WAT (WebAssembly Text) support
+- **Astro Framework**: Modern static site generation with SSR and API endpoint security
+- **Svelte/SvelteKit**: Reactive framework security with store and hydration analysis
 
 ### AST-Based Analysis
 
@@ -1344,7 +1464,7 @@ RUSTFLAGS="-W unused" cargo build --release
 
 ### **🛡️ Security Analysis Excellence**
 - **1,700+ security patterns** with enhanced detection algorithms
-- **19+ programming languages** with comprehensive vulnerability coverage
+- **22+ programming languages** with comprehensive vulnerability coverage
 - **Production-ready binary** with verified security analysis capabilities
 - **Real-time linting** demonstrating immediate vulnerability detection
 
@@ -1369,7 +1489,7 @@ RUSTFLAGS="-W unused" cargo build --release
 - ✅ **Real-time analysis** - Sub-100ms response times for IDE integration
 
 ### **🛡️ Security Analysis Completeness**
-- ✅ **19+ programming languages** - Complete vulnerability coverage with enhanced algorithms
+- ✅ **22+ programming languages** - Complete vulnerability coverage with enhanced algorithms
 - ✅ **1,700+ security patterns** - Comprehensive detection across all CWE categories
 - ✅ **Bearer-inspired privacy detection** - Advanced PII/PHI analysis and data flow tracking
 - ✅ **Google Sanitizers integration** - Memory safety with AddressSanitizer/ThreadSanitizer patterns

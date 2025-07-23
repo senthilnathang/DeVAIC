@@ -17,6 +17,7 @@ pub mod dart_parser;
 pub mod swift_parser;
 pub mod rust_parser;
 pub mod delphi_parser;
+pub mod wasm_parser;
 
 use crate::{error::Result, Language};
 use std::path::PathBuf;
@@ -247,6 +248,7 @@ impl ParserFactory {
             Language::Swift => Ok(Box::new(swift_parser::SwiftParser::new()?)),
             Language::Rust => Ok(Box::new(rust_parser::RustParser::new()?)),
             Language::Delphi => Ok(Box::new(delphi_parser::DelphiParser::new())),
+            Language::Wasm => Ok(Box::new(wasm_parser::WasmParser::new())),
         }
     }
 }

@@ -1,0 +1,184 @@
+---
+// Astro frontmatter with security vulnerabilities
+const API_KEY = "sk_live_1234567890abcdef"; // Should trigger ASTRO-SECRET-001
+const SECRET_TOKEN = "super_secret_key_12345";
+
+// Unsafe request access
+const userAgent = Astro.request.headers.get('user-agent');
+const requestUrl = Astro.request.url;
+
+// Code injection risk in frontmatter - should trigger ASTRO-INJECT-001  
+const dynamicCode = "alert('xss')";
+const result = eval(dynamicCode);
+
+// Environment variable exposure - should trigger ASTRO-ENV-001
+const secretKey = import.meta.env.SECRET_API_KEY;
+const privateToken = import.meta.env.PRIVATE_TOKEN;
+
+// Unsafe content query
+import { getCollection } from 'astro:content';
+const posts = await getCollection('blog').filter(post => eval(post.data.query));
+
+// API endpoint functions with security issues
+export async function GET({ request }) {
+  // No validation - should trigger ASTRO-API-001
+  const data = await request.json();
+  
+  // Unsafe response - should trigger API response vulnerability
+  return new Response(`<script>alert('${data.input}')</script>`);
+}
+
+export async function POST({ request }) {
+  const body = await request.formData();
+  const userInput = body.get('input');
+  
+  // Direct use without validation
+  return new Response(JSON.stringify({ message: userInput }));
+}
+
+// getStaticPaths with injection risk
+export async function getStaticPaths() {
+  const code = "return [{params: {id: 'test'}}]";
+  return eval(code); // Should trigger injection vulnerability
+}
+
+// Middleware without auth
+export function onRequest(context, next) {
+  // No authentication checks - should trigger ASTRO-MIDDLEWARE-001
+  return next();
+}
+---
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Vulnerable Astro Page</title>
+</head>
+<body>
+  <!-- Unsafe HTML fragment - should trigger ASTRO-XSS-001 -->
+  <Fragment set:html={Astro.params.content} />
+  
+  <!-- User input in set:html - should trigger ASTRO-XSS-002 -->
+  <div set:html={Astro.url.searchParams.get('html')} />
+  
+  <!-- Dangerous component props -->
+  <div innerHTML={userAgent}>User Agent</div>
+  <span dangerouslySetInnerHTML={Astro.params.content}>Content</span>
+  
+  <!-- Unsafe client directives - should trigger ASTRO-HYDRATION-001 -->
+  <script client:load>
+    eval(userData);
+  </script>
+  
+  <div client:idle={innerHTML: userContent}>Content</div>
+  
+  <!-- Hydration XSS risk -->
+  <Component client:load={`data-content=${Astro.params.userInput}`} />
+  <Widget client:visible={template: `${requestUrl}/callback`} />
+  
+  <!-- Unsafe image sources - should trigger ASTRO-IMAGE-001 -->
+  <Image src={`https://example.com/images/${Astro.params.imagePath}`} alt="Dynamic" />
+  <img src={Astro.url.searchParams.get('img')} />
+  
+  <!-- Image path traversal - should trigger ASTRO-PATH-001 -->
+  <Image src="../../../etc/passwd" alt="Traversal" />
+  <Image src="../../../../windows/system32/config/sam" alt="Windows" />
+  
+  <!-- Dynamic route parameters without validation - should trigger ASTRO-ROUTE-001 -->
+  <h1>Welcome {params.username}</h1>
+  <div>User ID: {params.userId}</div>
+  <span>Category: {params.category}</span>
+  
+  <!-- Inline script injection - should trigger ASTRO-SCRIPT-001 -->
+  <script>
+    const userData = `${Astro.params.data}`;
+    const config = {api: `${import.meta.env.API_URL}/users`};
+    document.getElementById('output').innerHTML = userData;
+  </script>
+  
+  <!-- Style injection -->
+  <style>
+    .user-content::before {
+      content: `${Astro.params.style}`;
+    }
+    .dynamic-color {
+      color: ${Astro.url.searchParams.get('color')};
+    }
+  </style>
+  
+  <!-- View transitions XSS -->
+  <div transition:name={`slide-${Astro.params.transition}`}>
+    <span transition:animate={`fade-${userContent}`}>Animation</span>
+  </div>
+  
+  <!-- Content collections XSS -->
+  {posts.map(post => (
+    <article set:html={post.data.content}>
+      <h2>{post.data.title}</h2>
+      <div set:html={post.data.description} />
+    </article>
+  ))}
+  
+  <!-- Dynamic imports injection -->
+  <script>
+    const moduleName = new URLSearchParams(window.location.search).get('module');
+    import(`/modules/${moduleName}.js`).then(mod => mod.init());
+    
+    const componentPath = `./components/${Astro.params.component}.astro`;
+    const Component = await import(componentPath);
+  </script>
+  
+  <!-- Unsafe module imports -->
+  <script>
+    import UserWidget from `./widgets/${Astro.params.widgetType}.astro`;
+    import { helper } from `../utils/${requestUrl.pathname}.js`;
+  </script>
+  
+  <!-- CORS wildcard configuration example -->
+  <script>
+    fetch('/api/data', {
+      headers: {
+        'Access-Control-Allow-Origin': '*'
+      }
+    });
+  </script>
+</body>
+</html>
+
+<!-- Astro configuration security issues (astro.config.mjs example):
+
+export default defineConfig({
+  integrations: [
+    // Unsafe integration config
+    custom({
+      transform: code => eval(code) // Code injection risk
+    })
+  ],
+  
+  // Hardcoded secrets in config
+  vite: {
+    define: {
+      API_KEY: '"sk_live_secret_key_123"',
+      SECRET: '"hardcoded_secret_value"'
+    }
+  }
+});
+
+-->
+
+<!-- Middleware security issues (middleware.ts example):
+
+export async function onRequest(context, next) {
+  // Missing auth checks
+  return next();
+}
+
+export async function onRequest({ url, request }, next) {
+  // Unsafe redirect
+  if (url.pathname === '/redirect') {
+    return Response.redirect(`/login?return=${url.searchParams.get('url')}`);
+  }
+  return next();
+}
+
+-->
