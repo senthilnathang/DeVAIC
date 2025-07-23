@@ -20,6 +20,10 @@ pub mod delphi_rules;
 pub mod wasm_rules;
 pub mod svelte_rules;
 pub mod astro_rules;
+pub mod zig_rules;
+pub mod v_rules;
+pub mod carbon_rules;
+pub mod nim_rules;
 pub mod owasp_llm_rules;
 pub mod owasp_web_rules;
 pub mod privacy_rules;
@@ -60,6 +64,10 @@ pub struct RuleEngine {
     wasm_rules: wasm_rules::WasmRules,
     svelte_rules: svelte_rules::SvelteRules,
     astro_rules: astro_rules::AstroRules,
+    zig_rules: zig_rules::ZigRules,
+    v_rules: v_rules::VRules,
+    carbon_rules: carbon_rules::CarbonRules,
+    nim_rules: nim_rules::NimRules,
     owasp_llm_rules: owasp_llm_rules::OwaspLlmRules,
     owasp_web_rules: owasp_web_rules::OwaspWebRules,
     privacy_rules: privacy_rules::PrivacyRules,
@@ -96,6 +104,10 @@ impl RuleEngine {
             wasm_rules: wasm_rules::WasmRules::new(),
             svelte_rules: svelte_rules::SvelteRules::new(),
             astro_rules: astro_rules::AstroRules::new(),
+            zig_rules: zig_rules::ZigRules::new(),
+            v_rules: v_rules::VRules::new(),
+            carbon_rules: carbon_rules::CarbonRules::new(),
+            nim_rules: nim_rules::NimRules::new(),
             owasp_llm_rules: owasp_llm_rules::OwaspLlmRules::new(),
             owasp_web_rules: owasp_web_rules::OwaspWebRules::new(),
             privacy_rules: privacy_rules::PrivacyRules::new(),
@@ -188,6 +200,18 @@ impl RuleEngine {
             }
             Language::Wasm => {
                 vulnerabilities.extend(self.wasm_rules.analyze(source_file, ast)?);
+            }
+            Language::Zig => {
+                vulnerabilities.extend(self.zig_rules.analyze(&source_file.content, &source_file.path.to_string_lossy())?);
+            }
+            Language::V => {
+                vulnerabilities.extend(self.v_rules.analyze(&source_file.content, &source_file.path.to_string_lossy())?);
+            }
+            Language::Carbon => {
+                vulnerabilities.extend(self.carbon_rules.analyze(&source_file.content, &source_file.path.to_string_lossy())?);
+            }
+            Language::Nim => {
+                vulnerabilities.extend(self.nim_rules.analyze(&source_file.content, &source_file.path.to_string_lossy())?);
             }
         }
 

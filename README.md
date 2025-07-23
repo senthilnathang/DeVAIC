@@ -1,6 +1,6 @@
 # DeVAIC - Advanced Vulnerability Analysis with Bearer-Inspired Privacy & Google Sanitizers Memory Safety Detection
 
-A high-performance static code analyzer for comprehensive vulnerability, security risk, privacy detection, and memory safety analysis in 22+ programming languages including C, C++, Java, JavaScript, TypeScript, Python, Go, PHP, Ruby, Kotlin, Swift, C#, Bash, SCADA, COBOL, Pascal, Rust, **Delphi/Object Pascal**, **Dart/Flutter**, **WebAssembly (WASM)**, **Astro**, and **Svelte/SvelteKit**, built in Rust.
+A high-performance static code analyzer for comprehensive vulnerability, security risk, privacy detection, and memory safety analysis in 26+ programming languages including C, C++, Java, JavaScript, TypeScript, Python, Go, PHP, Ruby, Kotlin, Swift, C#, Bash, SCADA, COBOL, Pascal, Rust, **Delphi/Object Pascal**, **Dart/Flutter**, **WebAssembly (WASM)**, **Astro**, **Svelte/SvelteKit**, **Zig**, **V**, **Carbon**, and **Nim**, built in Rust.
 
 [![Build Status](https://github.com/dessertlab/DeVAIC/workflows/CI/badge.svg)](https://github.com/dessertlab/DeVAIC/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -58,7 +58,7 @@ DeVAIC provides enterprise-grade security analysis combining Bearer-inspired pri
 - **LeakSanitizer Integration**: Memory and resource leak identification
 
 ### 🎯 **Enhanced Multi-Language Vulnerability Detection (EXPANDED 2024)**
-- **22+ Language Support**: Complete coverage including C, C++, Java, JavaScript, TypeScript, Python, Go, PHP, Ruby, Kotlin, Swift, C#, Bash, SCADA, COBOL, Pascal, Rust, **Delphi/Object Pascal**, **Dart/Flutter**, **WebAssembly (WASM)**, **Astro**, and **Svelte/SvelteKit**
+- **26+ Language Support**: Complete coverage including C, C++, Java, JavaScript, TypeScript, Python, Go, PHP, Ruby, Kotlin, Swift, C#, Bash, SCADA, COBOL, Pascal, Rust, **Delphi/Object Pascal**, **Dart/Flutter**, **WebAssembly (WASM)**, **Astro**, **Svelte/SvelteKit**, **Zig**, **V**, **Carbon**, and **Nim**
 - **Advanced Mobile Security**: Comprehensive iOS (Swift) and Android/Flutter (Dart) security analysis
 - **Enhanced AST Parsing**: Tree-sitter integration with language-specific metadata and performance metrics
 - **Mobile-First Security Patterns**: Biometric authentication, keychain security, certificate pinning, privacy compliance
@@ -95,7 +95,7 @@ The project is now production-ready with comprehensive improvements and enhanced
 - ✅ **Memory Efficiency**: **60% memory reduction** through intelligent pooling and caching
 - ✅ **Advanced Architecture**: Multi-level caching, SIMD acceleration, async processing
 - ✅ **Enhanced Structure**: Organized test_suite/, deployment/, docs/, and examples/ directories
-- ✅ **All Language Support**: 22+ languages with optimized parsers and rules
+- ✅ **All Language Support**: 26+ languages with optimized parsers and rules
 - ✅ **Enterprise Features**: Advanced reporting, compliance checking, visualization
 - ✅ **Production Monitoring**: Built-in performance analytics and benchmarking
 - ✅ **Deployment Ready**: Docker, Kubernetes, and comprehensive deployment guides
@@ -113,6 +113,28 @@ The project is now production-ready with comprehensive improvements and enhanced
 ### ✅ **Latest Updates (2024)**
 
 #### **🎯 Comprehensive Language Support Expansion**
+- **✅ Systems Programming Languages (NEW 2024)**: Advanced memory-safe language support
+  - **Zig Language**: Memory-safe systems programming with compile-time safety analysis
+    - Undefined behavior detection and prevention
+    - Integer overflow and underflow detection
+    - Allocator security and resource management patterns
+    - C interop security analysis
+  - **V Language**: Simple, fast, cross-platform language with security focus
+    - Web framework (vweb) security analysis
+    - SQL injection and XSS prevention
+    - FFI safety and C interop security
+    - Network programming security patterns
+  - **Carbon Language**: Google's C++ successor with memory safety emphasis
+    - C++ interop security boundary analysis
+    - Type safety and generic programming security
+    - Public API security design patterns
+    - Resource management and concurrency safety
+  - **Nim Language**: Efficient systems programming with macro security
+    - Macro system security and code generation safety
+    - Threading and concurrency security analysis
+    - FFI safety with C/C++ interoperability
+    - Memory management and buffer overflow prevention
+
 - **✅ Dart/Flutter Support**: Complete mobile security analysis with 90+ new patterns
   - Privacy-focused mobile app analysis (PII detection, device fingerprinting)
   - Flutter-specific security patterns (WebView, state management, navigation)
@@ -204,7 +226,7 @@ The project is now production-ready with comprehensive improvements and enhanced
 | **Privacy Risk Detection** | ✅ Full PII/PHI | ✅ Privacy-focused | ❌ | ⚠️ Limited | ⚠️ Basic |
 | **Memory Safety Analysis** | ✅ Full Sanitizers | ❌ | ✅ Runtime Only | ⚠️ Limited | ⚠️ Basic |
 | **OWASP Top 10 Coverage** | ✅ Complete | ⚠️ Partial | ❌ | ✅ Complete | ✅ Complete |
-| **Multi-language Support** | ✅ 22+ Languages | ⚠️ Limited | ✅ Native Code | ✅ 20+ Languages | ✅ 25+ Languages |
+| **Multi-language Support** | ✅ 26+ Languages | ⚠️ Limited | ✅ Native Code | ✅ 20+ Languages | ✅ 25+ Languages |
 | **Mobile Security (iOS/Android)** | ✅ **Advanced 400+ patterns** | ❌ | ❌ | ⚠️ Limited | ⚠️ Basic |
 | **Flutter/Dart Support** | ✅ **Comprehensive** | ❌ | ❌ | ⚠️ Limited | ⚠️ Basic |
 | **Swift/iOS Security** | ✅ **Enterprise-grade** | ❌ | ❌ | ⚠️ Limited | ⚠️ Basic |
@@ -213,6 +235,10 @@ The project is now production-ready with comprehensive improvements and enhanced
 | **WebAssembly (WASM)** | ✅ **Complete WAT/WASM Analysis** | ❌ | ❌ | ❌ | ❌ |
 | **Astro Framework** | ✅ **Modern SSG Security** | ❌ | ❌ | ❌ | ❌ |
 | **Svelte/SvelteKit** | ✅ **Reactive Framework Security** | ❌ | ❌ | ❌ | ❌ |
+| **Zig Systems Programming** | ✅ **Memory Safety Analysis** | ❌ | ❌ | ❌ | ❌ |
+| **V Language Support** | ✅ **Cross-platform Security** | ❌ | ❌ | ❌ | ❌ |
+| **Carbon Language** | ✅ **C++ Successor Security** | ❌ | ❌ | ❌ | ❌ |
+| **Nim Language** | ✅ **Macro System Security** | ❌ | ❌ | ❌ | ❌ |
 | **SCADA/Industrial** | ✅ Specialized | ❌ | ❌ | ❌ | ❌ |
 | **Machine Learning** | ✅ **8 Model Types** | ❌ | ❌ | ❌ | ⚠️ Basic |
 | **IDE Integration** | ✅ **Enhanced LSP + VS Code** | ❌ | ❌ | ✅ Limited | ✅ Full |
@@ -447,6 +473,94 @@ The project is now production-ready with comprehensive improvements and enhanced
 
 **📋 Supported File Extensions**
 - `.svelte` - Svelte component files
+
+### Systems Programming Languages (NEW 2024)
+
+#### Zig Language
+
+**✅ Memory-Safe Systems Programming with Compile-Time Safety Analysis**
+
+*Complete Zig security analysis for .zig files with comprehensive memory safety, undefined behavior detection, and C interop security patterns.*
+
+**🎯 Zig-Specific Security Analysis**
+- **Memory Safety**: Unsafe pointer casts, undefined behavior detection, allocator security patterns
+- **Integer Safety**: Wrapping arithmetic operations, unchecked integer conversions, overflow detection
+- **Error Handling**: Ignored error unions, unreachable code paths, panic conditions
+- **C Interop Security**: @cImport usage validation, extern function safety, foreign library analysis
+- **Resource Management**: Memory leak detection, manual allocation without cleanup
+- **Compile-Time Safety**: Unsafe compile-time operations, unsafe code generation
+
+**🔒 Zig Security Patterns**
+- **Allocator Security**: Memory allocation patterns, resource cleanup validation
+- **Undefined Behavior**: Detection and prevention of undefined behavior usage
+- **Cross-Platform Safety**: Platform-specific security considerations
+- **Debug Code Detection**: Development-time debugging statements in production
+
+#### V Language
+
+**✅ Simple, Fast, Cross-Platform Language with Security Focus**
+
+*Complete V language security analysis for .v files with web framework security, FFI safety, and cross-platform security patterns.*
+
+**🎯 V-Specific Security Analysis**
+- **Web Security (vweb)**: XSS vulnerabilities in template interpolation, SQL injection in database queries
+- **FFI Safety**: C interop security, external library binding validation, unsafe function calls
+- **Network Security**: HTTP request validation, TLS certificate verification, SSRF prevention
+- **File Security**: Path traversal prevention, file operation validation, temporary file handling
+- **Error Handling**: Ignored error results, panic-on-error patterns, exception suppression
+- **Command Injection**: OS command execution validation, system call security
+
+**🔒 V Security Patterns**
+- **Database Security**: Hardcoded credentials detection, query parameterization
+- **Cross-Platform Security**: Platform-specific unsafe code detection
+- **JSON Security**: Unsafe deserialization patterns, validation bypass
+- **Module Security**: Unsafe import patterns, external dependency validation
+
+#### Carbon Language
+
+**✅ Google's C++ Successor with Memory Safety Emphasis**
+
+*Complete Carbon language security analysis for .carbon files with C++ interop security, type safety, and API design security patterns.*
+
+**🎯 Carbon-Specific Security Analysis**
+- **Memory Safety**: Unsafe blocks, raw pointer access, unchecked array operations
+- **C++ Interop Security**: Legacy code boundary analysis, extern implementation safety
+- **Type Safety**: Unsafe type casting, bit manipulation operations, generic programming security
+- **API Design Security**: Public unsafe APIs, mutable global state, package import security
+- **Resource Management**: Manual memory management, resource leak detection, cleanup validation
+- **Concurrency Safety**: Unsafe shared access, race condition detection, thread safety
+
+**🔒 Carbon Security Patterns**
+- **Error Handling**: Unhandled error expectations, error suppression patterns
+- **Arithmetic Safety**: Integer overflow operations, division by zero risks
+- **Network Security**: Unencrypted connections, I/O operation validation
+- **Development Security**: Debug code detection, TODO/FIXME comment analysis
+
+#### Nim Language
+
+**✅ Efficient Systems Programming with Macro Security**
+
+*Complete Nim language security analysis for .nim, .nims, and .nimble files with macro system security, threading safety, and FFI analysis.*
+
+**🎯 Nim-Specific Security Analysis**
+- **Memory Safety**: Unsafe memory operations, manual memory management, pointer arithmetic
+- **FFI Security**: C interop pragmas, external library bindings, header inclusion safety
+- **Macro System Security**: Unsafe macro definitions, compile-time code execution, template security
+- **Threading Safety**: Unsafe threading pragmas, global shared state, concurrency vulnerabilities
+- **Buffer Security**: Memory copy operations, string operations, overflow prevention
+- **Serialization Security**: Unsafe deserialization, pickle-like operations, data validation
+
+**🔒 Nim Security Patterns**
+- **Pragma Security**: Disabled safety checks, unsafe code generation, debug pragmas
+- **Command Injection**: Process execution validation, system call security
+- **File Security**: Path traversal prevention, temporary file handling, race conditions
+- **Error Handling**: Ignored exceptions, unsafe assertions, option access validation
+
+**📋 Supported File Extensions**
+- `.zig` - Zig source files
+- `.v` - V language source files  
+- `.carbon` - Carbon language source files
+- `.nim`, `.nims`, `.nimble` - Nim language source files
 
 ### C/C++ Language
 

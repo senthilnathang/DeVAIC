@@ -71,6 +71,10 @@ pub enum Language {
     Rust,
     Delphi,
     Wasm,
+    Zig,
+    V,
+    Carbon,
+    Nim,
 }
 
 impl Language {
@@ -96,6 +100,10 @@ impl Language {
             "rs" => Some(Language::Rust),
             "pas" | "dpr" | "dpk" | "dfm" | "fmx" | "dcu" => Some(Language::Delphi),
             "wasm" | "wat" | "wast" => Some(Language::Wasm),
+            "zig" => Some(Language::Zig),
+            "v" => Some(Language::V),
+            "carbon" => Some(Language::Carbon),
+            "nim" | "nims" | "nimble" => Some(Language::Nim),
             _ => None,
         }
     }
@@ -122,6 +130,10 @@ impl Language {
             Language::Rust,
             Language::Delphi,
             Language::Wasm,
+            Language::Zig,
+            Language::V,
+            Language::Carbon,
+            Language::Nim,
         ]
     }
 }
@@ -149,6 +161,10 @@ impl std::fmt::Display for Language {
             Language::Rust => write!(f, "rust"),
             Language::Delphi => write!(f, "delphi"),
             Language::Wasm => write!(f, "wasm"),
+            Language::Zig => write!(f, "zig"),
+            Language::V => write!(f, "v"),
+            Language::Carbon => write!(f, "carbon"),
+            Language::Nim => write!(f, "nim"),
         }
     }
 }

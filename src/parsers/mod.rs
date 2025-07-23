@@ -18,6 +18,10 @@ pub mod swift_parser;
 pub mod rust_parser;
 pub mod delphi_parser;
 pub mod wasm_parser;
+pub mod zig_parser;
+pub mod v_parser;
+pub mod carbon_parser;
+pub mod nim_parser;
 
 use crate::{error::Result, Language};
 use std::path::PathBuf;
@@ -249,6 +253,10 @@ impl ParserFactory {
             Language::Rust => Ok(Box::new(rust_parser::RustParser::new()?)),
             Language::Delphi => Ok(Box::new(delphi_parser::DelphiParser::new())),
             Language::Wasm => Ok(Box::new(wasm_parser::WasmParser::new())),
+            Language::Zig => Ok(Box::new(zig_parser::ZigParser::new())),
+            Language::V => Ok(Box::new(v_parser::VParser::new())),
+            Language::Carbon => Ok(Box::new(carbon_parser::CarbonParser::new())),
+            Language::Nim => Ok(Box::new(nim_parser::NimParser::new())),
         }
     }
 }
