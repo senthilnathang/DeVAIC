@@ -38,6 +38,7 @@ pub mod semantic_similarity_engine;
 pub mod transfer_validation_engine;
 pub mod business_logic_analyzer;
 pub mod performance;
+pub mod advanced_caching;
 
 pub use analyzer::Analyzer;
 pub use build_break::{BuildBreakAnalyzer, BuildBreakResult};
@@ -74,6 +75,10 @@ pub use performance::{
     ScalabilityAnalyzer, ScalabilityConfig, EnterpriseBenchmarkSuite, EnterpriseBenchmarkConfig,
 };
 pub use business_logic_analyzer::{BusinessLogicAnalyzer, BusinessLogicConfig};
+pub use advanced_caching::{
+    AdvancedCachingSystem, AdvancedCachingConfig, DistributedCache, SmartCacheWarmer,
+    CacheCoherencyManager, CacheType, CacheEntry, LocalCache, CacheStatisticsReport
+};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize, Copy)]
 pub enum Language {
