@@ -29,6 +29,14 @@ pub mod performance_monitor;
 pub mod intelligent_cache;
 pub mod optimized_regex;
 pub mod simd_optimizations;
+pub mod cve_pattern_discovery;
+pub mod pattern_extraction_engine;
+pub mod pattern_validation_system;
+pub mod automated_rule_integration;
+pub mod cross_language_transfer;
+pub mod semantic_similarity_engine;
+pub mod transfer_validation_engine;
+pub mod business_logic_analyzer;
 
 pub use analyzer::Analyzer;
 pub use build_break::{BuildBreakAnalyzer, BuildBreakResult};
@@ -48,6 +56,18 @@ pub use performance_monitor::PerformanceMonitor;
 pub use intelligent_cache::{IntelligentCache, CacheKey, CacheEntry};
 pub use optimized_regex::{OptimizedRegexEngine, simd_ops};
 pub use simd_optimizations::{SIMDPatternMatcher, CharClass, benchmark_simd_operations};
+pub use cve_pattern_discovery::{CVEPatternDiscovery, DiscoveryConfig, CVERecord, ExtractedPattern};
+pub use pattern_extraction_engine::{PatternExtractionEngine, ExtractionConfig, CodeAnalysisResult};
+pub use pattern_validation_system::{PatternValidationSystem, ValidationConfig, ValidationResult};
+pub use automated_rule_integration::{AutomatedRuleIntegration, IntegrationConfig, IntegrationStatus};
+pub use cross_language_transfer::{
+    CrossLanguageTransfer, TransferConfig, TransferResult, TransferAnalytics,
+    TransferConfidenceScore, TransferContext, PatternSimilarityAnalysis, TransferViability
+};
+pub use semantic_similarity_engine::{
+    SemanticSimilarityEngine, SimilarityConfig, SimilarityAnalysisResult, SimilarPattern,
+    SimilarityType, VariationDetection, VariationType
+};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize, Copy)]
 pub enum Language {

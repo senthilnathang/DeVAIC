@@ -84,6 +84,9 @@ serde_yaml = "0.9"
 # Date/time for SARIF output - Updated
 chrono = { version = "0.4", features = ["serde", "clock"] }
 
+# UUID generation for vulnerability IDs
+uuid = { version = "1.0", features = ["v4"] }
+
 # Report generation - Enhanced with latest versions
 tabled = "0.14"  # Compatible version
 colored = "2.1"

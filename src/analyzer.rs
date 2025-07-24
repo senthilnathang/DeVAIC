@@ -7,6 +7,8 @@ use crate::{
     cache::get_global_cache,
     optimized_reader::OptimizedFileReader,
     parallel_scanner::{ParallelDirectoryScanner},
+    semantic_similarity_engine::{SemanticSimilarityEngine, SimilarityConfig},
+    business_logic_analyzer::{BusinessLogicAnalyzer, BusinessLogicConfig},
     Language, Vulnerability,
 };
 use std::path::Path;
@@ -18,6 +20,9 @@ pub struct Analyzer {
     optimized_reader: OptimizedFileReader,
     parallel_enabled: bool,
     max_depth: usize,
+    semantic_engine: Option<SemanticSimilarityEngine>,
+    business_logic_analyzer: Option<BusinessLogicAnalyzer>,
+    enable_ai_analysis: bool,
 }
 
 impl Analyzer {
@@ -25,12 +30,28 @@ impl Analyzer {
         let rule_engine = RuleEngine::new(&config.rules);
         let optimized_reader = OptimizedFileReader::new(true); // Enable caching
         
+        // Initialize AI engines if enabled
+        let semantic_engine = if config.enable_ai_analysis.unwrap_or(false) {
+            Some(SemanticSimilarityEngine::new(SimilarityConfig::default()))
+        } else {
+            None
+        };
+        
+        let business_logic_analyzer = if config.enable_ai_analysis.unwrap_or(false) {
+            Some(BusinessLogicAnalyzer::new(BusinessLogicConfig::default()))
+        } else {
+            None
+        };
+        
         Ok(Self {
             config,
             rule_engine,
             optimized_reader,
             parallel_enabled: true,
             max_depth: 100,
+            semantic_engine,
+            business_logic_analyzer,
+            enable_ai_analysis: config.enable_ai_analysis.unwrap_or(false),
         })
     }
 
@@ -41,12 +62,28 @@ impl Analyzer {
         
         let optimized_reader = OptimizedFileReader::new(true); // Enable caching
         
+        // Initialize AI engines if enabled
+        let semantic_engine = if config.enable_ai_analysis.unwrap_or(false) {
+            Some(SemanticSimilarityEngine::new(SimilarityConfig::default()))
+        } else {
+            None
+        };
+        
+        let business_logic_analyzer = if config.enable_ai_analysis.unwrap_or(false) {
+            Some(BusinessLogicAnalyzer::new(BusinessLogicConfig::default()))
+        } else {
+            None
+        };
+        
         Self {
             config,
             rule_engine,
             optimized_reader,
             parallel_enabled: true,
             max_depth: 100,
+            semantic_engine,
+            business_logic_analyzer,
+            enable_ai_analysis: config.enable_ai_analysis.unwrap_or(false),
         }
     }
 
@@ -123,7 +160,7 @@ impl Analyzer {
         Ok(vulnerabilities)
     }
 
-    pub fn analyze_file(&self, path: &Path) -> Result<Vec<Vulnerability>> {
+    pub async fn analyze_file(&self, path: &Path) -> Result<Vec<Vulnerability>> {
         let extension = match path.extension().and_then(|ext| ext.to_str()) {
             Some(ext) => ext,
             None => {
@@ -172,7 +209,125 @@ impl Analyzer {
         let mut parser = ParserFactory::create_parser(&source_file.language)?;
         let ast = parser.parse(&source_file)?;
 
-        self.rule_engine.analyze(&source_file, &ast)
+        let mut vulnerabilities = self.rule_engine.analyze(&source_file, &ast)?;
+        
+        // Perform AI-enhanced analysis if enabled
+        if self.enable_ai_analysis {
+            let ai_vulnerabilities = self.perform_ai_analysis(&source_file).await?;
+            vulnerabilities.extend(ai_vulnerabilities);
+        }
+        
+        Ok(vulnerabilities)
+    }
+
+    /// Perform AI-enhanced analysis using semantic similarity and business logic detection
+    async fn perform_ai_analysis(&self, source_file: &SourceFile) -> Result<Vec<Vulnerability>> {
+        let mut ai_vulnerabilities = Vec::new();
+        
+        // Semantic Similarity Analysis
+        if let Some(ref semantic_engine) = self.semantic_engine {
+            match semantic_engine.find_similar_vulnerabilities(&source_file.content, &source_file.language.to_string()).await {
+                Ok(similarity_result) => {
+                    for similarity_match in similarity_result.matches {
+                        // Convert similarity match to vulnerability
+                        let vulnerability = Vulnerability {
+                            id: format!("AI-SIM-{}", uuid::Uuid::new_v4()),
+                            title: format!("Semantic Similarity: {}", similarity_match.vulnerability.vulnerability_type),
+                            description: similarity_match.explanation,
+                            severity: match similarity_match.vulnerability.severity {
+                                s if s >= 9.0 => crate::Severity::Critical,
+                                s if s >= 7.0 => crate::Severity::High,
+                                s if s >= 5.0 => crate::Severity::Medium,
+                                s if s >= 3.0 => crate::Severity::Low,
+                                _ => crate::Severity::Info,
+                            },
+                            category: "ai_semantic_similarity".to_string(),
+                            cwe: Some(similarity_match.vulnerability.cwe_id.clone()),
+                            owasp: None,
+                            file_path: source_file.path.display().to_string(),
+                            line_number: similarity_match.location.line_start,
+                            column_start: similarity_match.location.column_start,
+                            column_end: similarity_match.location.column_end,
+                            source_code: format!("Lines {}-{}", similarity_match.location.line_start, similarity_match.location.line_end),
+                            recommendation: format!("Similar to known vulnerability: {}. Similarity score: {:.3}", 
+                                similarity_match.vulnerability.vulnerability_type, similarity_match.similarity_score),
+                            references: vec![],
+                            confidence: similarity_match.confidence,
+                        };
+                        ai_vulnerabilities.push(vulnerability);
+                    }
+                }
+                Err(e) => {
+                    log::warn!("Semantic similarity analysis failed: {}", e);
+                }
+            }
+        }
+        
+        // Business Logic Analysis
+        if let Some(ref business_analyzer) = self.business_logic_analyzer {
+            match business_analyzer.analyze_business_logic(&source_file.content, source_file.language.clone()).await {
+                Ok(business_result) => {
+                    for business_vuln in business_result.vulnerabilities {
+                        // Convert business logic vulnerability to standard vulnerability
+                        let vulnerability = Vulnerability {
+                            id: business_vuln.vulnerability_info.id,
+                            title: business_vuln.vulnerability_info.title,
+                            description: business_vuln.vulnerability_info.description,
+                            severity: business_vuln.vulnerability_info.severity,
+                            category: "ai_business_logic".to_string(),
+                            cwe: business_vuln.vulnerability_info.cwe,
+                            owasp: business_vuln.vulnerability_info.owasp,
+                            file_path: source_file.path.display().to_string(),
+                            line_number: business_vuln.vulnerability_info.line_number,
+                            column_start: business_vuln.vulnerability_info.column_start,
+                            column_end: business_vuln.vulnerability_info.column_end,
+                            source_code: business_vuln.vulnerability_info.source_code,
+                            recommendation: format!("{} | Business Risk Score: {} | Impact: {:?}", 
+                                business_vuln.vulnerability_info.recommendation,
+                                business_vuln.business_risk.risk_score,
+                                business_vuln.workflow_impact.impact_level
+                            ),
+                            references: business_vuln.vulnerability_info.references,
+                            confidence: business_vuln.vulnerability_info.confidence,
+                        };
+                        ai_vulnerabilities.push(vulnerability);
+                    }
+                }
+                Err(e) => {
+                    log::warn!("Business logic analysis failed: {}", e);
+                }
+            }
+        }
+        
+        Ok(ai_vulnerabilities)
+    }
+
+    /// Enable AI-enhanced analysis
+    pub fn enable_ai_analysis(&mut self) {
+        self.enable_ai_analysis = true;
+        
+        if self.semantic_engine.is_none() {
+            self.semantic_engine = Some(SemanticSimilarityEngine::new(SimilarityConfig::default()));
+        }
+        
+        if self.business_logic_analyzer.is_none() {
+            self.business_logic_analyzer = Some(BusinessLogicAnalyzer::new(BusinessLogicConfig::default()));
+        }
+    }
+
+    /// Disable AI-enhanced analysis
+    pub fn disable_ai_analysis(&mut self) {
+        self.enable_ai_analysis = false;
+    }
+
+    /// Get semantic similarity engine
+    pub fn get_semantic_engine(&self) -> Option<&SemanticSimilarityEngine> {
+        self.semantic_engine.as_ref()
+    }
+
+    /// Get business logic analyzer
+    pub fn get_business_logic_analyzer(&self) -> Option<&BusinessLogicAnalyzer> {
+        self.business_logic_analyzer.as_ref()
     }
 
 }

@@ -31,7 +31,7 @@ lazy_static! {
         
         // SQL injection patterns
         m.insert("sql_injection_exec", 
-            Regex::new(r#"(?i)(ExecSQL|Open|Query|Execute)\s*\(\s*['"'].*\+.*['"']"#).unwrap()
+            Regex::new(r"(?i)(SQL\.Text|CommandText)\s*:=.*\+|(?:ExecSQL|Open|Query|Execute)\s*\(").unwrap()
         );
         
         m.insert("sql_injection_format", 
@@ -45,7 +45,7 @@ lazy_static! {
         
         // Unicode to ANSI conversion (sonar-delphi rule)
         m.insert("unicode_ansi_cast", 
-            Regex::new(r"(?i)(AnsiString|PAnsiChar)\s*\(\s*(String|WideString|UnicodeString|PWideChar)").unwrap()
+            Regex::new(r"(?i)(AnsiString|PAnsiChar)\s*\(").unwrap()
         );
         
         // Uninitialized variables

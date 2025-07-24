@@ -131,7 +131,7 @@ impl CarbonParser {
         
         patterns.insert(
             "division_by_zero".to_string(),
-            Regex::new(r"(?i)/(?!\*)").unwrap()
+            Regex::new(r"(?i)\s/\s").unwrap()
         );
         
         // Hardcoded values

@@ -60,7 +60,7 @@ impl VParser {
         
         patterns.insert(
             "vweb_sql_injection".to_string(),
-            Regex::new(r"(?i)db\.(exec|query)\s*\([^)]*\+").unwrap()
+            Regex::new(r"(?i)db\.(exec|query)\s*\(|query\s*:=.*\+.*(?:SELECT|INSERT|UPDATE|DELETE)").unwrap()
         );
         
         patterns.insert(
@@ -76,7 +76,7 @@ impl VParser {
         
         patterns.insert(
             "sql_injection_risk".to_string(),
-            Regex::new(r"(?i)(?:select|insert|update|delete).*\$|.*\+.*(?:select|insert|update|delete)").unwrap()
+            Regex::new(r"(?i)(?:SELECT|INSERT|UPDATE|DELETE).*\+|.*\+.*(?:SELECT|INSERT|UPDATE|DELETE)").unwrap()
         );
         
         // Network security patterns

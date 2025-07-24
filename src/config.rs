@@ -7,6 +7,7 @@ pub struct Config {
     pub rules: RulesConfig,
     pub output: OutputConfig,
     pub analysis: AnalysisConfig,
+    pub enable_ai_analysis: Option<bool>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -125,6 +126,7 @@ impl Default for Config {
                 ],
                 follow_symlinks: false,
             },
+            enable_ai_analysis: Some(false),
         }
     }
 }

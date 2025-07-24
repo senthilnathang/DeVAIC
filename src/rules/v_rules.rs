@@ -35,7 +35,7 @@ impl VRules {
         
         patterns.insert(
             "sql_injection_risk".to_string(),
-            Regex::new(r"(?i)db\.(?:exec|query)\s*\([^)]*\+" ).unwrap()
+            Regex::new(r"(?i)db\.(?:exec|query)\s*\(").unwrap()
         );
         
         patterns.insert(

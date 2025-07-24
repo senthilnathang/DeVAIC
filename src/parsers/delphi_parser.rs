@@ -25,12 +25,12 @@ impl DelphiParser {
         // Initialize common Delphi security patterns based on sonar-delphi insights
         patterns.insert(
             "hardcoded_password".to_string(),
-            Regex::new(r#"(?i)(password|pwd|pass)\s*[:=]\s*['"]([^'"]+)['"]"#).unwrap()
+            Regex::new(r#"(?i)(password|pwd|pass).*[:=]\s*['"]([^'"]+)['"]"#).unwrap()
         );
         
         patterns.insert(
             "sql_injection".to_string(),
-            Regex::new(r#"(?i)(ExecSQL|Open|Query)\s*\(\s*['"].*\+.*['"]"#).unwrap()
+            Regex::new(r"(?i)(SQL\.Text|CommandText)\s*:=.*\+|(?:ExecSQL|Open|Query)\s*\(").unwrap()
         );
         
         patterns.insert(
@@ -40,7 +40,7 @@ impl DelphiParser {
         
         patterns.insert(
             "unicode_to_ansi_cast".to_string(),
-            Regex::new(r"(?i)(AnsiString|PAnsiChar)\s*\(\s*(String|WideString|UnicodeString)").unwrap()
+            Regex::new(r"(?i)(AnsiString|PAnsiChar)\s*\(").unwrap()
         );
         
         patterns.insert(

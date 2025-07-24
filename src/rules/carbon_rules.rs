@@ -117,13 +117,13 @@ impl CarbonRules {
         
         patterns.insert(
             "division_by_zero_risk".to_string(),
-            Regex::new(r"(?i)/(?!\*)").unwrap()
+            Regex::new(r"(?i)\s/\s").unwrap()
         );
         
         // Hardcoded values
         patterns.insert(
             "hardcoded_credentials".to_string(),
-            Regex::new(r#"(?i)(?:password|secret|key|token|api[_-]?key)\s*:\s*StringLiteral\(\".*[^\"]+\".*\)"#).unwrap()
+            Regex::new(r#"(?i)(?:password|secret|key|token|api[_-]?key).*[:=]\s*.*\".*[^\"]+\""#).unwrap()
         );
         
         // Concurrency patterns
