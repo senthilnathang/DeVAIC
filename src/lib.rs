@@ -37,6 +37,7 @@ pub mod cross_language_transfer;
 pub mod semantic_similarity_engine;
 pub mod transfer_validation_engine;
 pub mod business_logic_analyzer;
+pub mod performance;
 
 pub use analyzer::Analyzer;
 pub use build_break::{BuildBreakAnalyzer, BuildBreakResult};
@@ -68,6 +69,11 @@ pub use semantic_similarity_engine::{
     SemanticSimilarityEngine, SimilarityConfig, SimilarityAnalysisResult, SimilarPattern,
     SimilarityType, VariationDetection, VariationType
 };
+pub use performance::{
+    AIPerformanceOptimizer, AIPerformanceConfig, MemoryProfiler, MemoryProfilerConfig,
+    ScalabilityAnalyzer, ScalabilityConfig, EnterpriseBenchmarkSuite, EnterpriseBenchmarkConfig,
+};
+pub use business_logic_analyzer::{BusinessLogicAnalyzer, BusinessLogicConfig};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize, Copy)]
 pub enum Language {
@@ -192,16 +198,20 @@ impl std::fmt::Display for Language {
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct Vulnerability {
     pub id: String,
-    pub cwe: Option<String>,
-    pub vulnerability_type: String,
+    pub title: String,
+    pub description: String,
     pub severity: Severity,
     pub category: String,
-    pub description: String,
+    pub cwe: Option<String>,
+    pub owasp: Option<String>,
     pub file_path: String,
     pub line_number: usize,
-    pub column: usize,
+    pub column_start: usize,
+    pub column_end: usize,
     pub source_code: String,
     pub recommendation: String,
+    pub references: Vec<String>,
+    pub confidence: f64,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
