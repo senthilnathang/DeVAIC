@@ -9,10 +9,13 @@ use crate::{
     parallel_scanner::{ParallelDirectoryScanner},
     semantic_similarity_engine::{SemanticSimilarityEngine, SimilarityConfig},
     business_logic_analyzer::{BusinessLogicAnalyzer, BusinessLogicConfig},
+    progress_reporter::{ProgressReporter, ProgressEvent},
     Language, Vulnerability,
 };
 use std::path::Path;
+use std::time::{Duration, Instant};
 use walkdir::WalkDir;
+use tokio::sync::broadcast;
 
 pub struct Analyzer {
     config: Config,
@@ -23,6 +26,7 @@ pub struct Analyzer {
     semantic_engine: Option<SemanticSimilarityEngine>,
     business_logic_analyzer: Option<BusinessLogicAnalyzer>,
     enable_ai_analysis: bool,
+    progress_reporter: Option<ProgressReporter>,
 }
 
 impl Analyzer {
@@ -56,6 +60,7 @@ impl Analyzer {
             semantic_engine,
             business_logic_analyzer,
             enable_ai_analysis,
+            progress_reporter: None,
         })
     }
 
@@ -92,6 +97,7 @@ impl Analyzer {
             semantic_engine,
             business_logic_analyzer,
             enable_ai_analysis,
+            progress_reporter: None,
         }
     }
 
@@ -115,7 +121,29 @@ impl Analyzer {
         get_global_cache().clear_all();
     }
 
+    /// Enable real-time progress reporting
+    pub fn enable_progress_reporting(&mut self, show_progress_bar: bool, show_detailed_stats: bool, verbose_mode: bool) {
+        self.progress_reporter = Some(ProgressReporter::new(show_progress_bar, show_detailed_stats, verbose_mode));
+    }
+
+    /// Get progress event receiver
+    pub fn get_progress_receiver(&self) -> Option<broadcast::Receiver<ProgressEvent>> {
+        self.progress_reporter.as_ref().map(|p| p.subscribe())
+    }
+
     pub async fn analyze_directory(&self, path: &Path) -> Result<Vec<Vulnerability>> {
+        // Count total files for progress reporting
+        let total_files = if self.progress_reporter.is_some() {
+            self.count_files_in_directory(path)
+        } else {
+            0
+        };
+
+        // Start progress reporting if enabled
+        if let Some(ref reporter) = self.progress_reporter {
+            let total_rules = self.rule_engine.get_rule_count();
+            reporter.start_analysis(total_files, total_rules);
+        }
         if self.parallel_enabled {
             // Use parallel scanner for better performance
             let scanner = ParallelDirectoryScanner::new(
@@ -130,6 +158,12 @@ impl Analyzer {
                 Ok(results) => {
                     log::info!("Parallel scan completed: {} files, {} vulnerabilities, {}ms", 
                               results.files_scanned, results.vulnerabilities.len(), results.scan_time_ms);
+                    
+                    // Complete progress reporting
+                    if let Some(ref reporter) = self.progress_reporter {
+                        reporter.complete_analysis(results.vulnerabilities.len());
+                    }
+                    
                     Ok(results.vulnerabilities)
                 }
                 Err(e) => {
@@ -146,6 +180,7 @@ impl Analyzer {
     async fn analyze_directory_sequential(&self, path: &Path) -> Result<Vec<Vulnerability>> {
         // Use smart file filter for better performance
         let mut vulnerabilities = Vec::new();
+        let mut file_index = 0;
         
         for entry in WalkDir::new(path)
             .follow_links(self.config.analysis.follow_symlinks)
@@ -155,14 +190,52 @@ impl Analyzer {
             if entry.file_type().is_file() {
                 let file_path = entry.path();
                 
+                // Report file start
+                if let Some(ref reporter) = self.progress_reporter {
+                    let file_size = entry.metadata().map(|m| m.len()).unwrap_or(0);
+                    reporter.file_started(file_path.display().to_string(), file_size, file_index);
+                }
+                
+                let file_start_time = Instant::now();
                 log::debug!("Analyzing file: {}", file_path.display());
+                
                 match self.analyze_file(file_path).await {
-                    Ok(mut file_vulns) => vulnerabilities.append(&mut file_vulns),
+                    Ok(mut file_vulns) => {
+                        let vuln_count = file_vulns.len();
+                        
+                        // Report each vulnerability as it's found
+                        if let Some(ref reporter) = self.progress_reporter {
+                            for vuln in &file_vulns {
+                                reporter.vulnerability_found(vuln.clone(), file_path.display().to_string(), Duration::from_millis(1));
+                            }
+                        }
+                        
+                        vulnerabilities.append(&mut file_vulns);
+                        
+                        // Report file completion
+                        if let Some(ref reporter) = self.progress_reporter {
+                            let processing_time = file_start_time.elapsed();
+                            reporter.file_completed(file_path.display().to_string(), vuln_count, processing_time, file_index);
+                        }
+                    },
                     Err(e) => {
                         log::debug!("Skipped file {}: {}", file_path.display(), e);
+                        
+                        // Report file completion with 0 vulnerabilities
+                        if let Some(ref reporter) = self.progress_reporter {
+                            let processing_time = file_start_time.elapsed();
+                            reporter.file_completed(file_path.display().to_string(), 0, processing_time, file_index);
+                        }
                     }
                 }
+                
+                file_index += 1;
             }
+        }
+
+        // Complete progress reporting
+        if let Some(ref reporter) = self.progress_reporter {
+            reporter.complete_analysis(vulnerabilities.len());
         }
 
         Ok(vulnerabilities)
@@ -223,6 +296,13 @@ impl Analyzer {
         if self.enable_ai_analysis {
             let ai_vulnerabilities = self.perform_ai_analysis(&source_file).await?;
             vulnerabilities.extend(ai_vulnerabilities);
+        }
+        
+        // Report vulnerabilities in real-time for single file analysis
+        if let Some(ref reporter) = self.progress_reporter {
+            for vuln in &vulnerabilities {
+                reporter.vulnerability_found(vuln.clone(), path.display().to_string(), Duration::from_millis(1));
+            }
         }
         
         Ok(vulnerabilities)
@@ -341,6 +421,16 @@ impl Analyzer {
     /// Get business logic analyzer
     pub fn get_business_logic_analyzer(&self) -> Option<&BusinessLogicAnalyzer> {
         self.business_logic_analyzer.as_ref()
+    }
+
+    /// Count files in directory for progress tracking
+    fn count_files_in_directory(&self, path: &Path) -> usize {
+        WalkDir::new(path)
+            .follow_links(self.config.analysis.follow_symlinks)
+            .into_iter()
+            .filter_map(|e| e.ok())
+            .filter(|e| e.file_type().is_file())
+            .count()
     }
 
 }

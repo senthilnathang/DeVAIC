@@ -39,6 +39,7 @@ pub mod transfer_validation_engine;
 pub mod business_logic_analyzer;
 pub mod performance;
 pub mod advanced_caching;
+pub mod progress_reporter;
 
 pub use analyzer::Analyzer;
 pub use build_break::{BuildBreakAnalyzer, BuildBreakResult};
