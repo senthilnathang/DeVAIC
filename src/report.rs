@@ -62,7 +62,7 @@ struct VulnerabilityRow {
     #[tabled(rename = "CWE")]
     cwe: String,
     #[tabled(rename = "Type")]
-    vulnerability_type: String,
+    title: String,
     #[tabled(rename = "Severity")]
     severity: String,
     #[tabled(rename = "Category")]
@@ -132,7 +132,7 @@ impl Report {
                 VulnerabilityRow {
                     id: v.id.clone(),
                     cwe: v.cwe.as_ref().unwrap_or(&"N/A".to_string()).clone(),
-                    vulnerability_type: v.vulnerability_type.clone(),
+                    title: v.title.clone(),
                     severity: severity_str,
                     category: v.category.clone(),
                     file: v.file_path.clone(),
@@ -237,7 +237,7 @@ impl Report {
                 y_position = 270.0;
             }
             
-            current_layer.use_text(&format!("{}. {} ({})", i + 1, vuln.vulnerability_type, vuln.severity), 12.0, Mm(25.0), Mm(y_position), &helvetica_bold);
+            current_layer.use_text(&format!("{}. {} ({})", i + 1, vuln.title, vuln.severity), 12.0, Mm(25.0), Mm(y_position), &helvetica_bold);
             y_position -= 10.0;
             
             current_layer.use_text(&format!("   File: {}:{}", vuln.file_path, vuln.line_number), 10.0, Mm(30.0), Mm(y_position), &helvetica);
@@ -312,12 +312,12 @@ impl Report {
             
             worksheet.write_string(row, 0, &vuln.id)?;
             worksheet.write_string(row, 1, vuln.cwe.as_ref().unwrap_or(&"N/A".to_string()))?;
-            worksheet.write_string(row, 2, &vuln.vulnerability_type)?;
+            worksheet.write_string(row, 2, &vuln.title)?;
             worksheet.write_string(row, 3, &vuln.severity.to_string())?;
             worksheet.write_string(row, 4, &vuln.category)?;
             worksheet.write_string(row, 5, &vuln.file_path)?;
             worksheet.write_number(row, 6, vuln.line_number as f64)?;
-            worksheet.write_number(row, 7, vuln.column as f64)?;
+            worksheet.write_number(row, 7, vuln.column_start as f64)?;
             worksheet.write_string(row, 8, &vuln.description)?;
             worksheet.write_string(row, 9, &vuln.recommendation)?;
         }
@@ -442,7 +442,7 @@ impl Vulnerability {
                     },
                     region: SarifRegion {
                         start_line: self.line_number,
-                        start_column: self.column,
+                        start_column: self.column_start,
                     },
                 },
             }],
@@ -536,15 +536,19 @@ mod tests {
             Vulnerability {
                 id: "TEST001".to_string(),
                 cwe: Some("CWE-120".to_string()),
-                vulnerability_type: "Buffer Overflow".to_string(),
+                owasp: Some("A01:2021".to_string()),
+                title: "Buffer Overflow".to_string(),
                 severity: Severity::High,
                 category: "injection".to_string(),
                 description: "Test vulnerability".to_string(),
                 file_path: "test.c".to_string(),
                 line_number: 10,
-                column: 5,
+                column_start: 5,
+                column_end: 10,
                 source_code: "strcpy(buffer, input);".to_string(),
                 recommendation: "Use strncpy instead".to_string(),
+                references: vec!["https://cwe.mitre.org/data/definitions/120.html".to_string()],
+                confidence: 0.9,
             }
         ];
 
@@ -563,15 +567,19 @@ mod tests {
             Vulnerability {
                 id: "TEST001".to_string(),
                 cwe: Some("CWE-95".to_string()),
-                vulnerability_type: "Code Injection".to_string(),
+                owasp: Some("A03:2021".to_string()),
+                title: "Code Injection".to_string(),
                 severity: Severity::Medium,
                 category: "validation".to_string(),
                 description: "Test vulnerability".to_string(),
                 file_path: "test.py".to_string(),
                 line_number: 5,
-                column: 0,
+                column_start: 0,
+                column_end: 15,
                 source_code: "eval(user_input)".to_string(),
                 recommendation: "Avoid using eval".to_string(),
+                references: vec!["https://cwe.mitre.org/data/definitions/95.html".to_string()],
+                confidence: 0.8,
             }
         ];
 

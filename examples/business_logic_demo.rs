@@ -288,7 +288,7 @@ async fn demo_ecommerce_analysis(analyzer: &BusinessLogicAnalyzer) -> Result<(),
         }
     "#;
 
-    let result = analyzer.analyze_business_logic(vulnerable_code, Language::JavaScript).await?;
+    let result = analyzer.analyze_business_logic(vulnerable_code, Language::Javascript).await?;
     
     println!("   📊 Analysis Results:");
     println!("      Vulnerabilities Found: {}", result.vulnerabilities.len());
@@ -342,7 +342,7 @@ async fn demo_banking_analysis(analyzer: &BusinessLogicAnalyzer) -> Result<(), B
         }
     "#;
 
-    let result = analyzer.analyze_business_logic(vulnerable_code, Language::JavaScript).await?;
+    let result = analyzer.analyze_business_logic(vulnerable_code, Language::Javascript).await?;
     
     println!("   📊 Banking Analysis Results:");
     println!("      Total Issues Found: {}", 
@@ -374,7 +374,7 @@ async fn demo_healthcare_analysis(analyzer: &BusinessLogicAnalyzer) -> Result<()
         }
     "#;
 
-    let result = analyzer.analyze_business_logic(vulnerable_code, Language::JavaScript).await?;
+    let result = analyzer.analyze_business_logic(vulnerable_code, Language::Javascript).await?;
     
     println!("   📊 Healthcare Analysis Results:");
     println!("      Privacy Violations: {}", result.rule_violations.len());
@@ -413,7 +413,7 @@ async fn demo_generic_application_analysis(analyzer: &BusinessLogicAnalyzer) -> 
         }
     "#;
 
-    let result = analyzer.analyze_business_logic(vulnerable_code, Language::JavaScript).await?;
+    let result = analyzer.analyze_business_logic(vulnerable_code, Language::Javascript).await?;
     
     println!("   📊 Generic Application Analysis:");
     println!("      Total Vulnerabilities: {}", result.vulnerabilities.len());

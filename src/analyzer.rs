@@ -32,7 +32,10 @@ impl Analyzer {
         
         // Initialize AI engines if enabled
         let semantic_engine = if config.enable_ai_analysis.unwrap_or(false) {
-            Some(SemanticSimilarityEngine::new(SimilarityConfig::default()))
+            match SemanticSimilarityEngine::new(SimilarityConfig::default()) {
+                Ok(engine) => Some(engine),
+                Err(_) => None,
+            }
         } else {
             None
         };
@@ -43,6 +46,7 @@ impl Analyzer {
             None
         };
         
+        let enable_ai_analysis = config.enable_ai_analysis.unwrap_or(false);
         Ok(Self {
             config,
             rule_engine,
@@ -51,7 +55,7 @@ impl Analyzer {
             max_depth: 100,
             semantic_engine,
             business_logic_analyzer,
-            enable_ai_analysis: config.enable_ai_analysis.unwrap_or(false),
+            enable_ai_analysis,
         })
     }
 
@@ -64,7 +68,10 @@ impl Analyzer {
         
         // Initialize AI engines if enabled
         let semantic_engine = if config.enable_ai_analysis.unwrap_or(false) {
-            Some(SemanticSimilarityEngine::new(SimilarityConfig::default()))
+            match SemanticSimilarityEngine::new(SimilarityConfig::default()) {
+                Ok(engine) => Some(engine),
+                Err(_) => None,
+            }
         } else {
             None
         };
@@ -75,6 +82,7 @@ impl Analyzer {
             None
         };
         
+        let enable_ai_analysis = config.enable_ai_analysis.unwrap_or(false);
         Self {
             config,
             rule_engine,
@@ -83,7 +91,7 @@ impl Analyzer {
             max_depth: 100,
             semantic_engine,
             business_logic_analyzer,
-            enable_ai_analysis: config.enable_ai_analysis.unwrap_or(false),
+            enable_ai_analysis,
         }
     }
 
@@ -107,7 +115,7 @@ impl Analyzer {
         get_global_cache().clear_all();
     }
 
-    pub fn analyze_directory(&self, path: &Path) -> Result<Vec<Vulnerability>> {
+    pub async fn analyze_directory(&self, path: &Path) -> Result<Vec<Vulnerability>> {
         if self.parallel_enabled {
             // Use parallel scanner for better performance
             let scanner = ParallelDirectoryScanner::new(
@@ -126,16 +134,16 @@ impl Analyzer {
                 }
                 Err(e) => {
                     log::warn!("Parallel scan failed, falling back to sequential: {}", e);
-                    self.analyze_directory_sequential(path)
+                    self.analyze_directory_sequential(path).await
                 }
             }
         } else {
-            self.analyze_directory_sequential(path)
+            self.analyze_directory_sequential(path).await
         }
     }
 
     /// Sequential directory analysis (fallback)
-    fn analyze_directory_sequential(&self, path: &Path) -> Result<Vec<Vulnerability>> {
+    async fn analyze_directory_sequential(&self, path: &Path) -> Result<Vec<Vulnerability>> {
         // Use smart file filter for better performance
         let mut vulnerabilities = Vec::new();
         
@@ -148,7 +156,7 @@ impl Analyzer {
                 let file_path = entry.path();
                 
                 log::debug!("Analyzing file: {}", file_path.display());
-                match self.analyze_file(file_path) {
+                match self.analyze_file(file_path).await {
                     Ok(mut file_vulns) => vulnerabilities.append(&mut file_vulns),
                     Err(e) => {
                         log::debug!("Skipped file {}: {}", file_path.display(), e);
@@ -228,31 +236,33 @@ impl Analyzer {
         if let Some(ref semantic_engine) = self.semantic_engine {
             match semantic_engine.find_similar_vulnerabilities(&source_file.content, &source_file.language.to_string()).await {
                 Ok(similarity_result) => {
-                    for similarity_match in similarity_result.matches {
+                    for similarity_match in similarity_result {
                         // Convert similarity match to vulnerability
                         let vulnerability = Vulnerability {
                             id: format!("AI-SIM-{}", uuid::Uuid::new_v4()),
-                            title: format!("Semantic Similarity: {}", similarity_match.vulnerability.vulnerability_type),
-                            description: similarity_match.explanation,
-                            severity: match similarity_match.vulnerability.severity {
-                                s if s >= 9.0 => crate::Severity::Critical,
-                                s if s >= 7.0 => crate::Severity::High,
-                                s if s >= 5.0 => crate::Severity::Medium,
-                                s if s >= 3.0 => crate::Severity::Low,
+                            title: format!("Semantic Similarity: {}", similarity_match.pattern_info.title),
+                            description: format!("Similar pattern detected: {}", similarity_match.pattern_info.title),
+                            severity: match similarity_match.similarity_score {
+                                s if s >= 0.9 => crate::Severity::Critical,
+                                s if s >= 0.7 => crate::Severity::High,
+                                s if s >= 0.5 => crate::Severity::Medium,
+                                s if s >= 0.3 => crate::Severity::Low,
                                 _ => crate::Severity::Info,
                             },
                             category: "ai_semantic_similarity".to_string(),
-                            cwe: Some(similarity_match.vulnerability.cwe_id.clone()),
+                            cwe: None,
                             owasp: None,
                             file_path: source_file.path.display().to_string(),
-                            line_number: similarity_match.location.line_start,
-                            column_start: similarity_match.location.column_start,
-                            column_end: similarity_match.location.column_end,
-                            source_code: format!("Lines {}-{}", similarity_match.location.line_start, similarity_match.location.line_end),
-                            recommendation: format!("Similar to known vulnerability: {}. Similarity score: {:.3}", 
-                                similarity_match.vulnerability.vulnerability_type, similarity_match.similarity_score),
+                            line_number: similarity_match.pattern_info.location.line_start,
+                            column_start: similarity_match.pattern_info.location.column_start,
+                            column_end: similarity_match.pattern_info.location.column_end,
+                            source_code: similarity_match.pattern_info.code_snippet.clone(),
+                            recommendation: format!("Similar to known vulnerability pattern: {}. Similarity score: {:.3}. {}", 
+                                similarity_match.pattern_info.title, 
+                                similarity_match.similarity_score,
+                                similarity_match.recommendations.join("; ")),
                             references: vec![],
-                            confidence: similarity_match.confidence,
+                            confidence: similarity_match.detection_confidence as f64,
                         };
                         ai_vulnerabilities.push(vulnerability);
                     }
@@ -307,7 +317,10 @@ impl Analyzer {
         self.enable_ai_analysis = true;
         
         if self.semantic_engine.is_none() {
-            self.semantic_engine = Some(SemanticSimilarityEngine::new(SimilarityConfig::default()));
+            self.semantic_engine = match SemanticSimilarityEngine::new(SimilarityConfig::default()) {
+                Ok(engine) => Some(engine),
+                Err(_) => None,
+            };
         }
         
         if self.business_logic_analyzer.is_none() {

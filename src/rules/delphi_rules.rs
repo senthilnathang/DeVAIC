@@ -135,17 +135,21 @@ impl DelphiRules {
             // Check for hardcoded credentials
             if let Some(captures) = DELPHI_PATTERNS["hardcoded_password"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "DELPHI-CRED-001".to_string(),
+id: "DELPHI-CRED-001".to_string(),
                     cwe: Some("CWE-798".to_string()),
-                    vulnerability_type: "Hardcoded Credentials".to_string(),
+                    title: "Hardcoded Credentials".to_string(),
                     severity: Severity::High,
                     category: "authentication".to_string(),
                     description: "Hardcoded password or secret detected in Delphi code".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Store credentials in configuration files, environment variables, or secure key stores".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.8,
                 });
             }
 
@@ -153,18 +157,22 @@ impl DelphiRules {
             if DELPHI_PATTERNS["sql_injection_exec"].is_match(line) || DELPHI_PATTERNS["sql_injection_format"].is_match(line) {
                 if let Some(captures) = DELPHI_PATTERNS["sql_injection_exec"].captures(line).or_else(|| DELPHI_PATTERNS["sql_injection_format"].captures(line)) {
                     vulnerabilities.push(Vulnerability {
-                        id: "DELPHI-SQLI-001".to_string(),
+id: "DELPHI-SQLI-001".to_string(),
                         cwe: Some("CWE-89".to_string()),
-                        vulnerability_type: "SQL Injection".to_string(),
+                        title: "SQL Injection".to_string(),
                         severity: Severity::Critical,
                         category: "injection".to_string(),
                         description: "Potential SQL injection vulnerability in Delphi database query".to_string(),
                         file_path: source_file.path.to_string_lossy().to_string(),
                         line_number: line_num,
-                        column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                        column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                        column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                         source_code: trimmed_line.to_string(),
                         recommendation: "Use parameterized queries with TQuery.Params or TADOQuery.Parameters".to_string(),
-                    });
+                        owasp: None,
+                        references: vec![],
+                        confidence: 0.9,
+                });
                 }
             }
 
@@ -173,32 +181,40 @@ impl DelphiRules {
                 vulnerabilities.push(Vulnerability {
                     id: "DELPHI-CAST-001".to_string(),
                     cwe: Some("CWE-704".to_string()),
-                    vulnerability_type: "Unsafe Type Cast".to_string(),
+                    owasp: Some("A03:2021".to_string()),
+                    title: "Unsafe Type Cast".to_string(),
                     severity: Severity::Medium,
                     category: "vulnerability".to_string(),
                     description: "Unsafe pointer cast detected - may lead to memory corruption".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Validate pointer safety and consider using safer string handling functions".to_string(),
+                    references: vec![],
+                    confidence: 0.8,
                 });
             }
 
             // Check for Unicode to ANSI casting (sonar-delphi inspired)
             if let Some(captures) = DELPHI_PATTERNS["unicode_ansi_cast"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "DELPHI-UNICODE-001".to_string(),
+id: "DELPHI-UNICODE-001".to_string(),
                     cwe: Some("CWE-176".to_string()),
-                    vulnerability_type: "Unsafe Unicode/ANSI Conversion".to_string(),
+                    title: "Unsafe Unicode/ANSI Conversion".to_string(),
                     severity: Severity::Medium,
                     category: "vulnerability".to_string(),
                     description: "Unicode types should not be cast to ANSI types without proper encoding handling".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Use proper encoding conversion functions like UTF8Encode/UTF8Decode or AnsiToUtf8".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.75,
                 });
             }
 
@@ -206,188 +222,232 @@ impl DelphiRules {
             if DELPHI_PATTERNS["uninitialized_variant"].is_match(line) || DELPHI_PATTERNS["uninitialized_pointer"].is_match(line) {
                 if let Some(captures) = DELPHI_PATTERNS["uninitialized_variant"].captures(line).or_else(|| DELPHI_PATTERNS["uninitialized_pointer"].captures(line)) {
                     vulnerabilities.push(Vulnerability {
-                        id: "DELPHI-UNINIT-001".to_string(),
+id: "DELPHI-UNINIT-001".to_string(),
                         cwe: Some("CWE-457".to_string()),
-                        vulnerability_type: "Uninitialized Variable".to_string(),
+                        title: "Uninitialized Variable".to_string(),
                         severity: Severity::Medium,
                         category: "vulnerability".to_string(),
                         description: "Variable declared but not initialized - may lead to undefined behavior".to_string(),
                         file_path: source_file.path.to_string_lossy().to_string(),
                         line_number: line_num,
-                        column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                        column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                        column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                         source_code: trimmed_line.to_string(),
                         recommendation: "Initialize variables with appropriate default values or use VarClear for variants".to_string(),
-                    });
+                        owasp: None,
+                        references: vec![],
+                        confidence: 0.75,
+                });
                 }
             }
 
             // Check for unsafe string operations
             if let Some(captures) = DELPHI_PATTERNS["unsafe_strcpy"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "DELPHI-BUFFER-001".to_string(),
+id: "DELPHI-BUFFER-001".to_string(),
                     cwe: Some("CWE-120".to_string()),
-                    vulnerability_type: "Buffer Overflow Risk".to_string(),
+                    title: "Buffer Overflow Risk".to_string(),
                     severity: Severity::High,
                     category: "vulnerability".to_string(),
                     description: "Unsafe string operation detected - may lead to buffer overflow".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Use safer string functions or validate buffer sizes before operations".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.8,
                 });
             }
 
             // Check for unsafe pointer arithmetic
             if let Some(captures) = DELPHI_PATTERNS["pointer_arithmetic"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "DELPHI-BUFFER-002".to_string(),
+id: "DELPHI-BUFFER-002".to_string(),
                     cwe: Some("CWE-119".to_string()),
-                    vulnerability_type: "Unsafe Pointer Arithmetic".to_string(),
+                    title: "Unsafe Pointer Arithmetic".to_string(),
                     severity: Severity::High,
                     category: "vulnerability".to_string(),
                     description: "Unsafe pointer arithmetic detected - may lead to buffer overflow".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Use bounds checking and safer memory management practices".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.8,
                 });
             }
 
             // Check for format string vulnerabilities
             if let Some(captures) = DELPHI_PATTERNS["format_vulnerability"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "DELPHI-FORMAT-001".to_string(),
+id: "DELPHI-FORMAT-001".to_string(),
                     cwe: Some("CWE-134".to_string()),
-                    vulnerability_type: "Format String Vulnerability".to_string(),
+                    title: "Format String Vulnerability".to_string(),
                     severity: Severity::Medium,
                     category: "vulnerability".to_string(),
                     description: "Potentially unsafe format string usage - validate format arguments".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Ensure format string arguments match the format specifiers and validate input".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.75,
                 });
             }
 
             // Check for DLL loading vulnerabilities
             if let Some(captures) = DELPHI_PATTERNS["dll_loading"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "DELPHI-DLL-001".to_string(),
+id: "DELPHI-DLL-001".to_string(),
                     cwe: Some("CWE-114".to_string()),
-                    vulnerability_type: "DLL Injection Risk".to_string(),
+                    title: "DLL Injection Risk".to_string(),
                     severity: Severity::High,
                     category: "security".to_string(),
                     description: "Dynamic library loading without path validation - DLL hijacking risk".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Use full paths for DLL loading and validate library authenticity".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.8,
                 });
             }
 
             // Check for registry access
             if let Some(captures) = DELPHI_PATTERNS["registry_access"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "DELPHI-REG-001".to_string(),
+id: "DELPHI-REG-001".to_string(),
                     cwe: Some("CWE-250".to_string()),
-                    vulnerability_type: "Registry Access".to_string(),
+                    title: "Registry Access".to_string(),
                     severity: Severity::Medium,
                     category: "security".to_string(),
                     description: "Registry access detected - ensure proper permissions and error handling".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Validate registry access permissions and handle access denied exceptions properly".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.75,
                 });
             }
 
             // Check for file operations with path traversal risks
             if let Some(captures) = DELPHI_PATTERNS["file_operations"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "DELPHI-PATH-001".to_string(),
+id: "DELPHI-PATH-001".to_string(),
                     cwe: Some("CWE-22".to_string()),
-                    vulnerability_type: "Path Traversal".to_string(),
+                    title: "Path Traversal".to_string(),
                     severity: Severity::High,
                     category: "vulnerability".to_string(),
                     description: "Potential path traversal vulnerability in file operations".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Sanitize file paths and prevent directory traversal attacks".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.8,
                 });
             }
 
             // Check for weak cryptography
             if let Some(captures) = DELPHI_PATTERNS["weak_crypto"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "DELPHI-CRYPTO-001".to_string(),
+id: "DELPHI-CRYPTO-001".to_string(),
                     cwe: Some("CWE-327".to_string()),
-                    vulnerability_type: "Weak Cryptography".to_string(),
+                    title: "Weak Cryptography".to_string(),
                     severity: Severity::Medium,
                     category: "cryptographic".to_string(),
                     description: "Weak cryptographic algorithm detected".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Use stronger cryptographic algorithms like SHA-256, AES, or modern alternatives".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.75,
                 });
             }
 
             // Check for process execution
             if let Some(captures) = DELPHI_PATTERNS["process_execution"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "DELPHI-EXEC-001".to_string(),
+id: "DELPHI-EXEC-001".to_string(),
                     cwe: Some("CWE-78".to_string()),
-                    vulnerability_type: "Command Injection Risk".to_string(),
+                    title: "Command Injection Risk".to_string(),
                     severity: Severity::High,
                     category: "injection".to_string(),
                     description: "Process execution detected - validate input to prevent command injection".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Sanitize command arguments and avoid executing user-controlled input".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.8,
                 });
             }
 
             // Check for empty exception handlers
             if let Some(captures) = DELPHI_PATTERNS["empty_exception"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "DELPHI-EXCEPT-001".to_string(),
+id: "DELPHI-EXCEPT-001".to_string(),
                     cwe: Some("CWE-390".to_string()),
-                    vulnerability_type: "Empty Exception Handler".to_string(),
+                    title: "Empty Exception Handler".to_string(),
                     severity: Severity::Low,
                     category: "security".to_string(),
                     description: "Empty exception handler detected - may hide security issues".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Implement proper exception handling with logging and appropriate recovery".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.7,
                 });
             }
 
             // Check for weak random number generation
             if let Some(captures) = DELPHI_PATTERNS["weak_random"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "DELPHI-RANDOM-001".to_string(),
+id: "DELPHI-RANDOM-001".to_string(),
                     cwe: Some("CWE-338".to_string()),
-                    vulnerability_type: "Weak Random Number Generation".to_string(),
+                    title: "Weak Random Number Generation".to_string(),
                     severity: Severity::Medium,
                     category: "cryptographic".to_string(),
                     description: "Weak random number generation detected - not suitable for security purposes".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Use cryptographically secure random number generators for security-sensitive operations".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.75,
                 });
             }
         }

@@ -139,14 +139,15 @@ enum OutputFormat {
     Pdf,
 }
 
-fn main() -> Result<()> {
+#[tokio::main]
+async fn main() -> Result<()> {
     env_logger::init();
     
     let cli = Cli::parse();
     
     // Handle IDE language server mode
     if cli.lsp_server {
-        return devaic::lsp_server::run_lsp_server();
+        return devaic::lsp_server::run_lsp_server().await;
     }
     
     // Initialize pattern loader
@@ -289,8 +290,8 @@ fn main() -> Result<()> {
     // Run benchmark if requested
     if cli.benchmark {
         let benchmark = devaic::benchmark::PerformanceBenchmark::new(config.clone());
-        let results = benchmark.run_benchmark(&target);
-        results?.print_summary();
+        let results = benchmark.run_benchmark(&target).await?;
+        results.print_summary();
         return Ok(());
     }
     
@@ -307,9 +308,9 @@ fn main() -> Result<()> {
     } else {
         // Use traditional analysis
         if target.is_file() {
-            analyzer.analyze_file(&target)?
+            analyzer.analyze_file(&target).await?
         } else {
-            analyzer.analyze_directory(&target)?
+            analyzer.analyze_directory(&target).await?
         }
     };
 

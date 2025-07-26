@@ -92,7 +92,7 @@ async fn create_sql_injection_signature() -> Result<VulnerabilitySignature, Box<
 
     Ok(VulnerabilitySignature {
         id: "sql-injection-001".to_string(),
-        vulnerability_type: "sql_injection".to_string(),
+        title: "sql_injection".to_string(),
         cwe_id: "CWE-89".to_string(),
         embedding,
         variations: vec![],
@@ -123,7 +123,7 @@ async fn create_buffer_overflow_signature() -> Result<VulnerabilitySignature, Bo
 
     Ok(VulnerabilitySignature {
         id: "buffer-overflow-001".to_string(),
-        vulnerability_type: "buffer_overflow".to_string(),
+        title: "buffer_overflow".to_string(),
         cwe_id: "CWE-120".to_string(),
         embedding,
         variations: vec![],
@@ -154,7 +154,7 @@ async fn create_xss_signature() -> Result<VulnerabilitySignature, Box<dyn std::e
 
     Ok(VulnerabilitySignature {
         id: "xss-001".to_string(),
-        vulnerability_type: "cross_site_scripting".to_string(),
+        title: "cross_site_scripting".to_string(),
         cwe_id: "CWE-79".to_string(),
         embedding,
         variations: vec![],

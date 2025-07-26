@@ -6,7 +6,7 @@
 
 use std::collections::{HashMap, VecDeque};
 use std::sync::{Arc, RwLock};
-use std::time::{Duration, Instant};
+use std::time::{Duration, Instant, SystemTime};
 use serde::{Deserialize, Serialize};
 
 use super::{AccessStatistics, CacheAlert, OptimizationSuggestion};
@@ -103,7 +103,7 @@ pub struct CacheMetrics {
     pub compression_ratio: f64,
     pub network_operations: u64,
     pub error_count: u64,
-    pub last_updated: Instant,
+    pub last_updated: SystemTime,
 }
 
 /// Global cache system metrics
@@ -122,7 +122,7 @@ pub struct GlobalCacheMetrics {
 /// Metrics snapshot for historical analysis
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MetricsSnapshot {
-    pub timestamp: Instant,
+    pub timestamp: SystemTime,
     pub cache_metrics: HashMap<String, CacheMetrics>,
     pub global_metrics: GlobalCacheMetrics,
     pub system_events: Vec<SystemEvent>,
@@ -132,7 +132,7 @@ pub struct MetricsSnapshot {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SystemEvent {
     pub event_type: SystemEventType,
-    pub timestamp: Instant,
+    pub timestamp: SystemTime,
     pub cache_id: Option<String>,
     pub event_data: HashMap<String, String>,
     pub impact_score: f64,
@@ -168,7 +168,7 @@ pub struct AnalysisModel {
     pub accuracy_score: f64,
     pub confidence_interval: f64,
     pub training_data_points: usize,
-    pub last_training: Instant,
+    pub last_training: SystemTime,
 }
 
 /// Types of analysis models
@@ -189,7 +189,7 @@ pub struct PerformanceBaseline {
     pub acceptable_range: (f64, f64),
     pub measurement_period: Duration,
     pub confidence_level: f64,
-    pub established_at: Instant,
+    pub established_at: SystemTime,
 }
 
 /// Trend analysis for metrics
@@ -242,7 +242,7 @@ pub struct Anomaly {
     pub metric_name: String,
     pub anomaly_type: AnomalyType,
     pub severity: f64,
-    pub detected_at: Instant,
+    pub detected_at: SystemTime,
     pub expected_value: f64,
     pub actual_value: f64,
     pub deviation_score: f64,
@@ -468,7 +468,7 @@ pub struct TuningResult {
     pub performance_before: f64,
     pub performance_after: f64,
     pub improvement_score: f64,
-    pub tuning_timestamp: Instant,
+    pub tuning_timestamp: SystemTime,
 }
 
 /// Alert management system
@@ -509,7 +509,7 @@ pub struct AlertEvent {
     pub event_id: String,
     pub alert_id: String,
     pub event_type: AlertEventType,
-    pub timestamp: Instant,
+    pub timestamp: SystemTime,
     pub metadata: HashMap<String, String>,
 }
 
@@ -612,7 +612,7 @@ pub struct Pattern {
     pub confidence: f64,
     pub frequency: f64,
     pub impact_score: f64,
-    pub detection_timestamp: Instant,
+    pub detection_timestamp: SystemTime,
 }
 
 /// Pattern types
@@ -730,7 +730,7 @@ pub struct RetentionPolicy {
 }
 
 impl CacheAnalytics {
-    pub async fn new() -> Result<Self, Box<dyn std::error::Error>> {
+    pub async fn new() -> Result<Self, Box<dyn std::error::Error + Send + Sync>> {
         let config = CacheAnalyticsConfig::default();
         
         Ok(Self {

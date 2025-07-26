@@ -270,6 +270,7 @@ pub struct MemoryMetrics {
     pub fragmentation_ratio: f64,
     pub memory_efficiency: f64,
     pub swap_usage_bytes: usize,
+    #[serde(skip, default = "Instant::now")]
     pub last_updated: Instant,
 }
 
@@ -933,7 +934,7 @@ pub enum AdaptationType {
 #[derive(Debug)]
 pub struct MemoryOptimizedEviction {
     config: EvictionConfig,
-    eviction_strategies: HashMap<String, Box<dyn EvictionStrategy + Send + Sync>>,
+    eviction_strategies: HashMap<String, Box<dyn EvictionStrategyTrait + Send + Sync>>,
     active_strategy: String,
     strategy_selector: StrategySelector,
     eviction_scheduler: EvictionScheduler,
@@ -942,7 +943,7 @@ pub struct MemoryOptimizedEviction {
 }
 
 /// Eviction strategy trait
-pub trait EvictionStrategy: std::fmt::Debug {
+pub trait EvictionStrategyTrait: std::fmt::Debug {
     fn select_candidates(&self, cache_entries: &[CacheEntry], eviction_count: usize) -> Vec<String>;
     fn calculate_eviction_priority(&self, entry: &CacheEntry) -> f64;
     fn update_statistics(&mut self, evicted_entries: &[CacheEntry]);
@@ -1256,7 +1257,7 @@ pub struct BenchmarkResult {
 #[derive(Debug)]
 pub struct CacheCompressionEngine {
     config: CompressionConfig,
-    compression_algorithms: HashMap<String, Box<dyn CompressionAlgorithm + Send + Sync>>,
+    compression_algorithms: HashMap<String, Box<dyn CompressionAlgorithmTrait + Send + Sync>>,
     active_algorithm: String,
     algorithm_selector: CompressionAlgorithmSelector,
     compression_cache: CompressionCache,
@@ -1264,7 +1265,7 @@ pub struct CacheCompressionEngine {
 }
 
 /// Compression algorithm trait
-pub trait CompressionAlgorithm: std::fmt::Debug {
+pub trait CompressionAlgorithmTrait: std::fmt::Debug {
     fn compress(&self, data: &[u8]) -> Result<Vec<u8>, CompressionError>;
     fn decompress(&self, compressed_data: &[u8]) -> Result<Vec<u8>, CompressionError>;
     fn get_algorithm_info(&self) -> CompressionAlgorithmInfo;
@@ -2097,14 +2098,14 @@ pub struct PoolStatistics {
 /// Pool allocator
 #[derive(Debug)]
 pub struct PoolAllocator {
-    allocation_strategies: HashMap<String, Box<dyn AllocationStrategy + Send + Sync>>,
+    allocation_strategies: HashMap<String, Box<dyn AllocationStrategyTrait + Send + Sync>>,
     active_strategy: String,
     allocation_statistics: AllocationStatistics,
     allocation_predictor: AllocationPredictor,
 }
 
 /// Allocation strategy trait
-pub trait AllocationStrategy: std::fmt::Debug {
+pub trait AllocationStrategyTrait: std::fmt::Debug {
     fn allocate(&mut self, size: usize, pools: &mut HashMap<usize, MemoryPool>) -> Result<AllocationResult, AllocationError>;
     fn deallocate(&mut self, block: &MemoryBlock, pools: &mut HashMap<usize, MemoryPool>) -> Result<(), AllocationError>;
     fn get_strategy_info(&self) -> AllocationStrategyInfo;
@@ -2432,7 +2433,7 @@ pub struct MemoryAwareCacheStats {
 }
 
 impl MemoryAwareCache {
-    pub async fn new(total_memory_limit_mb: usize) -> Result<Self, Box<dyn std::error::Error>> {
+    pub async fn new(total_memory_limit_mb: usize) -> Result<Self, Box<dyn std::error::Error + Send + Sync>> {
         let mut config = MemoryAwareCacheConfig::default();
         config.total_memory_limit_mb = total_memory_limit_mb;
         
@@ -2461,7 +2462,7 @@ impl MemoryAwareCache {
         }
     }
 
-    pub async fn optimize_memory_usage(&self) -> Result<f64, Box<dyn std::error::Error>> {
+    pub async fn optimize_memory_usage(&self) -> Result<f64, Box<dyn std::error::Error + Send + Sync>> {
         // Optimize memory usage and return improvement score
         Ok(0.1) // Placeholder
     }

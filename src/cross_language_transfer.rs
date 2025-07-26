@@ -14,6 +14,7 @@ use crate::{
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
+use std::time::Duration;
 use tokio::sync::RwLock;
 use regex::Regex;
 
@@ -178,7 +179,7 @@ pub enum TransferViability {
 pub struct SourcePatternInfo {
     pub pattern_id: String,
     pub source_language: Language,
-    pub vulnerability_type: VulnerabilityType,
+    pub title: VulnerabilityType,
     pub confidence: f32,
     pub semantic_features: SemanticFeatures,
     pub syntactic_features: SyntacticFeatures,
@@ -936,7 +937,7 @@ pub enum TrustLevel {
 pub struct TaintSink {
     pub sink_id: String,
     pub sink_type: TaintSinkType,
-    pub vulnerability_type: VulnerabilityType,
+    pub title: VulnerabilityType,
     pub required_sanitization: Vec<SanitizationType>,
 }
 
@@ -979,7 +980,7 @@ pub struct VulnerabilityPath {
     pub source_node: String,
     pub sink_node: String,
     pub intermediate_nodes: Vec<String>,
-    pub vulnerability_type: VulnerabilityType,
+    pub title: VulnerabilityType,
     pub exploitability: f32,
 }
 
@@ -1469,7 +1470,7 @@ pub struct ASTNode {
 pub struct SourceLocation {
     pub file: String,
     pub line: u32,
-    pub column: u32,
+    pub column_start: u32,
     pub length: u32,
 }
 
@@ -2110,7 +2111,7 @@ pub struct TransferHistoryRecord {
     pub transfer_id: String,
     pub source_language: Language,
     pub target_language: Language,
-    pub vulnerability_type: VulnerabilityType,
+    pub title: VulnerabilityType,
     pub success: bool,
     pub confidence: f32,
     pub validation_results: TransferValidationResult,
@@ -2235,6 +2236,7 @@ impl CrossLanguageTransfer {
             }
 
             match self.generate_target_pattern(
+                source_pattern,
                 &abstract_pattern,
                 target_language,
                 &semantic_features,
@@ -2269,7 +2271,7 @@ impl CrossLanguageTransfer {
         let source_pattern_info = SourcePatternInfo {
             pattern_id: source_pattern.id.clone(),
             source_language: self.infer_source_language(source_pattern).unwrap_or(Language::Javascript),
-            vulnerability_type: self.map_category_to_vulnerability_type(&source_pattern.category),
+            title: self.map_category_to_vulnerability_type(&source_pattern.category),
             confidence: source_pattern.patterns.get(0)
                 .and_then(|p| p.confidence)
                 .unwrap_or(0.8),
@@ -2393,6 +2395,7 @@ impl CrossLanguageTransfer {
     /// Generate target pattern for specific language
     async fn generate_target_pattern(
         &self,
+        source_pattern: &SecurityPattern,
         abstract_pattern: &AbstractPattern,
         target_language: Language,
         semantic_features: &SemanticFeatures,
@@ -2406,18 +2409,22 @@ impl CrossLanguageTransfer {
         let transferred_pattern = adapter.adapt_pattern(abstract_pattern)?;
         
         // Calculate transfer confidence
+        let transfer_context = TransferContext {
+            validation_result: None,
+            transfer_parameters: HashMap::new(),
+            metadata: HashMap::new(),
+        };
         let transfer_confidence = self.calculate_transfer_confidence(
-            abstract_pattern,
-            &transferred_pattern,
-            semantic_features,
-            syntactic_features,
-        )?;
+            &source_pattern,
+            target_language,
+            &transfer_context,
+        ).await?;
 
         // Calculate semantic similarity
         let semantic_similarity = self.calculate_semantic_similarity(
-            semantic_features,
-            &transferred_pattern,
-        )?;
+            &source_pattern,
+            target_language,
+        ).await?;
 
         // Determine transfer method used
         let transfer_method = self.determine_transfer_method(abstract_pattern, &transferred_pattern)?;
@@ -2433,7 +2440,7 @@ impl CrossLanguageTransfer {
             pattern_id: format!("{}_{:?}", transferred_pattern.id, target_language),
             target_language,
             transferred_pattern,
-            transfer_confidence,
+            transfer_confidence: transfer_confidence.overall_confidence,
             transfer_method,
             semantic_similarity,
             adaptation_notes,
@@ -2470,7 +2477,7 @@ impl CrossLanguageTransfer {
                     transfer_id: uuid::Uuid::new_v4().to_string(),
                     source_language: result.source_pattern.source_language,
                     target_language: target_pattern.target_language,
-                    vulnerability_type: result.source_pattern.vulnerability_type.clone(),
+                    title: result.source_pattern.title.clone(),
                     success: target_pattern.transfer_confidence >= self.config.min_transfer_confidence,
                     confidence: target_pattern.transfer_confidence,
                     validation_results: result.validation_results.get(0).cloned()
@@ -2573,7 +2580,7 @@ impl CrossLanguageTransfer {
 
         // 6. Validation score from pre-transfer validation
         score.validation_score = if let Some(validation) = &transfer_context.validation_result {
-            validation.overall_score
+            (validation.quality_score + validation.performance_score + validation.security_score) / 3.0
         } else {
             0.5 // Default moderate score if no validation
         };
@@ -2771,30 +2778,7 @@ impl CrossLanguageTransfer {
         length_factor + special_chars
     }
 
-    fn calculate_transfer_confidence(
-        &self,
-        _abstract_pattern: &AbstractPattern,
-        _transferred_pattern: &SecurityPattern,
-        _semantic_features: &SemanticFeatures,
-        _syntactic_features: &SyntacticFeatures,
-    ) -> Result<f32> {
-        // Simplified confidence calculation
-        // In a real implementation, this would consider:
-        // - Semantic similarity preservation
-        // - Syntactic validity in target language
-        // - Historical success rates
-        // - Pattern complexity factors
-        Ok(0.75)
-    }
 
-    fn calculate_semantic_similarity(
-        &self,
-        _source_features: &SemanticFeatures,
-        _target_pattern: &SecurityPattern,
-    ) -> Result<f32> {
-        // Simplified similarity calculation
-        Ok(0.8)
-    }
 
     fn determine_transfer_method(
         &self,
@@ -2913,7 +2897,7 @@ impl CrossLanguageTransfer {
         &self,
         source_language: &Language,
         target_language: Language,
-        vulnerability_type: &VulnerabilityType,
+        title: &VulnerabilityType,
     ) -> Result<f32> {
         let knowledge_base = self.knowledge_base.read().await;
         
@@ -2924,7 +2908,7 @@ impl CrossLanguageTransfer {
         for transfer in &knowledge_base.transfer_history {
             if transfer.source_language == *source_language 
                 && transfer.target_language == target_language
-                && transfer.vulnerability_type == *vulnerability_type {
+                && transfer.title == *title {
                 relevant_transfers += 1;
                 if transfer.success {
                     successful_transfers += 1;
@@ -3191,20 +3175,20 @@ impl CrossLanguageTransfer {
 
     fn calculate_severity_similarity(&self, sev1: &Severity, sev2: &Severity) -> f32 {
         let score1 = match sev1 {
-            Severity::Info => 1.0,
-            Severity::Low => 2.0,
-            Severity::Medium => 3.0,
-            Severity::High => 4.0,
-            Severity::Critical => 5.0,
+            Severity::Info => 1.0_f32,
+            Severity::Low => 2.0_f32,
+            Severity::Medium => 3.0_f32,
+            Severity::High => 4.0_f32,
+            Severity::Critical => 5.0_f32,
         };
         let score2 = match sev2 {
-            Severity::Info => 1.0,
-            Severity::Low => 2.0,
-            Severity::Medium => 3.0,
-            Severity::High => 4.0,
-            Severity::Critical => 5.0,
+            Severity::Info => 1.0_f32,
+            Severity::Low => 2.0_f32,
+            Severity::Medium => 3.0_f32,
+            Severity::High => 4.0_f32,
+            Severity::Critical => 5.0_f32,
         };
-        1.0 - (score1 - score2).abs() / 4.0
+        1.0_f32 - (score1 - score2).abs() / 4.0_f32
     }
 
     fn calculate_regex_similarity(&self, regex1: &str, regex2: &str) -> Result<f32> {

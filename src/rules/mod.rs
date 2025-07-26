@@ -32,6 +32,7 @@ pub mod vulnerability_scanner_rules;
 pub mod sanitizer_rules;
 pub mod dependency_scanner_rules;
 pub mod custom_pattern_rules;
+pub mod advanced_rule_engine;
 
 use crate::{
     config::RulesConfig,
@@ -284,27 +285,31 @@ pub trait RuleSet {
 pub fn create_vulnerability(
     id: &str,
     cwe: Option<&str>,
-    vulnerability_type: &str,
+    title: &str,
     severity: Severity,
     category: &str,
     description: &str,
     file_path: &str,
     line_number: usize,
-    column: usize,
+    column_start: usize,
     source_code: &str,
     recommendation: &str,
 ) -> Vulnerability {
     Vulnerability {
         id: id.to_string(),
         cwe: cwe.map(|s| s.to_string()),
-        vulnerability_type: vulnerability_type.to_string(),
+        title: title.to_string(),
         severity,
         category: category.to_string(),
         description: description.to_string(),
         file_path: file_path.to_string(),
         line_number,
-        column,
+        column_start,
+        column_end: column_start,
         source_code: source_code.to_string(),
         recommendation: recommendation.to_string(),
+        owasp: None,
+        references: Vec::new(),
+        confidence: 0.8,
     }
 }

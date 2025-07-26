@@ -179,102 +179,126 @@ impl AstroRules {
             // Check for unsafe HTML fragment
             if let Some(captures) = ASTRO_PATTERNS["unsafe_html_fragment"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "ASTRO-XSS-001".to_string(),
+id: "ASTRO-XSS-001".to_string(),
                     cwe: Some("CWE-79".to_string()),
-                    vulnerability_type: "Cross-Site Scripting (XSS)".to_string(),
+                    title: "Cross-Site Scripting (XSS)".to_string(),
                     severity: Severity::High,
                     category: "security".to_string(),
                     description: "Unsafe Fragment with set:html - XSS vulnerability".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Sanitize HTML content before using set:html or use safe alternatives.".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.8,
                 });
             }
 
             // Check for unescaped user content
             if let Some(captures) = ASTRO_PATTERNS["unescaped_user_content"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "ASTRO-XSS-002".to_string(),
+id: "ASTRO-XSS-002".to_string(),
                     cwe: Some("CWE-79".to_string()),
-                    vulnerability_type: "Unescaped User Input".to_string(),
+                    title: "Unescaped User Input".to_string(),
                     severity: Severity::Critical,
                     category: "security".to_string(),
                     description: "User input directly used in set:html - critical XSS vulnerability".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Never use user input directly in set:html. Implement proper sanitization.".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.9,
                 });
             }
 
             // Check for frontmatter code injection
             if let Some(captures) = ASTRO_PATTERNS["frontmatter_code_injection"].captures(&source_file.content) {
                 vulnerabilities.push(Vulnerability {
-                    id: "ASTRO-INJECT-001".to_string(),
+id: "ASTRO-INJECT-001".to_string(),
                     cwe: Some("CWE-95".to_string()),
-                    vulnerability_type: "Code Injection".to_string(),
+                    title: "Code Injection".to_string(),
                     severity: Severity::Critical,
                     category: "security".to_string(),
                     description: "Code injection risk in Astro frontmatter".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Avoid eval, Function, and timer functions with dynamic content in frontmatter.".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.9,
                 });
             }
 
             // Check for frontmatter hardcoded secrets
             if let Some(captures) = ASTRO_PATTERNS["frontmatter_hardcoded_secrets"].captures(&source_file.content) {
                 vulnerabilities.push(Vulnerability {
-                    id: "ASTRO-SECRET-001".to_string(),
+id: "ASTRO-SECRET-001".to_string(),
                     cwe: Some("CWE-798".to_string()),
-                    vulnerability_type: "Hardcoded Secrets".to_string(),
+                    title: "Hardcoded Secrets".to_string(),
                     severity: Severity::Critical,
                     category: "authentication".to_string(),
                     description: "Hardcoded secrets in Astro frontmatter".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Move secrets to environment variables and use proper secret management.".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.9,
                 });
             }
 
             // Check for API endpoint without validation
             if let Some(captures) = ASTRO_PATTERNS["api_endpoint_no_validation"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "ASTRO-API-001".to_string(),
+id: "ASTRO-API-001".to_string(),
                     cwe: Some("CWE-20".to_string()),
-                    vulnerability_type: "API Endpoint Without Validation".to_string(),
+                    title: "API Endpoint Without Validation".to_string(),
                     severity: Severity::High,
                     category: "security".to_string(),
                     description: "Astro API endpoint processing request data without validation".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Validate and sanitize all request data in API endpoints.".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.8,
                 });
             }
 
             // Check for unsafe client directive
             if let Some(captures) = ASTRO_PATTERNS["unsafe_client_directive"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "ASTRO-HYDRATION-001".to_string(),
+id: "ASTRO-HYDRATION-001".to_string(),
                     cwe: Some("CWE-79".to_string()),
-                    vulnerability_type: "Client Hydration XSS".to_string(),
+                    title: "Client Hydration XSS".to_string(),
                     severity: Severity::High,
                     category: "security".to_string(),
                     description: "Unsafe operations in client hydration directive".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Avoid unsafe operations in client directives. Use safe hydration patterns.".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.8,
                 });
             }
 
@@ -283,100 +307,124 @@ impl AstroRules {
                 vulnerabilities.push(Vulnerability {
                     id: "ASTRO-ENV-001".to_string(),
                     cwe: Some("CWE-200".to_string()),
-                    vulnerability_type: "Environment Variable Exposure".to_string(),
+                    title: "Environment Variable Exposure".to_string(),
                     severity: Severity::High,
                     category: "security".to_string(),
                     description: "Private environment variable potentially exposed to client".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Use PUBLIC_ prefix only for client-safe environment variables.".to_string(),
+                    owasp: Some("A03:2021 – Injection".to_string()),
+                    references: vec!["https://cwe.mitre.org/data/definitions/200.html".to_string()],
+                    confidence: 0.8,
                 });
             }
 
             // Check for middleware without auth
             if let Some(captures) = ASTRO_PATTERNS["middleware_no_auth"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "ASTRO-MIDDLEWARE-001".to_string(),
+id: "ASTRO-MIDDLEWARE-001".to_string(),
                     cwe: Some("CWE-862".to_string()),
-                    vulnerability_type: "Missing Authorization".to_string(),
+                    title: "Missing Authorization".to_string(),
                     severity: Severity::Medium,
                     category: "security".to_string(),
                     description: "Astro middleware without authorization checks".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Implement proper authentication and authorization in middleware.".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.75,
                 });
             }
 
             // Check for unsafe image source
             if let Some(captures) = ASTRO_PATTERNS["unsafe_image_src"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "ASTRO-IMAGE-001".to_string(),
+id: "ASTRO-IMAGE-001".to_string(),
                     cwe: Some("CWE-79".to_string()),
-                    vulnerability_type: "Image Source Injection".to_string(),
+                    title: "Image Source Injection".to_string(),
                     severity: Severity::Medium,
                     category: "security".to_string(),
                     description: "Dynamic image source - potential XSS or path traversal".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Validate image sources and use allowlisted domains.".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.75,
                 });
             }
 
             // Check for image path traversal
             if let Some(captures) = ASTRO_PATTERNS["image_path_traversal"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "ASTRO-PATH-001".to_string(),
+id: "ASTRO-PATH-001".to_string(),
                     cwe: Some("CWE-22".to_string()),
-                    vulnerability_type: "Path Traversal".to_string(),
+                    title: "Path Traversal".to_string(),
                     severity: Severity::High,
                     category: "security".to_string(),
                     description: "Image path contains directory traversal pattern".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Use absolute paths or properly validate relative paths.".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.8,
                 });
             }
 
             // Check for dynamic route without validation
             if let Some(captures) = ASTRO_PATTERNS["dynamic_route_no_validation"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "ASTRO-ROUTE-001".to_string(),
+id: "ASTRO-ROUTE-001".to_string(),
                     cwe: Some("CWE-20".to_string()),
-                    vulnerability_type: "Route Parameter Injection".to_string(),
+                    title: "Route Parameter Injection".to_string(),
                     severity: Severity::Medium,
                     category: "security".to_string(),
                     description: "Route parameter used without validation".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Validate and sanitize route parameters before use.".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.75,
                 });
             }
 
             // Check for inline script injection
             if let Some(captures) = ASTRO_PATTERNS["inline_script_injection"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "ASTRO-SCRIPT-001".to_string(),
+id: "ASTRO-SCRIPT-001".to_string(),
                     cwe: Some("CWE-79".to_string()),
-                    vulnerability_type: "Script Injection".to_string(),
+                    title: "Script Injection".to_string(),
                     severity: Severity::High,
                     category: "security".to_string(),
                     description: "Dynamic content in inline script - XSS risk".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Avoid dynamic content in inline scripts. Use external scripts or safe data passing.".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.8,
                 });
             }
         }

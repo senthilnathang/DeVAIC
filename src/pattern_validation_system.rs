@@ -412,7 +412,7 @@ pub struct BenchmarkFramework {
     pub framework_id: String,
     pub benchmark_suites: Vec<BenchmarkSuite>,
     pub execution_environments: Vec<ExecutionEnvironment>,
-    pub metrics_collectors: Vec<MetricsCollector>,
+    pub metrics_collectors: Vec<crate::advanced_caching::cache_analytics::MetricsCollector>,
 }
 
 /// Benchmark suite for testing

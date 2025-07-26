@@ -181,9 +181,9 @@ impl SarifOutput {
                 
                 rules.push(SarifRule {
                     id: vuln.id.clone(),
-                    name: vuln.vulnerability_type.clone(),
+                    name: vuln.title.clone(),
                     short_description: SarifMessage {
-                        text: vuln.vulnerability_type.clone(),
+                        text: vuln.title.clone(),
                     },
                     full_description: SarifMessage {
                         text: vuln.description.clone(),
@@ -218,9 +218,9 @@ impl SarifOutput {
                         },
                         region: SarifRegion {
                             start_line: vuln.line_number,
-                            start_column: vuln.column + 1, // SARIF uses 1-based columns
+                            start_column: vuln.column_start + 1, // SARIF uses 1-based columns
                             end_line: vuln.line_number,
-                            end_column: vuln.column + vuln.source_code.len() + 1,
+                            end_column: vuln.column_start + vuln.source_code.len() + 1,
                             snippet: Some(SarifArtifactContent {
                                 text: vuln.source_code.clone(),
                             }),
@@ -386,15 +386,19 @@ mod tests {
         let vulnerability = Vulnerability {
             id: "JS001".to_string(),
             cwe: Some("CWE-79".to_string()),
-            vulnerability_type: "Cross-Site Scripting".to_string(),
+            owasp: Some("A03:2021".to_string()),
+            title: "Cross-Site Scripting".to_string(),
             severity: Severity::High,
             category: "injection".to_string(),
             description: "XSS vulnerability detected".to_string(),
             file_path: "test.js".to_string(),
             line_number: 10,
-            column: 5,
+            column_start: 5,
+            column_end: 20,
             source_code: "innerHTML = userInput".to_string(),
             recommendation: "Sanitize user input".to_string(),
+            references: vec!["https://cwe.mitre.org/data/definitions/79.html".to_string()],
+            confidence: 0.85,
         };
         
         let sarif = SarifOutput::from_vulnerabilities(&[vulnerability], "DeVAIC", "1.0.0");

@@ -11,13 +11,17 @@ impl DartParser {
         let mut parser = TreeSitterParser::new();
         
         // Try to set the Dart language, fall back to basic parsing if it fails
-        match parser.set_language(tree_sitter_dart::language()) {
-            Ok(()) => {
-                log::info!("Dart parser initialized with tree-sitter language support");
-            }
-            Err(e) => {
-                log::warn!("Failed to set Dart language: {}, falling back to basic parsing", e);
-                // Continue with basic parser for compatibility
+        // Note: Using unsafe transmute to handle potential version mismatches between tree-sitter crates
+        unsafe {
+            let language = std::mem::transmute(tree_sitter_dart::language());
+            match parser.set_language(language) {
+                Ok(()) => {
+                    log::info!("Dart parser initialized with tree-sitter language support");
+                }
+                Err(e) => {
+                    log::warn!("Failed to set Dart language: {}, falling back to basic parsing", e);
+                    // Continue with basic parser for compatibility
+                }
             }
         }
         

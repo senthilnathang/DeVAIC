@@ -199,15 +199,19 @@ impl NimParser {
                 vulnerabilities.push(Vulnerability {
                     id: "NIM-MEM-001".to_string(),
                     cwe: Some("CWE-119".to_string()),
-                    vulnerability_type: "Unsafe Memory Access".to_string(),
+                    title: "Unsafe Memory Access".to_string(),
                     severity: Severity::High,
                     category: "vulnerability".to_string(),
                     description: "Unsafe memory operation detected - potential memory corruption".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Use safe memory operations or add proper bounds checking".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.8,
                 });
             }
 
@@ -216,15 +220,19 @@ impl NimParser {
                 vulnerabilities.push(Vulnerability {
                     id: "NIM-FFI-001".to_string(),
                     cwe: Some("CWE-829".to_string()),
-                    vulnerability_type: "Unsafe C Interop".to_string(),
+                    title: "Unsafe C Interop".to_string(),
                     severity: Severity::High,
                     category: "security".to_string(),
                     description: "C interop detected - potential security risks from external code".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Validate C function calls and ensure input sanitization".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.8,
                 });
             }
 
@@ -233,15 +241,19 @@ impl NimParser {
                 vulnerabilities.push(Vulnerability {
                     id: "NIM-MACRO-001".to_string(),
                     cwe: Some("CWE-94".to_string()),
-                    vulnerability_type: "Code Injection via Macros".to_string(),
+                    title: "Code Injection via Macros".to_string(),
                     severity: Severity::Medium,
                     category: "security".to_string(),
                     description: "Unsafe macro usage - potential code injection risk".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Validate macro inputs and use typed alternatives where possible".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.75,
                 });
             }
 
@@ -250,15 +262,19 @@ impl NimParser {
                 vulnerabilities.push(Vulnerability {
                     id: "NIM-THREAD-001".to_string(),
                     cwe: Some("CWE-362".to_string()),
-                    vulnerability_type: "Race Condition".to_string(),
+                    title: "Race Condition".to_string(),
                     severity: Severity::High,
                     category: "vulnerability".to_string(),
                     description: "Threading pragma detected - potential race condition risk".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Use proper synchronization mechanisms and thread-safe operations".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.8,
                 });
             }
 
@@ -267,15 +283,19 @@ impl NimParser {
                 vulnerabilities.push(Vulnerability {
                     id: "NIM-FILE-001".to_string(),
                     cwe: Some("CWE-22".to_string()),
-                    vulnerability_type: "Path Traversal".to_string(),
+                    title: "Path Traversal".to_string(),
                     severity: Severity::High,
                     category: "security".to_string(),
                     description: "File operation with dynamic path - path traversal risk".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Validate and sanitize file paths before operations".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.8,
                 });
             }
 
@@ -284,15 +304,19 @@ impl NimParser {
                 vulnerabilities.push(Vulnerability {
                     id: "NIM-BUF-001".to_string(),
                     cwe: Some("CWE-120".to_string()),
-                    vulnerability_type: "Buffer Overflow".to_string(),
+                    title: "Buffer Overflow".to_string(),
                     severity: Severity::High,
                     category: "vulnerability".to_string(),
                     description: "Memory copy operation - potential buffer overflow".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Use safe memory operations with bounds checking".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.8,
                 });
             }
 
@@ -301,15 +325,19 @@ impl NimParser {
                 vulnerabilities.push(Vulnerability {
                     id: "NIM-SECRET-001".to_string(),
                     cwe: Some("CWE-798".to_string()),
-                    vulnerability_type: "Hardcoded Credentials".to_string(),
+                    title: "Hardcoded Credentials".to_string(),
                     severity: Severity::Critical,
                     category: "authentication".to_string(),
                     description: "Hardcoded secret detected in Nim code".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Move secrets to environment variables or secure configuration".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.9,
                 });
             }
 
@@ -318,15 +346,19 @@ impl NimParser {
                 vulnerabilities.push(Vulnerability {
                     id: "NIM-CMD-001".to_string(),
                     cwe: Some("CWE-78".to_string()),
-                    vulnerability_type: "Command Injection".to_string(),
+                    title: "Command Injection".to_string(),
                     severity: Severity::Critical,
                     category: "security".to_string(),
                     description: "Command execution with dynamic input - command injection risk".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Validate and sanitize command arguments or use safe alternatives".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.9,
                 });
             }
 
@@ -335,15 +367,19 @@ impl NimParser {
                 vulnerabilities.push(Vulnerability {
                     id: "NIM-PRAGMA-001".to_string(),
                     cwe: Some("CWE-665".to_string()),
-                    vulnerability_type: "Unsafe Configuration".to_string(),
+                    title: "Unsafe Configuration".to_string(),
                     severity: Severity::Medium,
                     category: "security".to_string(),
                     description: "Unsafe pragma detected - disables important safety checks".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Enable safety checks in production code".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.75,
                 });
             }
 
@@ -352,15 +388,19 @@ impl NimParser {
                 vulnerabilities.push(Vulnerability {
                     id: "NIM-ERROR-001".to_string(),
                     cwe: Some("CWE-252".to_string()),
-                    vulnerability_type: "Unchecked Error Condition".to_string(),
+                    title: "Unchecked Error Condition".to_string(),
                     severity: Severity::Medium,
                     category: "vulnerability".to_string(),
                     description: "Exception ignored - may hide failures".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Handle exceptions appropriately or log for debugging".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.75,
                 });
             }
 
@@ -369,15 +409,19 @@ impl NimParser {
                 vulnerabilities.push(Vulnerability {
                     id: "NIM-DEBUG-001".to_string(),
                     cwe: Some("CWE-489".to_string()),
-                    vulnerability_type: "Debug Code in Production".to_string(),
+                    title: "Debug Code in Production".to_string(),
                     severity: Severity::Low,
                     category: "security".to_string(),
                     description: "Debug code detected - may leak sensitive information".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Remove debug statements from production code".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.7,
                 });
             }
         }

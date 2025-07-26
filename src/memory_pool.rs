@@ -385,16 +385,20 @@ mod tests {
         let mut vulns = pool.get();
         vulns.push(Vulnerability {
             id: "test".to_string(),
-            vulnerability_type: "Test".to_string(),
+            title: "Test".to_string(),
             severity: crate::Severity::High,
             category: "test".to_string(),
             description: "Test".to_string(),
             file_path: "test.rs".to_string(),
             line_number: 1,
-            column: 1,
+            column_start: 1,
+            column_end: 1,
             source_code: "test".to_string(),
             recommendation: "test".to_string(),
             cwe: None,
+            owasp: None,
+            references: vec![],
+            confidence: 0.8,
         });
         
         assert_eq!(vulns.len(), 1);

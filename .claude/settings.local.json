@@ -42,7 +42,10 @@
       "Bash(npm:*)",
       "Bash(./build.sh)",
       "Bash(code:*)",
-      "Bash(true)"
+      "Bash(true)",
+      "Bash(awk:*)",
+      "Bash(git checkout:*)",
+      "Bash(bash:*)"
     ],
     "deny": []
   }

@@ -132,7 +132,7 @@ mod tests {
             }
         "#;
         
-        let result = analyzer.analyze_business_logic(vulnerable_code, Language::JavaScript).await.unwrap();
+        let result = analyzer.analyze_business_logic(vulnerable_code, Language::Javascript).await.unwrap();
         
         assert!(result.metadata.duration_ms > 0);
         assert_eq!(result.metadata.workflows_analyzed, 1);
@@ -163,7 +163,7 @@ mod tests {
             }
         "#;
         
-        let result = analyzer.analyze_business_logic(auth_bypass_code, Language::JavaScript).await.unwrap();
+        let result = analyzer.analyze_business_logic(auth_bypass_code, Language::Javascript).await.unwrap();
         
         // Should detect authentication bypass
         assert!(!result.auth_issues.is_empty(), "Should detect authentication bypass");
@@ -188,7 +188,7 @@ mod tests {
             }
         "#;
         
-        let result = analyzer.analyze_business_logic(missing_validation_code, Language::JavaScript).await.unwrap();
+        let result = analyzer.analyze_business_logic(missing_validation_code, Language::Javascript).await.unwrap();
         
         // Should detect validation issues
         assert!(!result.validation_issues.is_empty(), "Should detect missing validation");
@@ -210,7 +210,7 @@ mod tests {
             }
         "#;
         
-        let result = analyzer.analyze_business_logic(rule_violation_code, Language::JavaScript).await.unwrap();
+        let result = analyzer.analyze_business_logic(rule_violation_code, Language::Javascript).await.unwrap();
         
         // Should detect business rule violations
         assert!(!result.rule_violations.is_empty(), "Should detect business rule violations");
@@ -231,7 +231,7 @@ mod tests {
             }
         "#;
         
-        let result = analyzer.analyze_business_logic(healthcare_code, Language::JavaScript).await.unwrap();
+        let result = analyzer.analyze_business_logic(healthcare_code, Language::Javascript).await.unwrap();
         
         assert!(!result.workflow_analysis.is_empty(), "Should analyze workflow");
         
@@ -256,7 +256,7 @@ mod tests {
             }
         "#;
         
-        let result = analyzer.analyze_business_logic(vulnerable_code, Language::JavaScript).await.unwrap();
+        let result = analyzer.analyze_business_logic(vulnerable_code, Language::Javascript).await.unwrap();
         
         // Should convert issues to vulnerabilities
         if !result.vulnerabilities.is_empty() {
@@ -297,7 +297,7 @@ mod tests {
     fn create_test_sql_injection_signature() -> VulnerabilitySignature {
         VulnerabilitySignature {
             id: "test-sql-001".to_string(),
-            vulnerability_type: "sql_injection".to_string(),
+            title: "sql_injection".to_string(),
             cwe_id: "CWE-89".to_string(),
             embedding: CodeEmbedding {
                 vector: vec![0.5; 512],
@@ -325,7 +325,7 @@ mod tests {
     fn create_test_xss_signature() -> VulnerabilitySignature {
         VulnerabilitySignature {
             id: "test-xss-001".to_string(),
-            vulnerability_type: "cross_site_scripting".to_string(),
+            title: "cross_site_scripting".to_string(),
             cwe_id: "CWE-79".to_string(),
             embedding: CodeEmbedding {
                 vector: vec![0.3; 512],

@@ -836,6 +836,20 @@ pub enum ViolationType {
     TimingViolation,
 }
 
+impl std::fmt::Display for ViolationType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ViolationType::InconsistentValues => write!(f, "Inconsistent Values"),
+            ViolationType::StaleData => write!(f, "Stale Data"),
+            ViolationType::MissedInvalidation => write!(f, "Missed Invalidation"),
+            ViolationType::OrphanedEntry => write!(f, "Orphaned Entry"),
+            ViolationType::CascadingInconsistency => write!(f, "Cascading Inconsistency"),
+            ViolationType::ProtocolViolation => write!(f, "Protocol Violation"),
+            ViolationType::TimingViolation => write!(f, "Timing Violation"),
+        }
+    }
+}
+
 /// Violation severity
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum ViolationSeverity {
@@ -906,7 +920,7 @@ impl CacheCoherencyManager {
     pub async fn new(
         config: CoherencyConfig,
         distributed_cache: Option<Arc<DistributedCache>>,
-    ) -> Result<Self, Box<dyn std::error::Error>> {
+    ) -> Result<Self, Box<dyn std::error::Error + Send + Sync>> {
         let coherency_state = Arc::new(RwLock::new(CoherencyState {
             vector_clocks: HashMap::new(),
             active_operations: HashMap::new(),
@@ -968,7 +982,7 @@ impl CacheCoherencyManager {
     }
 
     /// Notify about cache update
-    pub async fn notify_update(&self, cache_id: &str, key: &str) -> Result<(), Box<dyn std::error::Error>> {
+    pub async fn notify_update(&self, cache_id: &str, key: &str) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let invalidation_request = InvalidationRequest {
             request_id: uuid::Uuid::new_v4().to_string(),
             cache_id: cache_id.to_string(),
@@ -986,7 +1000,7 @@ impl CacheCoherencyManager {
     }
 
     /// Notify about cache invalidation
-    pub async fn notify_invalidation(&self, cache_id: &str, key: &str) -> Result<(), Box<dyn std::error::Error>> {
+    pub async fn notify_invalidation(&self, cache_id: &str, key: &str) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let message = CoherencyMessage::InvalidationRequest {
             request_id: uuid::Uuid::new_v4().to_string(),
             cache_id: cache_id.to_string(),
@@ -1000,7 +1014,7 @@ impl CacheCoherencyManager {
     }
 
     /// Synchronize with other nodes
-    pub async fn synchronize(&self, scope: SyncScope) -> Result<SyncResult, Box<dyn std::error::Error>> {
+    pub async fn synchronize(&self, scope: SyncScope) -> Result<SyncResult, Box<dyn std::error::Error + Send + Sync>> {
         let sync_id = uuid::Uuid::new_v4().to_string();
         
         let sync_request = ScheduledSync {
@@ -1029,7 +1043,10 @@ impl CacheCoherencyManager {
 
     async fn message_processing_loop(&self) {
         // Process coherency messages
-        let mut receiver = self.message_bus.receiver.write().unwrap();
+        let mut receiver = {
+            let receiver_guard = self.message_bus.receiver.write().unwrap();
+            receiver_guard.resubscribe()
+        }; // Guard is dropped here
         
         while let Ok(message) = receiver.recv().await {
             if let Err(e) = self.process_coherency_message(message).await {
@@ -1046,8 +1063,10 @@ impl CacheCoherencyManager {
         loop {
             interval.tick().await;
             
-            let state = self.coherency_state.read().unwrap();
-            let violations = self.violation_detector.detect_violations(&state);
+            let violations = {
+                let state = self.coherency_state.read().unwrap();
+                self.violation_detector.detect_violations(&state)
+            }; // Guard is dropped here
             
             for violation in violations {
                 self.handle_coherency_violation(violation).await;
@@ -1063,12 +1082,13 @@ impl CacheCoherencyManager {
             
             // Check for scheduled syncs
             let now = Instant::now();
-            let mut scheduler = self.sync_scheduler.scheduled_syncs.write().unwrap();
-            
-            let ready_syncs: Vec<_> = scheduler.iter()
-                .filter(|sync| sync.next_execution <= now)
-                .cloned()
-                .collect();
+            let ready_syncs: Vec<_> = {
+                let scheduler = self.sync_scheduler.scheduled_syncs.read().unwrap();
+                scheduler.iter()
+                    .filter(|sync| sync.next_execution <= now)
+                    .cloned()
+                    .collect()
+            }; // Guard is dropped here
 
             for sync in ready_syncs {
                 if let Err(e) = self.execute_sync(&sync).await {
@@ -1098,7 +1118,7 @@ impl CacheCoherencyManager {
 
     // Helper methods
 
-    async fn process_coherency_message(&self, message: CoherencyMessage) -> Result<(), Box<dyn std::error::Error>> {
+    async fn process_coherency_message(&self, message: CoherencyMessage) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         match message {
             CoherencyMessage::InvalidationRequest { request_id, cache_id, keys, sender, .. } => {
                 // Process invalidation request
@@ -1155,17 +1175,17 @@ impl CacheCoherencyManager {
         }
     }
 
-    async fn emergency_violation_response(&self, _violation: &CoherencyViolation) -> Result<(), Box<dyn std::error::Error>> {
+    async fn emergency_violation_response(&self, _violation: &CoherencyViolation) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         // Implement emergency response procedures
         Ok(())
     }
 
-    async fn standard_violation_response(&self, _violation: &CoherencyViolation) -> Result<(), Box<dyn std::error::Error>> {
+    async fn standard_violation_response(&self, _violation: &CoherencyViolation) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         // Implement standard response procedures
         Ok(())
     }
 
-    async fn execute_sync(&self, _sync: &ScheduledSync) -> Result<(), Box<dyn std::error::Error>> {
+    async fn execute_sync(&self, _sync: &ScheduledSync) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         // Execute synchronization operation
         Ok(())
     }
@@ -1249,9 +1269,9 @@ impl ViolationDetector {
 
 /// Cache sync trait for external synchronization
 pub trait CacheSync: Send + Sync {
-    fn sync_cache(&self, cache_id: &str, scope: &SyncScope) -> Result<SyncResult, Box<dyn std::error::Error>>;
+    fn sync_cache(&self, cache_id: &str, scope: &SyncScope) -> Result<SyncResult, Box<dyn std::error::Error + Send + Sync>>;
     fn get_sync_status(&self, sync_id: &str) -> Option<SyncStatus>;
-    fn cancel_sync(&self, sync_id: &str) -> Result<(), Box<dyn std::error::Error>>;
+    fn cancel_sync(&self, sync_id: &str) -> Result<(), Box<dyn std::error::Error + Send + Sync>>;
 }
 
 #[cfg(test)]

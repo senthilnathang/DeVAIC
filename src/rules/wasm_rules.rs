@@ -153,272 +153,336 @@ impl WasmRules {
             // Check for memory growth without limits
             if let Some(captures) = WASM_PATTERNS["memory_grow_without_limits"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "WASM-MEM-001".to_string(),
+id: "WASM-MEM-001".to_string(),
                     cwe: Some("CWE-770".to_string()),
-                    vulnerability_type: "Resource Exhaustion".to_string(),
+                    title: "Resource Exhaustion".to_string(),
                     severity: Severity::High,
                     category: "vulnerability".to_string(),
                     description: "Memory growth without bounds checking - may lead to resource exhaustion".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Implement bounds checking and memory limits for memory.grow operations".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.8,
                 });
             }
 
             // Check for unsafe memory operations
             if let Some(captures) = WASM_PATTERNS["unsafe_memory_operations"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "WASM-MEM-002".to_string(),
+id: "WASM-MEM-002".to_string(),
                     cwe: Some("CWE-119".to_string()),
-                    vulnerability_type: "Buffer Overflow Risk".to_string(),
+                    title: "Buffer Overflow Risk".to_string(),
                     severity: Severity::Medium,
                     category: "vulnerability".to_string(),
                     description: "Memory operation without validation comment - ensure bounds checking".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Add validation comments and ensure proper bounds checking for memory operations".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.75,
                 });
             }
 
             // Check for unaligned memory access
             if let Some(captures) = WASM_PATTERNS["unaligned_memory_access"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "WASM-MEM-003".to_string(),
+id: "WASM-MEM-003".to_string(),
                     cwe: Some("CWE-704".to_string()),
-                    vulnerability_type: "Unaligned Memory Access".to_string(),
+                    title: "Unaligned Memory Access".to_string(),
                     severity: Severity::Medium,
                     category: "vulnerability".to_string(),
                     description: "Potentially unaligned memory access detected - may cause performance issues or crashes".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Ensure memory access alignment matches data type requirements".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.75,
                 });
             }
 
             // Check for dangerous environment imports
             if let Some(captures) = WASM_PATTERNS["dangerous_env_imports"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "WASM-IMPORT-001".to_string(),
+id: "WASM-IMPORT-001".to_string(),
                     cwe: Some("CWE-829".to_string()),
-                    vulnerability_type: "Dangerous Host Import".to_string(),
+                    title: "Dangerous Host Import".to_string(),
                     severity: Severity::Critical,
                     category: "security".to_string(),
                     description: "Dangerous environment function import - may allow code execution".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Avoid dangerous imports or implement strict input validation and sandboxing".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.9,
                 });
             }
 
             // Check for filesystem imports
             if let Some(captures) = WASM_PATTERNS["filesystem_imports"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "WASM-IMPORT-002".to_string(),
+id: "WASM-IMPORT-002".to_string(),
                     cwe: Some("CWE-200".to_string()),
-                    vulnerability_type: "File System Access".to_string(),
+                    title: "File System Access".to_string(),
                     severity: Severity::High,
                     category: "security".to_string(),
                     description: "File system access import detected - ensure proper access controls".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Implement path validation, access controls, and audit logging for file operations".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.8,
                 });
             }
 
             // Check for network imports
             if let Some(captures) = WASM_PATTERNS["network_imports"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "WASM-IMPORT-003".to_string(),
+id: "WASM-IMPORT-003".to_string(),
                     cwe: Some("CWE-918".to_string()),
-                    vulnerability_type: "Network Access Risk".to_string(),
+                    title: "Network Access Risk".to_string(),
                     severity: Severity::High,
                     category: "security".to_string(),
                     description: "Network function import detected - may allow SSRF or data exfiltration".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Implement URL validation, rate limiting, and network access controls".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.8,
                 });
             }
 
             // Check for crypto imports
             if let Some(captures) = WASM_PATTERNS["crypto_imports"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "WASM-CRYPTO-001".to_string(),
+id: "WASM-CRYPTO-001".to_string(),
                     cwe: Some("CWE-327".to_string()),
-                    vulnerability_type: "Cryptographic Function Import".to_string(),
+                    title: "Cryptographic Function Import".to_string(),
                     severity: Severity::Medium,
                     category: "cryptographic".to_string(),
                     description: "Cryptographic function import - ensure secure implementation and key management".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Verify cryptographic implementation security and proper key management practices".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.75,
                 });
             }
 
             // Check for memory exports
             if let Some(captures) = WASM_PATTERNS["memory_exports"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "WASM-EXPORT-001".to_string(),
+id: "WASM-EXPORT-001".to_string(),
                     cwe: Some("CWE-200".to_string()),
-                    vulnerability_type: "Memory Export".to_string(),
+                    title: "Memory Export".to_string(),
                     severity: Severity::Medium,
                     category: "security".to_string(),
                     description: "Memory or heap information exported - may expose sensitive data or memory layout".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Review memory exports and ensure no sensitive data is exposed".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.75,
                 });
             }
 
             // Check for internal function exports
             if let Some(captures) = WASM_PATTERNS["internal_function_exports"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "WASM-EXPORT-002".to_string(),
+id: "WASM-EXPORT-002".to_string(),
                     cwe: Some("CWE-668".to_string()),
-                    vulnerability_type: "Internal Function Export".to_string(),
+                    title: "Internal Function Export".to_string(),
                     severity: Severity::Low,
                     category: "security".to_string(),
                     description: "Internal function exported - may expose implementation details".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Review exported functions and only expose necessary public interfaces".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.7,
                 });
             }
 
             // Check for unrestricted indirect calls
             if let Some(captures) = WASM_PATTERNS["unrestricted_indirect_calls"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "WASM-CONTROL-001".to_string(),
+id: "WASM-CONTROL-001".to_string(),
                     cwe: Some("CWE-691".to_string()),
-                    vulnerability_type: "Control Flow Vulnerability".to_string(),
+                    title: "Control Flow Vulnerability".to_string(),
                     severity: Severity::High,
                     category: "vulnerability".to_string(),
                     description: "Indirect call without validation comment - may allow control flow hijacking".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Validate function table indices and add validation comments for indirect calls".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.8,
                 });
             }
 
             // Check for dynamic function table operations
             if let Some(captures) = WASM_PATTERNS["dynamic_function_table"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "WASM-TABLE-001".to_string(),
+id: "WASM-TABLE-001".to_string(),
                     cwe: Some("CWE-913".to_string()),
-                    vulnerability_type: "Function Table Manipulation".to_string(),
+                    title: "Function Table Manipulation".to_string(),
                     severity: Severity::Medium,
                     category: "vulnerability".to_string(),
                     description: "Function table manipulation without bounds checking comment".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Implement bounds checking and add validation comments for table operations".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.75,
                 });
             }
 
             // Check for hardcoded credentials
             if let Some(captures) = WASM_PATTERNS["hardcoded_credentials"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "WASM-SECRET-001".to_string(),
+id: "WASM-SECRET-001".to_string(),
                     cwe: Some("CWE-798".to_string()),
-                    vulnerability_type: "Hardcoded Credentials".to_string(),
+                    title: "Hardcoded Credentials".to_string(),
                     severity: Severity::Critical,
                     category: "authentication".to_string(),
                     description: "Hardcoded credentials detected in WASM data section".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Remove hardcoded credentials and use secure configuration management".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.9,
                 });
             }
 
             // Check for hardcoded URLs
             if let Some(captures) = WASM_PATTERNS["hardcoded_urls"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "WASM-CONFIG-001".to_string(),
+id: "WASM-CONFIG-001".to_string(),
                     cwe: Some("CWE-200".to_string()),
-                    vulnerability_type: "Information Exposure".to_string(),
+                    title: "Information Exposure".to_string(),
                     severity: Severity::Low,
                     category: "security".to_string(),
                     description: "Hardcoded URL detected in WASM data - may expose endpoints".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Use configuration files or environment variables for URLs".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.7,
                 });
             }
 
             // Check for variable-time crypto operations
             if let Some(captures) = WASM_PATTERNS["variable_time_crypto"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "WASM-TIMING-001".to_string(),
+id: "WASM-TIMING-001".to_string(),
                     cwe: Some("CWE-208".to_string()),
-                    vulnerability_type: "Timing Attack Vulnerability".to_string(),
+                    title: "Timing Attack Vulnerability".to_string(),
                     severity: Severity::High,
                     category: "cryptographic".to_string(),
                     description: "Variable-time operation on cryptographic data - vulnerable to timing attacks".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Use constant-time operations for cryptographic computations".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.8,
                 });
             }
 
             // Check for large memory allocation
             if let Some(captures) = WASM_PATTERNS["large_memory_allocation"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "WASM-RESOURCE-001".to_string(),
+id: "WASM-RESOURCE-001".to_string(),
                     cwe: Some("CWE-770".to_string()),
-                    vulnerability_type: "Resource Exhaustion".to_string(),
+                    title: "Resource Exhaustion".to_string(),
                     severity: Severity::Medium,
                     category: "vulnerability".to_string(),
                     description: "Large memory allocation detected - may lead to resource exhaustion".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Implement memory limits and validate allocation sizes".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.75,
                 });
             }
 
             // Check for performance.now timing imports
             if let Some(captures) = WASM_PATTERNS["performance_now_timing"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "WASM-TIMING-002".to_string(),
+id: "WASM-TIMING-002".to_string(),
                     cwe: Some("CWE-208".to_string()),
-                    vulnerability_type: "High-Resolution Timing".to_string(),
+                    title: "High-Resolution Timing".to_string(),
                     severity: Severity::Medium,
                     category: "security".to_string(),
                     description: "High-resolution timing import - may enable timing-based side-channel attacks".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Consider using lower-resolution timing or add timing jitter for security-sensitive operations".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.75,
                 });
             }
         }

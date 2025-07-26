@@ -714,7 +714,7 @@ pub enum AlertSeverity {
 
 impl DistributedCache {
     /// Create a new distributed cache
-    pub async fn new(config: DistributedCacheConfig) -> Result<Self, Box<dyn std::error::Error>> {
+    pub async fn new(config: DistributedCacheConfig) -> Result<Self, Box<dyn std::error::Error + Send + Sync>> {
         let cluster = CacheCluster::new(&config).await?;
         let connection_manager = Arc::new(ConnectionManager::new(config.connection.clone()));
         let replication_manager = Arc::new(ReplicationManager::new(config.replication.clone()));
@@ -737,7 +737,7 @@ impl DistributedCache {
         cache_id: &str,
         key: &str,
         entry: &CacheEntry,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let start_time = Instant::now();
 
         // Determine target nodes based on sharding strategy
@@ -779,7 +779,7 @@ impl DistributedCache {
         &self,
         cache_id: &str,
         key: &str,
-    ) -> Result<Option<CacheEntry>, Box<dyn std::error::Error>> {
+    ) -> Result<Option<CacheEntry>, Box<dyn std::error::Error + Send + Sync>> {
         let start_time = Instant::now();
 
         // Determine source nodes based on read preference
@@ -823,7 +823,7 @@ impl DistributedCache {
         &self,
         cache_id: &str,
         key: &str,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let start_time = Instant::now();
 
         // Get all nodes that might contain this key
@@ -831,7 +831,7 @@ impl DistributedCache {
 
         // Invalidate on all nodes
         let mut invalidation_results = Vec::new();
-        for node in &all_nodes {
+        for node in all_nodes {
             let result = self.invalidate_in_node(node, cache_id, key).await;
             invalidation_results.push((node.node_id.clone(), result));
         }
@@ -862,7 +862,7 @@ impl DistributedCache {
 
     // Helper methods
 
-    fn get_target_nodes(&self, key: &str) -> Result<Vec<&CacheNode>, Box<dyn std::error::Error>> {
+    fn get_target_nodes(&self, key: &str) -> Result<Vec<&CacheNode>, Box<dyn std::error::Error + Send + Sync>> {
         match &self.config.replication {
             CacheReplicationStrategy::Sharded { shard_count, hash_function, .. } => {
                 let shard_id = self.calculate_shard(key, *shard_count, hash_function);
@@ -879,7 +879,7 @@ impl DistributedCache {
         }
     }
 
-    fn get_source_nodes(&self, key: &str) -> Result<Vec<&CacheNode>, Box<dyn std::error::Error>> {
+    fn get_source_nodes(&self, key: &str) -> Result<Vec<&CacheNode>, Box<dyn std::error::Error + Send + Sync>> {
         match &self.config.replication {
             CacheReplicationStrategy::MasterSlave { read_preference, .. } => {
                 match read_preference {
@@ -909,7 +909,7 @@ impl DistributedCache {
         }
     }
 
-    fn get_replica_nodes(&self, _key: &str, replication_factor: usize) -> Result<Vec<&CacheNode>, Box<dyn std::error::Error>> {
+    fn get_replica_nodes(&self, _key: &str, replication_factor: usize) -> Result<Vec<&CacheNode>, Box<dyn std::error::Error + Send + Sync>> {
         Ok(self.cluster.nodes.iter()
             .filter(|node| matches!(node.role, NodeRole::Slave | NodeRole::Replica))
             .take(replication_factor)
@@ -943,7 +943,7 @@ impl DistributedCache {
         cache_id: &str,
         key: &str,
         data: &[u8],
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         // Placeholder implementation - would use actual cache client
         // In real implementation, this would use Redis or Memcached client
         Ok(())
@@ -954,7 +954,7 @@ impl DistributedCache {
         node: &CacheNode,
         cache_id: &str,
         key: &str,
-    ) -> Result<Option<Vec<u8>>, Box<dyn std::error::Error>> {
+    ) -> Result<Option<Vec<u8>>, Box<dyn std::error::Error + Send + Sync>> {
         // Placeholder implementation
         Ok(None)
     }
@@ -964,7 +964,7 @@ impl DistributedCache {
         node: &CacheNode,
         cache_id: &str,
         key: &str,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         // Placeholder implementation
         Ok(())
     }
@@ -975,7 +975,7 @@ impl DistributedCache {
         cache_id: &str,
         key: &str,
         data: &[u8],
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         // Placeholder implementation
         Ok(())
     }
@@ -1003,7 +1003,7 @@ impl DistributedCache {
 }
 
 impl CacheCluster {
-    pub async fn new(config: &DistributedCacheConfig) -> Result<Self, Box<dyn std::error::Error>> {
+    pub async fn new(config: &DistributedCacheConfig) -> Result<Self, Box<dyn std::error::Error + Send + Sync>> {
         let nodes = match &config.backend {
             CacheBackend::Redis { cluster_nodes, .. } => {
                 cluster_nodes.iter().enumerate().map(|(i, address)| {

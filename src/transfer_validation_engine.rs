@@ -9,9 +9,10 @@ use crate::{
     cross_language_transfer::{
         TransferValidationResult, TransferValidationSystem, AbstractPattern, TargetPattern,
         ValidationStatus, TransformationValidationResult, TransformationIssue, TransformationIssueType,
-        SemanticFeatures, SyntacticFeatures, VulnerabilityType, TransferMethod,
+        SemanticFeatures, SyntacticFeatures, TransferMethod,
     },
     pattern_loader::SecurityPattern,
+    cve_pattern_discovery::VulnerabilityType,
     error::Result,
     Language, Severity,
 };
@@ -832,7 +833,7 @@ pub struct SyntacticValidationEngine {
 /// Language parser trait
 pub trait LanguageParser: Send + Sync {
     fn parse_pattern(&self, pattern: &str) -> Result<SyntaxTree>;
-    fn validate_syntax(&self, pattern: &str) -> Result<SyntaxValidationResult>;
+    fn validate_syntax(&self, pattern: &str) -> Result<SyntacticValidationResult>;
     fn get_language(&self) -> Language;
 }
 
@@ -1020,7 +1021,7 @@ pub struct SecurityTestCase {
     pub test_type: SecurityTestType,
     pub input_data: String,
     pub expected_result: TestExpectation,
-    pub vulnerability_type: VulnerabilityType,
+    pub title: VulnerabilityType,
 }
 
 /// Type of security test

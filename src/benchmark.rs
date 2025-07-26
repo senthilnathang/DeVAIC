@@ -13,7 +13,7 @@ impl PerformanceBenchmark {
     }
 
     /// Run comprehensive benchmark comparing different scanning strategies
-    pub fn run_benchmark(&self, target_path: &Path) -> crate::Result<BenchmarkResults> {
+    pub async fn run_benchmark(&self, target_path: &Path) -> crate::Result<BenchmarkResults> {
         println!("Running performance benchmark on: {}", target_path.display());
         
         // Clear cache before benchmarking
@@ -21,32 +21,32 @@ impl PerformanceBenchmark {
         
         // Benchmark 1: Sequential scanning without cache
         println!("1. Sequential scanning without cache...");
-        let seq_no_cache = self.benchmark_sequential(target_path, false);
+        let seq_no_cache = self.benchmark_sequential(target_path, false).await;
         
         // Clear cache
         get_global_cache().clear_all();
         
         // Benchmark 2: Sequential scanning with cache
         println!("2. Sequential scanning with cache...");
-        let seq_with_cache = self.benchmark_sequential(target_path, true);
+        let seq_with_cache = self.benchmark_sequential(target_path, true).await;
         
         // Clear cache
         get_global_cache().clear_all();
         
         // Benchmark 3: Parallel scanning without cache
         println!("3. Parallel scanning without cache...");
-        let par_no_cache = self.benchmark_parallel(target_path, false);
+        let par_no_cache = self.benchmark_parallel(target_path, false).await;
         
         // Clear cache
         get_global_cache().clear_all();
         
         // Benchmark 4: Parallel scanning with cache
         println!("4. Parallel scanning with cache...");
-        let par_with_cache = self.benchmark_parallel(target_path, true);
+        let par_with_cache = self.benchmark_parallel(target_path, true).await;
         
         // Run cache-enabled parallel scan again to test cache hits
         println!("5. Parallel scanning with cache (second run)...");
-        let par_cache_hit = self.benchmark_parallel(target_path, true);
+        let par_cache_hit = self.benchmark_parallel(target_path, true).await;
 
         Ok(BenchmarkResults {
             sequential_no_cache: seq_no_cache?,
@@ -58,7 +58,7 @@ impl PerformanceBenchmark {
     }
 
     /// Benchmark sequential scanning
-    fn benchmark_sequential(&self, target_path: &Path, enable_cache: bool) -> crate::Result<BenchmarkResult> {
+    async fn benchmark_sequential(&self, target_path: &Path, enable_cache: bool) -> crate::Result<BenchmarkResult> {
         let start = Instant::now();
         
         // Create analyzer with sequential mode
@@ -66,6 +66,7 @@ impl PerformanceBenchmark {
         analyzer.set_parallel_enabled(false);
         
         let vulnerabilities = analyzer.analyze_directory(target_path)
+            .await
             .unwrap_or_else(|_| Vec::new());
         
         let duration = start.elapsed();
@@ -80,7 +81,7 @@ impl PerformanceBenchmark {
     }
 
     /// Benchmark parallel scanning
-    fn benchmark_parallel(&self, target_path: &Path, enable_cache: bool) -> crate::Result<BenchmarkResult> {
+    async fn benchmark_parallel(&self, target_path: &Path, enable_cache: bool) -> crate::Result<BenchmarkResult> {
         let start = Instant::now();
         
         // Create analyzer with parallel mode
@@ -88,6 +89,7 @@ impl PerformanceBenchmark {
         analyzer.set_parallel_enabled(true);
         
         let vulnerabilities = analyzer.analyze_directory(target_path)
+            .await
             .unwrap_or_else(|_| Vec::new());
         
         let duration = start.elapsed();

@@ -411,16 +411,16 @@ impl ComplianceEngine {
         
         for vuln in vulnerabilities {
             let matches = match requirement_id {
-                "A01:2021" => vuln.category == "access_control" || vuln.vulnerability_type.contains("Access"),
-                "A02:2021" => vuln.category == "cryptography" || vuln.vulnerability_type.contains("Crypto"),
-                "A03:2021" => vuln.category == "injection" || vuln.vulnerability_type.contains("Injection"),
-                "A04:2021" => vuln.category == "design" || vuln.vulnerability_type.contains("Design"),
-                "A05:2021" => vuln.category == "configuration" || vuln.vulnerability_type.contains("Configuration"),
-                "A06:2021" => vuln.category == "dependencies" || vuln.vulnerability_type.contains("Component"),
-                "A07:2021" => vuln.category == "authentication" || vuln.vulnerability_type.contains("Authentication"),
-                "A08:2021" => vuln.category == "integrity" || vuln.vulnerability_type.contains("Integrity"),
-                "A09:2021" => vuln.category == "logging" || vuln.vulnerability_type.contains("Logging"),
-                "A10:2021" => vuln.category == "ssrf" || vuln.vulnerability_type.contains("SSRF"),
+                "A01:2021" => vuln.category == "access_control" || vuln.title.contains("Access"),
+                "A02:2021" => vuln.category == "cryptography" || vuln.title.contains("Crypto"),
+                "A03:2021" => vuln.category == "injection" || vuln.title.contains("Injection"),
+                "A04:2021" => vuln.category == "design" || vuln.title.contains("Design"),
+                "A05:2021" => vuln.category == "configuration" || vuln.title.contains("Configuration"),
+                "A06:2021" => vuln.category == "dependencies" || vuln.title.contains("Component"),
+                "A07:2021" => vuln.category == "authentication" || vuln.title.contains("Authentication"),
+                "A08:2021" => vuln.category == "integrity" || vuln.title.contains("Integrity"),
+                "A09:2021" => vuln.category == "logging" || vuln.title.contains("Logging"),
+                "A10:2021" => vuln.category == "ssrf" || vuln.title.contains("SSRF"),
                 _ => false,
             };
             
@@ -443,10 +443,10 @@ impl ComplianceEngine {
         
         for vuln in vulnerabilities {
             let matches = match requirement_id {
-                "ID.AM" => vuln.category == "dependencies" || vuln.vulnerability_type.contains("Component"),
+                "ID.AM" => vuln.category == "dependencies" || vuln.title.contains("Component"),
                 "PR.AC" => vuln.category == "access_control" || vuln.category == "authentication",
-                "PR.DS" => vuln.category == "cryptography" || vuln.vulnerability_type.contains("Crypto"),
-                "DE.CM" => vuln.category == "logging" || vuln.vulnerability_type.contains("Monitoring"),
+                "PR.DS" => vuln.category == "cryptography" || vuln.title.contains("Crypto"),
+                "DE.CM" => vuln.category == "logging" || vuln.title.contains("Monitoring"),
                 "RS.RP" => false, // Response planning is not directly detectable in code
                 _ => false,
             };
@@ -472,7 +472,7 @@ impl ComplianceEngine {
             let matches = match requirement_id {
                 "PCI-6.5.1" => vuln.category == "injection",
                 "PCI-6.5.3" => vuln.category == "cryptography" && vuln.description.contains("storage"),
-                "PCI-6.5.4" => vuln.category == "network" || vuln.vulnerability_type.contains("TLS"),
+                "PCI-6.5.4" => vuln.category == "network" || vuln.title.contains("TLS"),
                 "PCI-6.5.8" => vuln.category == "access_control",
                 _ => false,
             };

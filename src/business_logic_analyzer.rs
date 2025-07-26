@@ -14,7 +14,7 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 
 /// Business logic vulnerability detection engine
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct BusinessLogicAnalyzer {
     /// Workflow models for different application types
     workflow_models: Arc<RwLock<HashMap<String, WorkflowModel>>>,
@@ -1428,12 +1428,12 @@ mod tests {
         let analyzer = BusinessLogicAnalyzer::new(config);
         
         let ecommerce_code = "function processPayment(amount) { return billing.charge(amount); }";
-        assert_eq!(analyzer.detect_application_type(ecommerce_code, Language::JavaScript), "ecommerce");
+        assert_eq!(analyzer.detect_application_type(ecommerce_code, Language::Javascript), "ecommerce");
         
         let banking_code = "function checkBalance(account) { return account.balance; }";
-        assert_eq!(analyzer.detect_application_type(banking_code, Language::JavaScript), "banking");
+        assert_eq!(analyzer.detect_application_type(banking_code, Language::Javascript), "banking");
         
         let generic_code = "function hello() { console.log('world'); }";
-        assert_eq!(analyzer.detect_application_type(generic_code, Language::JavaScript), "generic");
+        assert_eq!(analyzer.detect_application_type(generic_code, Language::Javascript), "generic");
     }
 }

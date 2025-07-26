@@ -6,11 +6,12 @@
 
 use crate::{
     error::Result,
-    ml_engine::MLRuleGenerator,
+    rules::advanced_rule_engine::ml_rule_generation::MLRuleGenerator,
     pattern_loader::{SecurityPattern, RegexPattern, CompiledPattern},
     rules::advanced_rule_engine::ml_rule_generation::{
-        GeneratedRule, RuleGenerationConfig, OptimizationObjective, RuleCategory
+        GeneratedRule, RuleGenerationConfig, OptimizationObjective
     },
+    rules::advanced_rule_engine::RuleCategory,
     Severity, Language,
 };
 use serde::{Deserialize, Serialize};
@@ -208,7 +209,7 @@ pub enum VulnerabilityType {
 #[derive(Debug, Clone)]
 pub struct PatternTemplate {
     pub template_id: String,
-    pub vulnerability_type: VulnerabilityType,
+    pub title: VulnerabilityType,
     pub pattern_structure: String,
     pub required_elements: Vec<String>,
     pub optional_elements: Vec<String>,
@@ -603,7 +604,7 @@ impl CVEPatternExtractor {
         Ok(vec![
             PatternTemplate {
                 template_id: "sql-injection".to_string(),
-                vulnerability_type: VulnerabilityType::Injection,
+                title: VulnerabilityType::Injection,
                 pattern_structure: r"(?i)(select|insert|update|delete).*\$\{.*\}".to_string(),
                 required_elements: vec!["sql_keyword".to_string(), "interpolation".to_string()],
                 optional_elements: vec!["table_name".to_string()],
@@ -857,23 +858,45 @@ impl CVEDataSource for GitHubAdvisorySource {
     }
 }
 
-// Placeholder implementations for supporting components
+// Implementations for supporting components
 
-pub struct NLPProcessor;
 impl NLPProcessor {
-    pub fn new() -> Result<Self> { Ok(Self) }
-    pub fn extract_from_description(&self, _desc: &str) -> Result<Vec<ExtractedPattern>> { Ok(vec![]) }
+    pub fn new() -> Result<Self> {
+        Ok(Self {
+            vulnerability_keywords: HashMap::new(),
+            technical_extractors: Vec::new(),
+            severity_indicators: HashMap::new(),
+        })
+    }
+    
+    pub fn extract_from_description(&self, _desc: &str) -> Result<Vec<ExtractedPattern>> {
+        Ok(vec![])
+    }
 }
 
-pub struct CodePatternAnalyzer;
 impl CodePatternAnalyzer {
-    pub fn new() -> Result<Self> { Ok(Self) }
-    pub fn extract_from_code(&self, _code: &str) -> Result<Vec<ExtractedPattern>> { Ok(vec![]) }
+    pub fn new() -> Result<Self> {
+        Ok(Self {
+            language_extractors: HashMap::new(),
+            ast_matchers: Vec::new(),
+            api_detectors: Vec::new(),
+        })
+    }
+    
+    pub fn extract_from_code(&self, _code: &str) -> Result<Vec<ExtractedPattern>> {
+        Ok(vec![])
+    }
 }
 
-pub struct VulnerabilityTaxonomyMapper;
 impl VulnerabilityTaxonomyMapper {
-    pub fn new() -> Result<Self> { Ok(Self) }
+    pub fn new() -> Result<Self> {
+        Ok(Self {
+            cwe_mappings: HashMap::new(),
+            owasp_mappings: HashMap::new(),
+            capec_mappings: HashMap::new(),
+        })
+    }
+    
     pub fn map_cwe_to_type(&self, _cwe_ids: &[String]) -> VulnerabilityType {
         VulnerabilityType::Other("unknown".to_string())
     }

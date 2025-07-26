@@ -68,7 +68,7 @@ fn test_compliance_engine() {
         Vulnerability {
             id: "TEST-001".to_string(),
             cwe: Some("CWE-89".to_string()),
-            vulnerability_type: "SQL Injection".to_string(),
+            title: "SQL Injection".to_string(),
             severity: Severity::High,
             category: "injection".to_string(),
             description: "Test SQL injection".to_string(),
@@ -81,7 +81,7 @@ fn test_compliance_engine() {
         Vulnerability {
             id: "TEST-002".to_string(),
             cwe: Some("CWE-79".to_string()),
-            vulnerability_type: "Cross-Site Scripting".to_string(),
+            title: "Cross-Site Scripting".to_string(),
             severity: Severity::Medium,
             category: "injection".to_string(),
             description: "Test XSS vulnerability".to_string(),
@@ -120,7 +120,7 @@ fn test_visualization_engine() {
         Vulnerability {
             id: "VIZ-001".to_string(),
             cwe: Some("CWE-89".to_string()),
-            vulnerability_type: "SQL Injection".to_string(),
+            title: "SQL Injection".to_string(),
             severity: Severity::Critical,
             category: "injection".to_string(),
             description: "Critical SQL injection".to_string(),
@@ -133,7 +133,7 @@ fn test_visualization_engine() {
         Vulnerability {
             id: "VIZ-002".to_string(),
             cwe: Some("CWE-79".to_string()),
-            vulnerability_type: "Cross-Site Scripting".to_string(),
+            title: "Cross-Site Scripting".to_string(),
             severity: Severity::High,
             category: "injection".to_string(),
             description: "XSS in user input".to_string(),
@@ -323,7 +323,7 @@ mod performance_tests {
             Vulnerability {
                 id: format!("PERF-{:04}", i),
                 cwe: Some("CWE-89".to_string()),
-                vulnerability_type: "Test Vulnerability".to_string(),
+                title: "Test Vulnerability".to_string(),
                 severity: if i % 4 == 0 { Severity::Critical } 
                          else if i % 3 == 0 { Severity::High }
                          else if i % 2 == 0 { Severity::Medium }

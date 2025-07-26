@@ -151,7 +151,7 @@ fn test_report_generation() {
         devaic::Vulnerability {
             id: "TEST-001".to_string(),
             cwe: Some("CWE-78".to_string()),
-            vulnerability_type: "Command Injection".to_string(),
+            title: "Command Injection".to_string(),
             severity: Severity::High,
             category: "injection".to_string(),
             description: "Potential command injection vulnerability".to_string(),
@@ -164,7 +164,7 @@ fn test_report_generation() {
         devaic::Vulnerability {
             id: "TEST-002".to_string(),
             cwe: Some("CWE-798".to_string()),
-            vulnerability_type: "Hardcoded Credentials".to_string(),
+            title: "Hardcoded Credentials".to_string(),
             severity: Severity::Medium,
             category: "secrets".to_string(),
             description: "Hardcoded password detected".to_string(),
@@ -234,7 +234,7 @@ fn test_compliance_engine() {
         devaic::Vulnerability {
             id: "COMP-001".to_string(),
             cwe: Some("CWE-89".to_string()),
-            vulnerability_type: "SQL Injection".to_string(),
+            title: "SQL Injection".to_string(),
             severity: Severity::High,
             category: "injection".to_string(),
             description: "SQL injection vulnerability".to_string(),
@@ -270,7 +270,7 @@ fn test_visualization_engine() {
         devaic::Vulnerability {
             id: "VIZ-001".to_string(),
             cwe: Some("CWE-79".to_string()),
-            vulnerability_type: "Cross-Site Scripting".to_string(),
+            title: "Cross-Site Scripting".to_string(),
             severity: Severity::High,
             category: "injection".to_string(),
             description: "XSS vulnerability".to_string(),

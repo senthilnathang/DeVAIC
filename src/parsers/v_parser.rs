@@ -186,15 +186,19 @@ impl VParser {
                 vulnerabilities.push(Vulnerability {
                     id: "V-UNSAFE-001".to_string(),
                     cwe: Some("CWE-119".to_string()),
-                    vulnerability_type: "Unsafe Memory Access".to_string(),
+                    title: "Unsafe Memory Access".to_string(),
                     severity: Severity::High,
                     category: "vulnerability".to_string(),
                     description: "Unsafe block detected - potential memory safety issues".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Review unsafe operations and ensure memory safety".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.8,
                 });
             }
 
@@ -203,15 +207,19 @@ impl VParser {
                 vulnerabilities.push(Vulnerability {
                     id: "V-FFI-001".to_string(),
                     cwe: Some("CWE-829".to_string()),
-                    vulnerability_type: "Unsafe C Interop".to_string(),
+                    title: "Unsafe C Interop".to_string(),
                     severity: Severity::High,
                     category: "security".to_string(),
                     description: "C interop detected - potential security risks from external code".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Validate C function calls and ensure input sanitization".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.8,
                 });
             }
 
@@ -220,15 +228,19 @@ impl VParser {
                 vulnerabilities.push(Vulnerability {
                     id: "V-WEB-001".to_string(),
                     cwe: Some("CWE-79".to_string()),
-                    vulnerability_type: "Cross-Site Scripting (XSS)".to_string(),
+                    title: "Cross-Site Scripting (XSS)".to_string(),
                     severity: Severity::High,
                     category: "security".to_string(),
                     description: "Template interpolation without escaping - XSS risk".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Use proper HTML escaping for user input in templates".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.8,
                 });
             }
 
@@ -237,15 +249,19 @@ impl VParser {
                 vulnerabilities.push(Vulnerability {
                     id: "V-SQL-001".to_string(),
                     cwe: Some("CWE-89".to_string()),
-                    vulnerability_type: "SQL Injection".to_string(),
+                    title: "SQL Injection".to_string(),
                     severity: Severity::Critical,
                     category: "security".to_string(),
                     description: "SQL query with string concatenation - SQL injection risk".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Use parameterized queries or prepared statements".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.9,
                 });
             }
 
@@ -254,15 +270,19 @@ impl VParser {
                 vulnerabilities.push(Vulnerability {
                     id: "V-DB-001".to_string(),
                     cwe: Some("CWE-798".to_string()),
-                    vulnerability_type: "Hardcoded Database Credentials".to_string(),
+                    title: "Hardcoded Database Credentials".to_string(),
                     severity: Severity::Critical,
                     category: "authentication".to_string(),
                     description: "Hardcoded database credentials detected".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Move database credentials to environment variables".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.9,
                 });
             }
 
@@ -271,15 +291,19 @@ impl VParser {
                 vulnerabilities.push(Vulnerability {
                     id: "V-HTTP-001".to_string(),
                     cwe: Some("CWE-918".to_string()),
-                    vulnerability_type: "Server-Side Request Forgery (SSRF)".to_string(),
+                    title: "Server-Side Request Forgery (SSRF)".to_string(),
                     severity: Severity::High,
                     category: "security".to_string(),
                     description: "HTTP request with dynamic URL - SSRF risk".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Validate and whitelist URLs before making HTTP requests".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.8,
                 });
             }
 
@@ -288,15 +312,19 @@ impl VParser {
                 vulnerabilities.push(Vulnerability {
                     id: "V-TLS-001".to_string(),
                     cwe: Some("CWE-295".to_string()),
-                    vulnerability_type: "Improper Certificate Validation".to_string(),
+                    title: "Improper Certificate Validation".to_string(),
                     severity: Severity::High,
                     category: "cryptographic".to_string(),
                     description: "TLS certificate verification disabled - man-in-the-middle risk".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Enable proper TLS certificate validation".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.8,
                 });
             }
 
@@ -305,15 +333,19 @@ impl VParser {
                 vulnerabilities.push(Vulnerability {
                     id: "V-FILE-001".to_string(),
                     cwe: Some("CWE-22".to_string()),
-                    vulnerability_type: "Path Traversal".to_string(),
+                    title: "Path Traversal".to_string(),
                     severity: Severity::High,
                     category: "security".to_string(),
                     description: "File operation with dynamic path - path traversal risk".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Validate and sanitize file paths before operations".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.8,
                 });
             }
 
@@ -322,15 +354,19 @@ impl VParser {
                 vulnerabilities.push(Vulnerability {
                     id: "V-ERROR-001".to_string(),
                     cwe: Some("CWE-252".to_string()),
-                    vulnerability_type: "Unchecked Error Condition".to_string(),
+                    title: "Unchecked Error Condition".to_string(),
                     severity: Severity::Medium,
                     category: "vulnerability".to_string(),
                     description: "Error ignored in or block - may hide failures".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Handle errors appropriately or log for debugging".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.75,
                 });
             }
 
@@ -339,15 +375,19 @@ impl VParser {
                 vulnerabilities.push(Vulnerability {
                     id: "V-SECRET-001".to_string(),
                     cwe: Some("CWE-798".to_string()),
-                    vulnerability_type: "Hardcoded Credentials".to_string(),
+                    title: "Hardcoded Credentials".to_string(),
                     severity: Severity::Critical,
                     category: "authentication".to_string(),
                     description: "Hardcoded secret detected in V code".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Move secrets to environment variables or secure configuration".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.9,
                 });
             }
 
@@ -356,15 +396,19 @@ impl VParser {
                 vulnerabilities.push(Vulnerability {
                     id: "V-CMD-001".to_string(),
                     cwe: Some("CWE-78".to_string()),
-                    vulnerability_type: "Command Injection".to_string(),
+                    title: "Command Injection".to_string(),
                     severity: Severity::Critical,
                     category: "security".to_string(),
                     description: "Command execution with dynamic input - command injection risk".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Validate and sanitize command arguments or use safe alternatives".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.9,
                 });
             }
 
@@ -373,15 +417,19 @@ impl VParser {
                 vulnerabilities.push(Vulnerability {
                     id: "V-DEBUG-001".to_string(),
                     cwe: Some("CWE-489".to_string()),
-                    vulnerability_type: "Debug Code in Production".to_string(),
+                    title: "Debug Code in Production".to_string(),
                     severity: Severity::Low,
                     category: "security".to_string(),
                     description: "Debug code detected - may leak sensitive information".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Remove debug statements from production code".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.7,
                 });
             }
         }

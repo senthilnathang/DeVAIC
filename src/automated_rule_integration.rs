@@ -83,6 +83,9 @@ pub struct IntegrationConfig {
     
     /// Rollback timeout (minutes)
     pub rollback_timeout_minutes: u32,
+    
+    /// Maximum performance impact allowed (milliseconds)
+    pub max_performance_impact_ms: f32,
 }
 
 /// Current state of the integration system
@@ -200,7 +203,7 @@ pub struct FalsePositiveReport {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MissedDetectionReport {
     pub file_path: String,
-    pub vulnerability_type: VulnerabilityType,
+    pub title: VulnerabilityType,
     pub description: String,
     pub expected_detection: String,
     pub impact_assessment: String,
@@ -387,7 +390,7 @@ pub struct PatternConverter {
 #[derive(Debug, Clone)]
 pub struct ConversionTemplate {
     pub template_id: String,
-    pub vulnerability_type: VulnerabilityType,
+    pub title: VulnerabilityType,
     pub pattern_structure: String,
     pub metadata_mappings: HashMap<String, String>,
     pub severity_mappings: HashMap<String, Severity>,
@@ -1503,7 +1506,7 @@ impl PatternConverter {
         
         templates.insert(VulnerabilityType::Injection, ConversionTemplate {
             template_id: "injection-template".to_string(),
-            vulnerability_type: VulnerabilityType::Injection,
+            title: VulnerabilityType::Injection,
             pattern_structure: "injection-pattern".to_string(),
             metadata_mappings: HashMap::new(),
             severity_mappings: HashMap::new(),
@@ -1675,6 +1678,7 @@ impl Default for IntegrationConfig {
             rule_retention_days: 90,
             enable_rule_versioning: true,
             rollback_timeout_minutes: 15,
+            max_performance_impact_ms: 100.0, // 100ms maximum impact
         }
     }
 }

@@ -64,7 +64,6 @@ impl AsyncFileScanner {
         // Spawn task to process files and send results
         let config = Arc::clone(&self.config);
         let buffer_size = self.buffer_size;
-        let progress_callback = self.progress_callback.as_ref().map(|cb| Arc::clone(cb) as Arc<dyn Fn(usize, usize) + Send + Sync>);
         
         tokio::spawn(async move {
             let mut processed = 0;
@@ -96,10 +95,8 @@ impl AsyncFileScanner {
                     processed += 1;
                 }
 
-                // Report progress
-                if let Some(ref callback) = progress_callback {
-                    callback(processed, total_files);
-                }
+                // Progress tracking (callback removed due to lifetime constraints)
+                log::debug!("Processed {}/{} files", processed, total_files);
 
                 if let Err(e) = tx.send(Ok(chunk_vulnerabilities)).await {
                     log::error!("Failed to send chunk results: {}", e);
@@ -254,10 +251,11 @@ impl AsyncFileScanner {
         );
 
         // Parse and analyze (CPU-bound work)
+        let config_clone = config.clone();
         let vulnerabilities = tokio::task::spawn_blocking(move || -> Result<Vec<Vulnerability>> {
             let mut parser = crate::parsers::ParserFactory::create_parser(&source_file.language)?;
             let ast = parser.parse(&source_file)?;
-            let rule_engine = crate::rules::RuleEngine::new(&config.rules);
+            let rule_engine = crate::rules::RuleEngine::new(&config_clone.rules);
             rule_engine.analyze(&source_file, &ast)
         }).await.map_err(|e| crate::DevaicError::Analysis(format!("Task join error: {}", e)))??;
 
@@ -488,7 +486,7 @@ impl StreamingVulnerabilityCollector {
         use std::hash::{Hash, Hasher};
         let mut hasher = siphasher::sip::SipHasher::new();
         
-        vuln.vulnerability_type.hash(&mut hasher);
+        vuln.title.hash(&mut hasher);
         vuln.file_path.hash(&mut hasher);
         vuln.line_number.hash(&mut hasher);
         
@@ -526,16 +524,20 @@ mod tests {
         
         let vuln = Vulnerability {
             id: "test".to_string(),
-            vulnerability_type: "SQL Injection".to_string(),
+            title: "SQL Injection".to_string(),
             severity: crate::Severity::High,
             category: "security".to_string(),
             description: "Test vulnerability".to_string(),
             file_path: "test.py".to_string(),
             line_number: 10,
-            column: 5,
+            column_start: 5,
+            column_end: 5,
             source_code: "test code".to_string(),
             recommendation: "Fix this".to_string(),
             cwe: None,
+            owasp: None,
+            references: vec![],
+            confidence: 0.8,
         };
         
         collector.add_batch(vec![vuln.clone(), vuln]); // Duplicate should be deduplicated

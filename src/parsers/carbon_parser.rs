@@ -211,15 +211,19 @@ impl CarbonParser {
                 vulnerabilities.push(Vulnerability {
                     id: "CARBON-UNSAFE-001".to_string(),
                     cwe: Some("CWE-119".to_string()),
-                    vulnerability_type: "Unsafe Memory Access".to_string(),
+                    title: "Unsafe Memory Access".to_string(),
                     severity: Severity::High,
                     category: "vulnerability".to_string(),
                     description: "Unsafe block detected - potential memory safety issues".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Review unsafe operations and ensure memory safety guarantees".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.8,
                 });
             }
 
@@ -228,15 +232,19 @@ impl CarbonParser {
                 vulnerabilities.push(Vulnerability {
                     id: "CARBON-CPP-001".to_string(),
                     cwe: Some("CWE-829".to_string()),
-                    vulnerability_type: "Unsafe C++ Interop".to_string(),
+                    title: "Unsafe C++ Interop".to_string(),
                     severity: Severity::High,
                     category: "security".to_string(),
                     description: "C++ interop detected - potential security risks from legacy code".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Validate C++ function calls and ensure safe boundaries".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.8,
                 });
             }
 
@@ -245,15 +253,19 @@ impl CarbonParser {
                 vulnerabilities.push(Vulnerability {
                     id: "CARBON-CAST-001".to_string(),
                     cwe: Some("CWE-704".to_string()),
-                    vulnerability_type: "Unsafe Type Cast".to_string(),
+                    title: "Unsafe Type Cast".to_string(),
                     severity: Severity::Medium,
                     category: "vulnerability".to_string(),
                     description: "Unsafe type cast detected - may cause data corruption".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Use safe casting alternatives or validate cast safety".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.75,
                 });
             }
 
@@ -262,15 +274,19 @@ impl CarbonParser {
                 vulnerabilities.push(Vulnerability {
                     id: "CARBON-API-001".to_string(),
                     cwe: Some("CWE-668".to_string()),
-                    vulnerability_type: "Unsafe Public API".to_string(),
+                    title: "Unsafe Public API".to_string(),
                     severity: Severity::High,
                     category: "security".to_string(),
                     description: "Public API with unsafe operations - security boundary violation".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Ensure public APIs maintain safety invariants or mark as unsafe".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.8,
                 });
             }
 
@@ -279,15 +295,19 @@ impl CarbonParser {
                 vulnerabilities.push(Vulnerability {
                     id: "CARBON-ERROR-001".to_string(),
                     cwe: Some("CWE-252".to_string()),
-                    vulnerability_type: "Unchecked Error Condition".to_string(),
+                    title: "Unchecked Error Condition".to_string(),
                     severity: Severity::Medium,
                     category: "vulnerability".to_string(),
                     description: "Error expectation without handling - may cause unexpected failures".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Handle errors appropriately or document why expectation is safe".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.75,
                 });
             }
 
@@ -296,15 +316,19 @@ impl CarbonParser {
                 vulnerabilities.push(Vulnerability {
                     id: "CARBON-MEM-001".to_string(),
                     cwe: Some("CWE-401".to_string()),
-                    vulnerability_type: "Manual Memory Management".to_string(),
+                    title: "Manual Memory Management".to_string(),
                     severity: Severity::Medium,
                     category: "vulnerability".to_string(),
                     description: "Manual memory management detected - potential memory leak".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Use RAII or automatic memory management alternatives".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.75,
                 });
             }
 
@@ -312,16 +336,20 @@ impl CarbonParser {
             if let Some(captures) = self.patterns["integer_overflow_risk"].captures(line) {
                 vulnerabilities.push(Vulnerability {
                     id: "CARBON-INT-001".to_string(),
-                    cwe: Some("CWE-190".to_string(),),
-                    vulnerability_type: "Integer Overflow".to_string(),
+                    cwe: Some("CWE-190".to_string()),
+                    title: "Integer Overflow".to_string(),
                     severity: Severity::Medium,
                     category: "vulnerability".to_string(),
                     description: "Unsafe arithmetic operation - potential integer overflow".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Use checked arithmetic or validate input ranges".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.8,
                 });
             }
 
@@ -330,15 +358,19 @@ impl CarbonParser {
                 vulnerabilities.push(Vulnerability {
                     id: "CARBON-SECRET-001".to_string(),
                     cwe: Some("CWE-798".to_string()),
-                    vulnerability_type: "Hardcoded Credentials".to_string(),
+                    title: "Hardcoded Credentials".to_string(),
                     severity: Severity::Critical,
                     category: "authentication".to_string(),
                     description: "Hardcoded secret detected in Carbon code".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Move secrets to environment variables or secure configuration".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.9,
                 });
             }
 
@@ -347,15 +379,19 @@ impl CarbonParser {
                 vulnerabilities.push(Vulnerability {
                     id: "CARBON-THREAD-001".to_string(),
                     cwe: Some("CWE-362".to_string()),
-                    vulnerability_type: "Race Condition".to_string(),
+                    title: "Race Condition".to_string(),
                     severity: Severity::High,
                     category: "vulnerability".to_string(),
                     description: "Unsafe shared data access - potential race condition".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Use safe concurrency primitives like Mutex or atomic operations".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.8,
                 });
             }
 
@@ -364,15 +400,19 @@ impl CarbonParser {
                 vulnerabilities.push(Vulnerability {
                     id: "CARBON-NET-001".to_string(),
                     cwe: Some("CWE-319".to_string()),
-                    vulnerability_type: "Cleartext Transmission".to_string(),
+                    title: "Cleartext Transmission".to_string(),
                     severity: Severity::Medium,
                     category: "cryptographic".to_string(),
                     description: "HTTP connection without TLS - cleartext transmission risk".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Use HTTPS/TLS for secure network communications".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.75,
                 });
             }
 
@@ -381,15 +421,19 @@ impl CarbonParser {
                 vulnerabilities.push(Vulnerability {
                     id: "CARBON-DEBUG-001".to_string(),
                     cwe: Some("CWE-489".to_string()),
-                    vulnerability_type: "Debug Code in Production".to_string(),
+                    title: "Debug Code in Production".to_string(),
                     severity: Severity::Low,
                     category: "security".to_string(),
                     description: "Debug code detected - may leak sensitive information".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Remove debug statements from production code".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.7,
                 });
             }
 
@@ -398,15 +442,19 @@ impl CarbonParser {
                 vulnerabilities.push(Vulnerability {
                     id: "CARBON-TODO-001".to_string(),
                     cwe: Some("CWE-489".to_string()),
-                    vulnerability_type: "Incomplete Implementation".to_string(),
+                    title: "Incomplete Implementation".to_string(),
                     severity: Severity::Medium,
                     category: "security".to_string(),
                     description: "TODO/FIXME comment - incomplete implementation".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Complete implementation or remove TODO comments before production".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.7,
                 });
             }
         }

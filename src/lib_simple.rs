@@ -148,13 +148,13 @@ impl std::fmt::Display for Language {
 pub struct Vulnerability {
     pub id: String,
     pub cwe: Option<String>,
-    pub vulnerability_type: String,
+    pub title: String,
     pub severity: Severity,
     pub category: String,
     pub description: String,
     pub file_path: String,
     pub line_number: usize,
-    pub column: usize,
+    pub column_start: usize,
     pub source_code: String,
     pub recommendation: String,
 }

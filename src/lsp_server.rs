@@ -179,7 +179,7 @@ impl LSPServer {
         })
     }
 
-    pub fn run(&self) -> Result<()> {
+    pub async fn run(&self) -> Result<()> {
         eprintln!("DeVAIC Language Server starting...");
         
         let stdin = std::io::stdin();
@@ -188,7 +188,7 @@ impl LSPServer {
         loop {
             match self.read_message(&mut reader) {
                 Ok(Some(message)) => {
-                    if let Err(e) = self.handle_message(message) {
+                    if let Err(e) = self.handle_message(message).await {
                         eprintln!("Error handling message: {}", e);
                     }
                 }
@@ -250,18 +250,18 @@ impl LSPServer {
         Ok(Some(message))
     }
 
-    fn handle_message(&self, message: Value) -> Result<()> {
+    async fn handle_message(&self, message: Value) -> Result<()> {
         if let Some(method) = message.get("method").and_then(|m| m.as_str()) {
             match method {
                 "initialize" => self.handle_initialize(message)?,
                 "initialized" => self.handle_initialized()?,
-                "textDocument/didOpen" => self.handle_did_open(message)?,
-                "textDocument/didChange" => self.handle_did_change(message)?,
-                "textDocument/didSave" => self.handle_did_save(message)?,
+                "textDocument/didOpen" => self.handle_did_open(message).await?,
+                "textDocument/didChange" => self.handle_did_change(message).await?,
+                "textDocument/didSave" => self.handle_did_save(message).await?,
                 "textDocument/didClose" => self.handle_did_close(message)?,
                 "textDocument/hover" => self.handle_hover(message)?,
                 "textDocument/codeAction" => self.handle_code_action(message)?,
-                "textDocument/analyze" => self.handle_analyze(message)?,
+                "textDocument/analyze" => self.handle_analyze(message).await?,
                 "workspace/didChangeConfiguration" => self.handle_configuration_change(message)?,
                 "shutdown" => self.handle_shutdown()?,
                 "exit" => std::process::exit(0),
@@ -297,7 +297,7 @@ impl LSPServer {
         Ok(())
     }
 
-    fn handle_did_open(&self, message: Value) -> Result<()> {
+    async fn handle_did_open(&self, message: Value) -> Result<()> {
         if let Some(params) = message.get("params") {
             if let Some(text_document) = params.get("textDocument") {
                 let uri = text_document.get("uri").and_then(|u| u.as_str()).unwrap_or("");
@@ -320,13 +320,13 @@ impl LSPServer {
                 }
 
                 // Analyze document
-                self.analyze_document(uri)?;
+                self.analyze_document(uri).await?;
             }
         }
         Ok(())
     }
 
-    fn handle_did_change(&self, message: Value) -> Result<()> {
+    async fn handle_did_change(&self, message: Value) -> Result<()> {
         if let Some(params) = message.get("params") {
             if let Some(text_document) = params.get("textDocument") {
                 let uri = text_document.get("uri").and_then(|u| u.as_str()).unwrap_or("");
@@ -345,7 +345,7 @@ impl LSPServer {
                             }
 
                             // Analyze document with debouncing
-                            self.analyze_document_debounced(uri)?;
+                            self.analyze_document_debounced(uri).await?;
                         }
                     }
                 }
@@ -354,11 +354,11 @@ impl LSPServer {
         Ok(())
     }
 
-    fn handle_did_save(&self, message: Value) -> Result<()> {
+    async fn handle_did_save(&self, message: Value) -> Result<()> {
         if let Some(params) = message.get("params") {
             if let Some(text_document) = params.get("textDocument") {
                 let uri = text_document.get("uri").and_then(|u| u.as_str()).unwrap_or("");
-                self.analyze_document(uri)?;
+                self.analyze_document(uri).await?;
             }
         }
         Ok(())
@@ -391,11 +391,11 @@ impl LSPServer {
         Ok(())
     }
 
-    fn handle_analyze(&self, message: Value) -> Result<()> {
+    async fn handle_analyze(&self, message: Value) -> Result<()> {
         if let Some(params) = message.get("params") {
             if let Some(text_document) = params.get("textDocument") {
                 let uri = text_document.get("uri").and_then(|u| u.as_str()).unwrap_or("");
-                let diagnostics = self.analyze_document(uri)?;
+                let diagnostics = self.analyze_document(uri).await?;
                 
                 let id = message.get("id").cloned().unwrap_or(json!(null));
                 let response = json!({
@@ -425,7 +425,7 @@ impl LSPServer {
         Ok(())
     }
 
-    fn analyze_document(&self, uri: &str) -> Result<Vec<LSPDiagnostic>> {
+    async fn analyze_document(&self, uri: &str) -> Result<Vec<LSPDiagnostic>> {
         let (content, language_id) = {
             let documents = self.documents.lock().unwrap();
             if let Some(doc) = documents.get(uri) {
@@ -452,7 +452,7 @@ impl LSPServer {
 
         // Analyze with DeVAIC
         let _config = self.config.lock().unwrap();
-        let vulnerabilities = self.analyzer.analyze_file(&source_file.path)?;
+        let vulnerabilities = self.analyzer.analyze_file(&source_file.path).await?;
 
         // Convert to LSP diagnostics
         let diagnostics: Vec<LSPDiagnostic> = vulnerabilities
@@ -475,10 +475,10 @@ impl LSPServer {
         Ok(diagnostics)
     }
 
-    fn analyze_document_debounced(&self, uri: &str) -> Result<()> {
+    async fn analyze_document_debounced(&self, uri: &str) -> Result<()> {
         // Simple debouncing - in a real implementation, you'd use a proper debouncing mechanism
-        thread::sleep(std::time::Duration::from_millis(100));
-        self.analyze_document(uri)?;
+        tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+        self.analyze_document(uri).await?;
         Ok(())
     }
 
@@ -487,17 +487,17 @@ impl LSPServer {
             range: LSPRange {
                 start: LSPPosition {
                     line: (vuln.line_number.saturating_sub(1)) as u32,
-                    character: vuln.column as u32,
+                    character: vuln.column_start as u32,
                 },
                 end: LSPPosition {
                     line: (vuln.line_number.saturating_sub(1)) as u32,
-                    character: (vuln.column + vuln.source_code.len()) as u32,
+                    character: vuln.column_end as u32,
                 },
             },
             severity: self.severity_to_lsp_severity(vuln.severity),
             code: Some(vuln.id),
             source: "DeVAIC Enhanced".to_string(),
-            message: format!("{}: {}", vuln.vulnerability_type, vuln.description),
+            message: format!("{}: {}", vuln.title, vuln.description),
             related_information: None,
         }
     }
@@ -559,7 +559,7 @@ impl LSPServer {
 }
 
 // CLI entry point for LSP server
-pub fn run_lsp_server() -> Result<()> {
+pub async fn run_lsp_server() -> Result<()> {
     let server = LSPServer::new()?;
-    server.run()
+    server.run().await
 }

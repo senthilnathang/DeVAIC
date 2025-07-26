@@ -214,204 +214,252 @@ impl NimRules {
             // Check for unsafe memory operations
             if let Some(captures) = self.patterns["unsafe_memory_operations"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "NIM-MEM-001".to_string(),
+id: "NIM-MEM-001".to_string(),
                     cwe: Some("CWE-119".to_string()),
-                    vulnerability_type: "Unsafe Memory Access".to_string(),
+                    title: "Unsafe Memory Access".to_string(),
                     severity: Severity::High,
                     category: "memory".to_string(),
                     description: "Unsafe memory operation detected - potential memory corruption".to_string(),
                     file_path: file_path.to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Use safe memory operations or add proper bounds checking".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.8,
                 });
             }
 
             // Check for C interop pragmas
             if let Some(captures) = self.patterns["c_interop_pragmas"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "NIM-FFI-001".to_string(),
+id: "NIM-FFI-001".to_string(),
                     cwe: Some("CWE-829".to_string()),
-                    vulnerability_type: "Unsafe C Interop".to_string(),
+                    title: "Unsafe C Interop".to_string(),
                     severity: Severity::High,
                     category: "interop".to_string(),
                     description: "C interop pragma detected - potential security risks from external code".to_string(),
                     file_path: file_path.to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Validate C function calls and ensure input sanitization".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.8,
                 });
             }
 
             // Check for unsafe macro definitions
             if let Some(captures) = self.patterns["unsafe_macro_definition"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "NIM-MACRO-001".to_string(),
+id: "NIM-MACRO-001".to_string(),
                     cwe: Some("CWE-94".to_string()),
-                    vulnerability_type: "Code Injection via Macros".to_string(),
+                    title: "Code Injection via Macros".to_string(),
                     severity: Severity::Medium,
                     category: "code_injection".to_string(),
                     description: "Unsafe macro definition - potential code injection risk".to_string(),
                     file_path: file_path.to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Validate macro inputs and use typed alternatives".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.75,
                 });
             }
 
             // Check for unsafe threading pragmas
             if let Some(captures) = self.patterns["unsafe_threading_pragma"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "NIM-THREAD-001".to_string(),
+id: "NIM-THREAD-001".to_string(),
                     cwe: Some("CWE-362".to_string()),
-                    vulnerability_type: "Race Condition".to_string(),
+                    title: "Race Condition".to_string(),
                     severity: Severity::High,
                     category: "concurrency".to_string(),
                     description: "Threading pragma detected - potential race condition risk".to_string(),
                     file_path: file_path.to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Use proper synchronization mechanisms".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.8,
                 });
             }
 
             // Check for unsafe file operations
             if let Some(captures) = self.patterns["unsafe_file_operations"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "NIM-FILE-001".to_string(),
+id: "NIM-FILE-001".to_string(),
                     cwe: Some("CWE-22".to_string()),
-                    vulnerability_type: "Path Traversal".to_string(),
+                    title: "Path Traversal".to_string(),
                     severity: Severity::High,
                     category: "file_system".to_string(),
                     description: "File operation with dynamic path - path traversal risk".to_string(),
                     file_path: file_path.to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Validate and sanitize file paths before operations".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.8,
                 });
             }
 
             // Check for buffer overflow risks
             if let Some(captures) = self.patterns["buffer_overflow_risk"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "NIM-BUF-001".to_string(),
+id: "NIM-BUF-001".to_string(),
                     cwe: Some("CWE-120".to_string()),
-                    vulnerability_type: "Buffer Overflow".to_string(),
+                    title: "Buffer Overflow".to_string(),
                     severity: Severity::High,
                     category: "buffer".to_string(),
                     description: "Memory copy operation - potential buffer overflow".to_string(),
                     file_path: file_path.to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Use safe memory operations with bounds checking".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.8,
                 });
             }
 
             // Check for hardcoded secrets
             if let Some(captures) = self.patterns["hardcoded_secrets"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "NIM-SECRET-001".to_string(),
+id: "NIM-SECRET-001".to_string(),
                     cwe: Some("CWE-798".to_string()),
-                    vulnerability_type: "Hardcoded Credentials".to_string(),
+                    title: "Hardcoded Credentials".to_string(),
                     severity: Severity::Critical,
                     category: "authentication".to_string(),
                     description: "Hardcoded credentials detected in Nim code".to_string(),
                     file_path: file_path.to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Move secrets to environment variables or secure configuration".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.9,
                 });
             }
 
             // Check for command injection risks
             if let Some(captures) = self.patterns["command_injection_risk"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "NIM-CMD-001".to_string(),
+id: "NIM-CMD-001".to_string(),
                     cwe: Some("CWE-78".to_string()),
-                    vulnerability_type: "Command Injection".to_string(),
+                    title: "Command Injection".to_string(),
                     severity: Severity::Critical,
                     category: "command_execution".to_string(),
                     description: "Command execution with dynamic input - injection risk".to_string(),
                     file_path: file_path.to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Validate and sanitize command arguments".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.9,
                 });
             }
 
             // Check for disabled safety checks
             if let Some(captures) = self.patterns["disabled_safety_checks"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "NIM-PRAGMA-001".to_string(),
+id: "NIM-PRAGMA-001".to_string(),
                     cwe: Some("CWE-665".to_string()),
-                    vulnerability_type: "Unsafe Configuration".to_string(),
+                    title: "Unsafe Configuration".to_string(),
                     severity: Severity::Medium,
                     category: "configuration".to_string(),
                     description: "Safety checks disabled - removes important protections".to_string(),
                     file_path: file_path.to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Enable safety checks in production code".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.75,
                 });
             }
 
             // Check for ignored exception handling
             if let Some(captures) = self.patterns["ignored_exception_handling"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "NIM-ERROR-001".to_string(),
+id: "NIM-ERROR-001".to_string(),
                     cwe: Some("CWE-252".to_string()),
-                    vulnerability_type: "Unchecked Error Condition".to_string(),
+                    title: "Unchecked Error Condition".to_string(),
                     severity: Severity::Medium,
                     category: "error_handling".to_string(),
                     description: "Exception ignored - may hide failures".to_string(),
                     file_path: file_path.to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Handle exceptions appropriately or log for debugging".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.75,
                 });
             }
 
             // Check for unsafe deserialization
             if let Some(captures) = self.patterns["unsafe_deserialization"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "NIM-DESER-001".to_string(),
+id: "NIM-DESER-001".to_string(),
                     cwe: Some("CWE-502".to_string()),
-                    vulnerability_type: "Unsafe Deserialization".to_string(),
+                    title: "Unsafe Deserialization".to_string(),
                     severity: Severity::High,
                     category: "serialization".to_string(),
                     description: "Unsafe deserialization operation detected".to_string(),
                     file_path: file_path.to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Validate and sanitize deserialized data".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.8,
                 });
             }
 
             // Check for debug output statements
             if let Some(captures) = self.patterns["debug_output_statements"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "NIM-DEBUG-001".to_string(),
+id: "NIM-DEBUG-001".to_string(),
                     cwe: Some("CWE-489".to_string()),
-                    vulnerability_type: "Debug Code in Production".to_string(),
+                    title: "Debug Code in Production".to_string(),
                     severity: Severity::Low,
                     category: "information_disclosure".to_string(),
                     description: "Debug output statement detected - may leak sensitive information".to_string(),
                     file_path: file_path.to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Remove debug statements from production code".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.7,
                 });
             }
         }

@@ -12,7 +12,7 @@ use crate::{
     error::Result,
     parsers::{ParsedAst, SourceFile},
     rules::advanced_rule_engine::*,
-    Severity, Vulnerability, Location,
+    Severity, Vulnerability,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, BTreeMap, VecDeque};
@@ -499,6 +499,16 @@ pub struct TrendAnalyzer {
     forecasting_engine: ForecastingEngine,
 }
 
+impl TrendAnalyzer {
+    pub fn new() -> Self {
+        Self {
+            time_series_analyzer: TimeSeriesAnalyzer::new(),
+            pattern_detector: PatternDetector::new(),
+            forecasting_engine: ForecastingEngine::new(),
+        }
+    }
+}
+
 /// Time series analysis
 pub struct TimeSeriesAnalyzer {
     /// Seasonal decomposition
@@ -554,6 +564,35 @@ pub struct CorrelationAnalyzer {
     pub minimum_correlation_threshold: f32,
 }
 
+impl CorrelationAnalyzer {
+    pub fn new() -> Self {
+        Self {
+            correlation_methods: vec![CorrelationMethod::Pearson, CorrelationMethod::Spearman],
+            minimum_correlation_threshold: 0.5,
+        }
+    }
+}
+
+impl TrendDetection {
+    pub fn new() -> Self {
+        Self {
+            algorithm: TrendAlgorithm::LinearRegression,
+            sensitivity: 0.8,
+            minimum_data_points: 10,
+        }
+    }
+}
+
+impl TimeSeriesAnalyzer {
+    pub fn new() -> Self {
+        Self {
+            seasonal_patterns: HashMap::new(),
+            trend_detection: TrendDetection::new(),
+            correlation_analyzer: CorrelationAnalyzer::new(),
+        }
+    }
+}
+
 /// Correlation methods
 #[derive(Debug, Clone)]
 pub enum CorrelationMethod {
@@ -588,6 +627,16 @@ pub struct TestSuiteManager {
     
     /// Coverage analyzer
     coverage_analyzer: CoverageAnalyzer,
+}
+
+impl TestSuiteManager {
+    pub fn new() -> Self {
+        Self {
+            test_cases: DashMap::new(),
+            execution_engine: TestExecutionEngine::new(),
+            coverage_analyzer: CoverageAnalyzer::new(),
+        }
+    }
 }
 
 /// Individual test case
@@ -640,7 +689,7 @@ pub struct ExpectedOutput {
 /// Expected vulnerability in test
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ExpectedVulnerability {
-    pub vulnerability_type: String,
+    pub title: String,
     pub severity: Severity,
     pub line_number: Option<usize>,
     pub description_pattern: Option<String>,
@@ -674,6 +723,17 @@ pub struct LanguageServerProtocol {
     
     /// Hover provider
     hover_provider: HoverProvider,
+}
+
+impl LanguageServerProtocol {
+    pub fn new() -> Self {
+        Self {
+            document_sync: DocumentSynchronization::new(),
+            diagnostic_provider: DiagnosticProvider::new(),
+            completion_provider: CompletionProvider::new(),
+            hover_provider: HoverProvider::new(),
+        }
+    }
 }
 
 /// Rule scheduling system
@@ -744,7 +804,7 @@ impl RuleManagementSystem {
                 update_frequency: UpdateFrequency::Weekly,
                 maintenance_schedule: MaintenanceSchedule {
                     next_review_date: SystemTime::now() + Duration::from_secs(7 * 24 * 3600),
-                    maintenance_window: Duration::from_hours(2),
+                    maintenance_window: Duration::from_secs(2 * 3600), // 2 hours
                     automatic_updates: true,
                     notification_preferences: NotificationPreferences {
                         email_notifications: true,
@@ -860,7 +920,10 @@ impl RuleRegistry {
         
         // Update category index
         let category = rule.rule.metadata.category.clone();
-        self.rules_by_category.entry(category).or_insert_with(Vec::new).push(rule_id.clone());
+        {
+            let mut entry = self.rules_by_category.entry(category).or_insert_with(Vec::new);
+            entry.push(rule_id.clone());
+        }
         
         // Update language index
         for language in &rule.rule.metadata.languages {
@@ -1045,7 +1108,7 @@ pub struct ValidationReport {
     pub quality_scores: QualityScores,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum ValidationStatus {
     Passed,
     Failed,
@@ -1137,11 +1200,7 @@ impl HistoricalMetricsStore {
     }
 }
 
-// Placeholder struct implementations
-pub struct TrendAnalyzer;
-impl TrendAnalyzer {
-    pub fn new() -> Self { Self }
-}
+// TrendAnalyzer implementation provided above
 
 pub struct AnomalyDetector;
 impl AnomalyDetector {
@@ -1158,10 +1217,7 @@ impl DashboardProvider {
     pub fn new() -> Self { Self }
 }
 
-pub struct TestSuiteManager;
-impl TestSuiteManager {
-    pub fn new() -> Self { Self }
-}
+// TestSuiteManager implementation provided above
 
 pub struct BenchmarkRunner;
 impl BenchmarkRunner {
@@ -1178,10 +1234,7 @@ impl RegressionTester {
     pub fn new() -> Self { Self }
 }
 
-pub struct LanguageServerProtocol;
-impl LanguageServerProtocol {
-    pub fn new() -> Self { Self }
-}
+// LanguageServerProtocol implementation provided above
 
 pub trait PluginManager {}
 
@@ -1263,6 +1316,54 @@ pub struct CompletionProvider;
 pub struct HoverProvider;
 pub struct TestExecutionEngine;
 pub struct CoverageAnalyzer;
+
+impl PatternDetector {
+    pub fn new() -> Self {
+        Self
+    }
+}
+
+impl ForecastingEngine {
+    pub fn new() -> Self {
+        Self
+    }
+}
+
+impl DocumentSynchronization {
+    pub fn new() -> Self {
+        Self
+    }
+}
+
+impl DiagnosticProvider {
+    pub fn new() -> Self {
+        Self
+    }
+}
+
+impl CompletionProvider {
+    pub fn new() -> Self {
+        Self
+    }
+}
+
+impl HoverProvider {
+    pub fn new() -> Self {
+        Self
+    }
+}
+
+impl TestExecutionEngine {
+    pub fn new() -> Self {
+        Self
+    }
+}
+
+impl CoverageAnalyzer {
+    pub fn new() -> Self {
+        Self
+    }
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ValidationResult {

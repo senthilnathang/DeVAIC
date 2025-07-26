@@ -108,15 +108,19 @@ impl DelphiParser {
                 vulnerabilities.push(Vulnerability {
                     id: "DELPHI-001".to_string(),
                     cwe: Some("CWE-798".to_string()),
-                    vulnerability_type: "Hardcoded Credentials".to_string(),
+                    title: "Hardcoded Credentials".to_string(),
                     severity: Severity::High,
                     category: "authentication".to_string(),
                     description: "Hardcoded password detected in Delphi code".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: line.trim().to_string(),
                     recommendation: "Store passwords in configuration files or environment variables".to_string(),
+                    owasp: Some("A07:2021 – Identification and Authentication Failures".to_string()),
+                    references: vec!["https://owasp.org/Top10/A07_2021-Identification_and_Authentication_Failures/".to_string()],
+                    confidence: 0.8,
                 });
             }
 
@@ -125,15 +129,19 @@ impl DelphiParser {
                 vulnerabilities.push(Vulnerability {
                     id: "DELPHI-002".to_string(),
                     cwe: Some("CWE-89".to_string()),
-                    vulnerability_type: "SQL Injection".to_string(),
+                    title: "SQL Injection".to_string(),
                     severity: Severity::Critical,
                     category: "injection".to_string(),
                     description: "Potential SQL injection in Delphi database query".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: line.trim().to_string(),
                     recommendation: "Use parameterized queries with TQuery.Params or prepared statements".to_string(),
+                    owasp: Some("A03:2021 – Injection".to_string()),
+                    references: vec!["https://owasp.org/Top10/A03_2021-Injection/".to_string()],
+                    confidence: 0.9,
                 });
             }
 
@@ -142,15 +150,19 @@ impl DelphiParser {
                 vulnerabilities.push(Vulnerability {
                     id: "DELPHI-003".to_string(),
                     cwe: Some("CWE-704".to_string()),
-                    vulnerability_type: "Unsafe Type Cast".to_string(),
+                    title: "Unsafe Type Cast".to_string(),
                     severity: Severity::Medium,
                     category: "security".to_string(),
                     description: "Unsafe pointer cast detected".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: line.trim().to_string(),
                     recommendation: "Validate pointer safety and consider using safer string handling".to_string(),
+                    owasp: Some("A06:2021 – Vulnerable and Outdated Components".to_string()),
+                    references: vec!["https://owasp.org/Top10/A06_2021-Vulnerable_and_Outdated_Components/".to_string()],
+                    confidence: 0.7,
                 });
             }
 
@@ -159,15 +171,19 @@ impl DelphiParser {
                 vulnerabilities.push(Vulnerability {
                     id: "DELPHI-004".to_string(),
                     cwe: Some("CWE-176".to_string()),
-                    vulnerability_type: "Unicode/ANSI Conversion".to_string(),
+                    title: "Unicode/ANSI Conversion".to_string(),
                     severity: Severity::Medium,
                     category: "security".to_string(),
                     description: "Unicode types should not be cast to ANSI types without proper encoding".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: line.trim().to_string(),
                     recommendation: "Use proper encoding conversion functions like UTF8Encode/UTF8Decode".to_string(),
+                    owasp: Some("A03:2021 – Injection".to_string()),
+                    references: vec!["https://owasp.org/Top10/A03_2021-Injection/".to_string()],
+                    confidence: 0.7,
                 });
             }
 
@@ -176,15 +192,19 @@ impl DelphiParser {
                 vulnerabilities.push(Vulnerability {
                     id: "DELPHI-005".to_string(),
                     cwe: Some("CWE-457".to_string()),
-                    vulnerability_type: "Uninitialized Variable".to_string(),
+                    title: "Uninitialized Variable".to_string(),
                     severity: Severity::Medium,
                     category: "vulnerability".to_string(),
                     description: "Variant variable declared but not initialized".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: line.trim().to_string(),
                     recommendation: "Initialize variant variables with VarClear or assign a default value".to_string(),
+                    owasp: Some("A06:2021 – Vulnerable and Outdated Components".to_string()),
+                    references: vec!["https://cwe.mitre.org/data/definitions/457.html".to_string()],
+                    confidence: 0.8,
                 });
             }
 
@@ -193,15 +213,19 @@ impl DelphiParser {
                 vulnerabilities.push(Vulnerability {
                     id: "DELPHI-006".to_string(),
                     cwe: Some("CWE-119".to_string()),
-                    vulnerability_type: "Buffer Overflow Risk".to_string(),
+                    title: "Buffer Overflow Risk".to_string(),
                     severity: Severity::High,
                     category: "vulnerability".to_string(),
                     description: "Unsafe pointer arithmetic detected".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: line.trim().to_string(),
                     recommendation: "Use bounds checking and safer memory management practices".to_string(),
+                    owasp: Some("A06:2021 – Vulnerable and Outdated Components".to_string()),
+                    references: vec!["https://cwe.mitre.org/data/definitions/119.html".to_string()],
+                    confidence: 0.8,
                 });
             }
 
@@ -210,15 +234,19 @@ impl DelphiParser {
                 vulnerabilities.push(Vulnerability {
                     id: "DELPHI-007".to_string(),
                     cwe: Some("CWE-134".to_string()),
-                    vulnerability_type: "Format String Vulnerability".to_string(),
+                    title: "Format String Vulnerability".to_string(),
                     severity: Severity::High,
                     category: "vulnerability".to_string(),
                     description: "Potentially unsafe format string usage".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: line.trim().to_string(),
                     recommendation: "Validate format string arguments match the format specifiers".to_string(),
+                    owasp: Some("A03:2021 – Injection".to_string()),
+                    references: vec!["https://cwe.mitre.org/data/definitions/134.html".to_string()],
+                    confidence: 0.8,
                 });
             }
 
@@ -227,15 +255,19 @@ impl DelphiParser {
                 vulnerabilities.push(Vulnerability {
                     id: "DELPHI-008".to_string(),
                     cwe: Some("CWE-114".to_string()),
-                    vulnerability_type: "DLL Injection Risk".to_string(),
+                    title: "DLL Injection Risk".to_string(),
                     severity: Severity::High,
                     category: "security".to_string(),
                     description: "Dynamic library loading without path validation".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: line.trim().to_string(),
                     recommendation: "Use full paths for DLL loading and validate library authenticity".to_string(),
+                    owasp: Some("A08:2021 – Software and Data Integrity Failures".to_string()),
+                    references: vec!["https://cwe.mitre.org/data/definitions/114.html".to_string()],
+                    confidence: 0.8,
                 });
             }
 
@@ -244,15 +276,19 @@ impl DelphiParser {
                 vulnerabilities.push(Vulnerability {
                     id: "DELPHI-009".to_string(),
                     cwe: Some("CWE-250".to_string()),
-                    vulnerability_type: "Registry Access".to_string(),
+                    owasp: Some("A01:2021".to_string()),
+                    title: "Registry Access".to_string(),
                     severity: Severity::Medium,
                     category: "security".to_string(),
                     description: "Registry access detected - ensure proper permissions".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: line.trim().to_string(),
                     recommendation: "Validate registry access permissions and handle access denied exceptions".to_string(),
+                    references: vec![],
+                    confidence: 0.7,
                 });
             }
 
@@ -261,15 +297,19 @@ impl DelphiParser {
                 vulnerabilities.push(Vulnerability {
                     id: "DELPHI-010".to_string(),
                     cwe: Some("CWE-22".to_string()),
-                    vulnerability_type: "Path Traversal".to_string(),
+                    owasp: Some("A01:2021".to_string()),
+                    title: "Path Traversal".to_string(),
                     severity: Severity::High,
                     category: "vulnerability".to_string(),
                     description: "Potential path traversal vulnerability".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: line.trim().to_string(),
                     recommendation: "Sanitize file paths and prevent directory traversal attacks".to_string(),
+                    references: vec![],
+                    confidence: 0.9,
                 });
             }
         }

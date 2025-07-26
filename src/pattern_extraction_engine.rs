@@ -315,7 +315,7 @@ pub struct SyntaxElement {
 #[derive(Debug, Clone)]
 pub struct CodeLocation {
     pub line: u32,
-    pub column: u32,
+    pub column_start: u32,
     pub length: u32,
     pub context: String,
 }
@@ -399,7 +399,7 @@ pub enum ValidationStatus {
 pub struct SecurityHotspot {
     pub hotspot_id: String,
     pub location: CodeLocation,
-    pub vulnerability_type: VulnerabilityType,
+    pub title: VulnerabilityType,
     pub risk_score: f32,
     pub evidence: Vec<String>,
 }
@@ -410,7 +410,7 @@ pub struct CodePattern {
     pub pattern_id: String,
     pub pattern_regex: String,
     pub pattern_description: String,
-    pub vulnerability_type: VulnerabilityType,
+    pub title: VulnerabilityType,
     pub confidence: f32,
     pub language_specificity: Vec<String>,
 }
@@ -465,7 +465,7 @@ pub struct FlowPattern {
 #[derive(Debug, Clone)]
 pub struct FlowVulnerabilityDetector {
     pub detector_id: String,
-    pub vulnerability_type: VulnerabilityType,
+    pub title: VulnerabilityType,
     pub detection_patterns: Vec<String>,
     pub false_positive_filters: Vec<String>,
 }
@@ -493,7 +493,7 @@ pub struct TaintSource {
 pub struct TaintSink {
     pub sink_id: String,
     pub sink_pattern: String,
-    pub vulnerability_type: VulnerabilityType,
+    pub title: VulnerabilityType,
     pub required_sanitization: Vec<String>,
 }
 
@@ -865,7 +865,7 @@ impl CodeAnalysisEngine {
             .into_iter()
             .map(|pattern| ExtractedPattern {
                 source_cve: "code-analysis".to_string(),
-                pattern_type: pattern.vulnerability_type,
+                pattern_type: pattern.title,
                 extracted_regex: vec![pattern.pattern_regex],
                 confidence_score: pattern.confidence,
                 supporting_evidence: vec![pattern.pattern_description.clone()],

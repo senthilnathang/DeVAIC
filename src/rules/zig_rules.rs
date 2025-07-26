@@ -107,136 +107,168 @@ impl ZigRules {
             // Check for unsafe pointer casts
             if let Some(captures) = self.patterns["unsafe_pointer_cast"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "ZIG-PTR-001".to_string(),
+id: "ZIG-PTR-001".to_string(),
                     cwe: Some("CWE-119".to_string()),
-                    vulnerability_type: "Unsafe Pointer Cast".to_string(),
+                    title: "Unsafe Pointer Cast".to_string(),
                     severity: Severity::High,
                     category: "memory".to_string(),
                     description: "Unsafe pointer cast operation detected".to_string(),
                     file_path: file_path.to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Validate pointer cast safety and consider safe alternatives".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.8,
                 });
             }
 
             // Check for undefined behavior
             if let Some(captures) = self.patterns["undefined_behavior"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "ZIG-UB-001".to_string(),
+id: "ZIG-UB-001".to_string(),
                     cwe: Some("CWE-758".to_string()),
-                    vulnerability_type: "Undefined Behavior".to_string(),
+                    title: "Undefined Behavior".to_string(),
                     severity: Severity::Critical,
                     category: "safety".to_string(),
                     description: "Undefined behavior usage detected".to_string(),
                     file_path: file_path.to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Replace undefined behavior with safe error handling".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.9,
                 });
             }
 
             // Check for potential memory leaks
             if let Some(captures) = self.patterns["memory_leak_potential"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "ZIG-MEM-001".to_string(),
+id: "ZIG-MEM-001".to_string(),
                     cwe: Some("CWE-401".to_string()),
-                    vulnerability_type: "Memory Leak".to_string(),
+                    title: "Memory Leak".to_string(),
                     severity: Severity::Medium,
                     category: "memory".to_string(),
                     description: "Potential memory leak - allocation without cleanup".to_string(),
                     file_path: file_path.to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Use defer or errdefer to ensure memory cleanup".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.75,
                 });
             }
 
             // Check for wrapping arithmetic
             if let Some(captures) = self.patterns["wrapping_arithmetic"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "ZIG-INT-001".to_string(),
+id: "ZIG-INT-001".to_string(),
                     cwe: Some("CWE-190".to_string()),
-                    vulnerability_type: "Integer Overflow".to_string(),
+                    title: "Integer Overflow".to_string(),
                     severity: Severity::Medium,
                     category: "arithmetic".to_string(),
                     description: "Wrapping arithmetic operation - potential overflow".to_string(),
                     file_path: file_path.to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Use checked arithmetic or validate input ranges".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.75,
                 });
             }
 
             // Check for ignored error unions
             if let Some(captures) = self.patterns["ignored_error_union"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "ZIG-ERR-001".to_string(),
+id: "ZIG-ERR-001".to_string(),
                     cwe: Some("CWE-252".to_string()),
-                    vulnerability_type: "Ignored Error".to_string(),
+                    title: "Ignored Error".to_string(),
                     severity: Severity::Medium,
                     category: "error_handling".to_string(),
                     description: "Error union result ignored in catch block".to_string(),
                     file_path: file_path.to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Handle errors appropriately or log for debugging".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.75,
                 });
             }
 
             // Check for C imports
             if let Some(captures) = self.patterns["c_import_usage"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "ZIG-C-001".to_string(),
+id: "ZIG-C-001".to_string(),
                     cwe: Some("CWE-829".to_string()),
-                    vulnerability_type: "Unsafe C Interop".to_string(),
+                    title: "Unsafe C Interop".to_string(),
                     severity: Severity::High,
                     category: "interop".to_string(),
                     description: "C import detected - external code security risk".to_string(),
                     file_path: file_path.to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Validate C library security and sanitize inputs".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.8,
                 });
             }
 
             // Check for debug statements
             if let Some(captures) = self.patterns["debug_print_statements"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "ZIG-DEBUG-001".to_string(),
+id: "ZIG-DEBUG-001".to_string(),
                     cwe: Some("CWE-489".to_string()),
-                    vulnerability_type: "Debug Code".to_string(),
+                    title: "Debug Code".to_string(),
                     severity: Severity::Low,
                     category: "information_disclosure".to_string(),
                     description: "Debug print statement detected".to_string(),
                     file_path: file_path.to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Remove debug statements from production code".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.7,
                 });
             }
 
             // Check for hardcoded credentials
             if let Some(captures) = self.patterns["hardcoded_credentials"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "ZIG-CRED-001".to_string(),
+id: "ZIG-CRED-001".to_string(),
                     cwe: Some("CWE-798".to_string()),
-                    vulnerability_type: "Hardcoded Credentials".to_string(),
+                    title: "Hardcoded Credentials".to_string(),
                     severity: Severity::Critical,
                     category: "authentication".to_string(),
                     description: "Hardcoded credentials detected".to_string(),
                     file_path: file_path.to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Move credentials to environment variables or secure storage".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.9,
                 });
             }
         }

@@ -758,21 +758,19 @@ impl ApiSecurityAnalyzer {
             vulnerabilities.push(Vulnerability {
                 id: format!("API-AUTH-001-{}", endpoint.line_number),
                 cwe: Some("CWE-306".to_string()),
-                vulnerability_type: "Missing Authentication".to_string(),
+                title: "Missing Authentication".to_string(),
                 severity: Severity::High,
                 category: "authentication".to_string(),
                 description: "API endpoint lacks authentication protection".to_string(),
                 file_path: source_file.path.to_string_lossy().to_string(),
                 line_number: endpoint.line_number,
-                column: 0,
+                column_start: 0,
+                column_end: 0,
                 source_code: endpoint.path.clone(),
                 recommendation: "Implement proper authentication for API endpoints".to_string(),
-                location: Location {
-                    file: source_file.path.to_string_lossy().to_string(),
-                    line: endpoint.line_number,
-                    column: 0,
-                },
-                code_snippet: Some(endpoint.path.clone()),
+                owasp: None,
+                references: Vec::new(),
+                confidence: 0.8,
             });
         }
         
@@ -782,21 +780,19 @@ impl ApiSecurityAnalyzer {
                 vulnerabilities.push(Vulnerability {
                     id: format!("API-INJECT-001-{}-{}", endpoint.line_number, param),
                     cwe: Some("CWE-89".to_string()),
-                    vulnerability_type: "Parameter Injection Risk".to_string(),
+                    title: "Parameter Injection Risk".to_string(),
                     severity: Severity::High,
                     category: "injection".to_string(),
                     description: format!("Parameter '{}' may be vulnerable to injection attacks", param),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: endpoint.line_number,
-                    column: 0,
+                    column_start: 0,
+                    column_end: 0,
                     source_code: endpoint.path.clone(),
                     recommendation: "Implement proper input validation and parameterized queries".to_string(),
-                    location: Location {
-                        file: source_file.path.to_string_lossy().to_string(),
-                        line: endpoint.line_number,
-                        column: 0,
-                    },
-                    code_snippet: Some(endpoint.path.clone()),
+                    owasp: None,
+                    references: Vec::new(),
+                    confidence: 0.8,
                 });
             }
         }
@@ -812,21 +808,19 @@ impl ApiSecurityAnalyzer {
             vulnerabilities.push(Vulnerability {
                 id: format!("GRAPHQL-INTRO-001-{}", endpoint.line_number),
                 cwe: Some("CWE-200".to_string()),
-                vulnerability_type: "GraphQL Introspection Exposed".to_string(),
+                title: "GraphQL Introspection Exposed".to_string(),
                 severity: Severity::Medium,
                 category: "information_disclosure".to_string(),
                 description: "GraphQL introspection is enabled in production".to_string(),
                 file_path: source_file.path.to_string_lossy().to_string(),
                 line_number: endpoint.line_number,
-                column: 0,
+                column_start: 0,
+                column_end: 0,
                 source_code: endpoint.path.clone(),
                 recommendation: "Disable GraphQL introspection in production environments".to_string(),
-                location: Location {
-                    file: source_file.path.to_string_lossy().to_string(),
-                    line: endpoint.line_number,
-                    column: 0,
-                },
-                code_snippet: Some(endpoint.path.clone()),
+                owasp: None,
+                references: Vec::new(),
+                confidence: 0.7,
             });
         }
         
@@ -852,21 +846,19 @@ impl ApiSecurityAnalyzer {
                 vulnerabilities.push(Vulnerability {
                     id: format!("API-EXPOSE-001-{}", endpoint.line_number),
                     cwe: Some("CWE-200".to_string()),
-                    vulnerability_type: "Sensitive Data Exposure".to_string(),
+                    title: "Sensitive Data Exposure".to_string(),
                     severity: Severity::High,
                     category: "information_disclosure".to_string(),
                     description: "API endpoint may expose sensitive data".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: endpoint.line_number,
-                    column: 0,
+                    column_start: 0,
+                    column_end: 0,
                     source_code: endpoint.path.clone(),
                     recommendation: "Implement proper data filtering and access controls".to_string(),
-                    location: Location {
-                        file: source_file.path.to_string_lossy().to_string(),
-                        line: endpoint.line_number,
-                        column: 0,
-                    },
-                    code_snippet: Some(endpoint.path.clone()),
+                    owasp: None,
+                    references: Vec::new(),
+                    confidence: 0.8,
                 });
             }
         }

@@ -228,15 +228,19 @@ impl SemgrepVulnerability {
         Vulnerability {
             id: self.rule_id.clone(),
             cwe: self.cwe.clone(),
-            vulnerability_type: format!("Semgrep: {}", self.rule_id),
+            title: format!("Semgrep: {}", self.rule_id),
             severity: self.severity.clone(),
             category: self.category.clone(),
             description: self.message.clone(),
             file_path: self.file_path.to_string_lossy().to_string(),
             line_number: self.line_number,
-            column: self.column,
+            column_start: self.column,
+            column_end: self.column + self.matched_text.len(),
             source_code: self.matched_text.clone(),
             recommendation: self.recommendation.clone(),
+            owasp: None,
+            references: Vec::new(),
+            confidence: 0.9,
         }
     }
     

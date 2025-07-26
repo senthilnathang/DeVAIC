@@ -107,7 +107,7 @@ pub struct ASTHotspot {
     pub start_byte: usize,
     pub end_byte: usize,
     pub line: usize,
-    pub column: usize,
+    pub column_start: usize,
     pub confidence: f32,
     pub vulnerability_types: Vec<String>,
 }
@@ -418,7 +418,7 @@ impl OptimizedASTParser {
                                 start_byte: node.start_byte(),
                                 end_byte: node.end_byte(),
                                 line: node.start_position().row,
-                                column: node.start_position().column,
+                                column_start: node.start_position().column,
                                 confidence,
                                 vulnerability_types: self.get_vulnerability_types_for_pattern(pattern_type, keyword),
                             });

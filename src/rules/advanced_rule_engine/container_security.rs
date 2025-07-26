@@ -12,8 +12,8 @@
 use crate::{
     error::Result,
     parsers::{ParsedAst, SourceFile},
-    rules::advanced_rule_engine::*,
-    Severity, Vulnerability, Location,
+    rules::advanced_rule_engine::{api_security::SecurityImpact, *},
+    Severity, Vulnerability,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -480,6 +480,51 @@ pub struct CacheSecurity {
 
 // Kubernetes Security Structures
 
+/// Network policy checks configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NetworkPolicyChecks {
+    pub enabled: bool,
+    pub check_ingress_rules: bool,
+    pub check_egress_rules: bool,
+    pub check_default_deny: bool,
+}
+
+/// Admission controller checks configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AdmissionControllerChecks {
+    pub enabled: bool,
+    pub check_pod_security_policy: bool,
+    pub check_opa_gatekeeper: bool,
+    pub check_image_policy: bool,
+}
+
+/// Resource quota checks configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ResourceQuotaChecks {
+    pub enabled: bool,
+    pub check_memory_limits: bool,
+    pub check_cpu_limits: bool,
+    pub check_storage_limits: bool,
+}
+
+/// Secret management checks configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SecretManagementChecks {
+    pub enabled: bool,
+    pub check_secret_encryption: bool,
+    pub check_secret_rotation: bool,
+    pub check_secret_access: bool,
+}
+
+/// Service mesh security configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ServiceMeshSecurity {
+    pub enabled: bool,
+    pub check_mtls: bool,
+    pub check_service_accounts: bool,
+    pub check_traffic_policies: bool,
+}
+
 /// Kubernetes security rule
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct KubernetesSecurityRule {
@@ -759,21 +804,19 @@ impl ContainerSecurityAnalyzer {
                     vulnerabilities.push(Vulnerability {
                         id: format!("DOCKER-USER-001-{}", line_number),
                         cwe: Some("CWE-250".to_string()),
-                        vulnerability_type: "Privileged User".to_string(),
+                        title: "Privileged User".to_string(),
                         severity: Severity::High,
                         category: "configuration".to_string(),
                         description: "Container running as root user".to_string(),
                         file_path: source_file.path.to_string_lossy().to_string(),
                         line_number,
-                        column: 0,
+                        column_start: 0,
+                        column_end: line.len(),
                         source_code: line.to_string(),
                         recommendation: "Use USER instruction to run as non-root user".to_string(),
-                        location: Location {
-                            file: source_file.path.to_string_lossy().to_string(),
-                            line: line_number,
-                            column: 0,
-                        },
-                        code_snippet: Some(line.to_string()),
+                        owasp: Some("A05:2021 – Security Misconfiguration".to_string()),
+                        references: vec!["https://owasp.org/Top10/A05_2021-Security_Misconfiguration/".to_string()],
+                        confidence: 0.9,
                     });
                 }
             }
@@ -784,21 +827,19 @@ impl ContainerSecurityAnalyzer {
                     vulnerabilities.push(Vulnerability {
                         id: format!("DOCKER-SECRET-001-{}", line_number),
                         cwe: Some("CWE-798".to_string()),
-                        vulnerability_type: "Secret Exposure".to_string(),
+                        title: "Secret Exposure".to_string(),
                         severity: Severity::Critical,
                         category: "secrets".to_string(),
                         description: "Secrets exposed in Dockerfile environment variables".to_string(),
                         file_path: source_file.path.to_string_lossy().to_string(),
                         line_number,
-                        column: 0,
+                        column_start: 0,
+                        column_end: line.len(),
                         source_code: line.to_string(),
                         recommendation: "Use Docker secrets or external secret management".to_string(),
-                        location: Location {
-                            file: source_file.path.to_string_lossy().to_string(),
-                            line: line_number,
-                            column: 0,
-                        },
-                        code_snippet: Some(line.to_string()),
+                        owasp: Some("A05:2021 – Security Misconfiguration".to_string()),
+                        references: vec!["https://owasp.org/Top10/A05_2021-Security_Misconfiguration/".to_string()],
+                        confidence: 0.8,
                     });
                 }
             }
@@ -809,21 +850,19 @@ impl ContainerSecurityAnalyzer {
                     vulnerabilities.push(Vulnerability {
                         id: format!("DOCKER-PROTO-001-{}", line_number),
                         cwe: Some("CWE-319".to_string()),
-                        vulnerability_type: "Insecure Protocol".to_string(),
+                        title: "Insecure Protocol".to_string(),
                         severity: Severity::Medium,
                         category: "network".to_string(),
                         description: "Insecure protocol used in Dockerfile".to_string(),
                         file_path: source_file.path.to_string_lossy().to_string(),
                         line_number,
-                        column: 0,
+                        column_start: 0,
+                        column_end: line.len(),
                         source_code: line.to_string(),
                         recommendation: "Use secure protocols (HTTPS, SFTP, SSH)".to_string(),
-                        location: Location {
-                            file: source_file.path.to_string_lossy().to_string(),
-                            line: line_number,
-                            column: 0,
-                        },
-                        code_snippet: Some(line.to_string()),
+                        owasp: Some("A05:2021 – Security Misconfiguration".to_string()),
+                        references: vec!["https://owasp.org/Top10/A05_2021-Security_Misconfiguration/".to_string()],
+                        confidence: 0.8,
                     });
                 }
             }
@@ -834,21 +873,19 @@ impl ContainerSecurityAnalyzer {
                     vulnerabilities.push(Vulnerability {
                         id: format!("DOCKER-CMD-001-{}", line_number),
                         cwe: Some("CWE-78".to_string()),
-                        vulnerability_type: "Dangerous Command".to_string(),
+                        title: "Dangerous Command".to_string(),
                         severity: Severity::High,
                         category: "configuration".to_string(),
                         description: "Dangerous command detected in Dockerfile".to_string(),
                         file_path: source_file.path.to_string_lossy().to_string(),
                         line_number,
-                        column: 0,
+                        column_start: 0,
+                        column_end: line.len(),
                         source_code: line.to_string(),
                         recommendation: "Avoid using sudo, overly permissive chmod, and root ownership changes".to_string(),
-                        location: Location {
-                            file: source_file.path.to_string_lossy().to_string(),
-                            line: line_number,
-                            column: 0,
-                        },
-                        code_snippet: Some(line.to_string()),
+                        owasp: Some("A05:2021 – Security Misconfiguration".to_string()),
+                        references: vec!["https://owasp.org/Top10/A05_2021-Security_Misconfiguration/".to_string()],
+                        confidence: 0.8,
                     });
                 }
             }
@@ -870,21 +907,19 @@ impl ContainerSecurityAnalyzer {
                     vulnerabilities.push(Vulnerability {
                         id: format!("K8S-PRIV-001-{}", line_number),
                         cwe: Some("CWE-250".to_string()),
-                        vulnerability_type: "Privileged Pod".to_string(),
+                        title: "Privileged Pod".to_string(),
                         severity: Severity::High,
                         category: "configuration".to_string(),
                         description: "Pod configured with privileged access".to_string(),
                         file_path: source_file.path.to_string_lossy().to_string(),
                         line_number,
-                        column: 0,
+                        column_start: 0,
+                        column_end: line.len(),
                         source_code: line.to_string(),
                         recommendation: "Remove privileged access and use least privilege principle".to_string(),
-                        location: Location {
-                            file: source_file.path.to_string_lossy().to_string(),
-                            line: line_number,
-                            column: 0,
-                        },
-                        code_snippet: Some(line.to_string()),
+                        owasp: Some("A05:2021 – Security Misconfiguration".to_string()),
+                        references: vec!["https://kubernetes.io/docs/concepts/security/pod-security-standards/".to_string()],
+                        confidence: 0.9,
                     });
                 }
             }
@@ -895,21 +930,19 @@ impl ContainerSecurityAnalyzer {
                     vulnerabilities.push(Vulnerability {
                         id: format!("K8S-CAP-001-{}", line_number),
                         cwe: Some("CWE-250".to_string()),
-                        vulnerability_type: "Unsafe Capability".to_string(),
+                        title: "Unsafe Capability".to_string(),
                         severity: Severity::High,
                         category: "configuration".to_string(),
                         description: "Container granted unsafe Linux capability".to_string(),
                         file_path: source_file.path.to_string_lossy().to_string(),
                         line_number,
-                        column: 0,
+                        column_start: 0,
+                        column_end: line.len(),
                         source_code: line.to_string(),
                         recommendation: "Remove unsafe capabilities and use minimal required capabilities".to_string(),
-                        location: Location {
-                            file: source_file.path.to_string_lossy().to_string(),
-                            line: line_number,
-                            column: 0,
-                        },
-                        code_snippet: Some(line.to_string()),
+                        owasp: Some("A05:2021 – Security Misconfiguration".to_string()),
+                        references: vec!["https://kubernetes.io/docs/concepts/security/pod-security-standards/".to_string()],
+                        confidence: 0.9,
                     });
                 }
             }
@@ -920,21 +953,19 @@ impl ContainerSecurityAnalyzer {
             vulnerabilities.push(Vulnerability {
                 id: "K8S-SEC-CTX-001".to_string(),
                 cwe: Some("CWE-276".to_string()),
-                vulnerability_type: "Missing Security Context".to_string(),
+                title: "Missing Security Context".to_string(),
                 severity: Severity::Medium,
                 category: "configuration".to_string(),
                 description: "Pod/Container lacks security context configuration".to_string(),
                 file_path: source_file.path.to_string_lossy().to_string(),
                 line_number: 1,
-                column: 0,
+                column_start: 0,
+                column_end: 0,
                 source_code: "Missing securityContext".to_string(),
                 recommendation: "Add securityContext with runAsNonRoot, readOnlyRootFilesystem, and other security settings".to_string(),
-                location: Location {
-                    file: source_file.path.to_string_lossy().to_string(),
-                    line: 1,
-                    column: 0,
-                },
-                code_snippet: Some("Missing securityContext".to_string()),
+                owasp: Some("A05:2021 – Security Misconfiguration".to_string()),
+                references: vec!["https://kubernetes.io/docs/tasks/configure-pod-container/security-context/".to_string()],
+                confidence: 0.9,
             });
         }
         
@@ -953,21 +984,19 @@ impl ContainerSecurityAnalyzer {
                     vulnerabilities.push(Vulnerability {
                         id: format!("COMPOSE-PRIV-001-{}", line_number),
                         cwe: Some("CWE-250".to_string()),
-                        vulnerability_type: "Privileged Container".to_string(),
+                        title: "Privileged Container".to_string(),
                         severity: Severity::High,
                         category: "configuration".to_string(),
                         description: "Docker Compose service configured with privileged access".to_string(),
                         file_path: source_file.path.to_string_lossy().to_string(),
                         line_number,
-                        column: 0,
+                        column_start: 0,
+                        column_end: line.len(),
                         source_code: line.to_string(),
                         recommendation: "Remove privileged flag and use specific capabilities if needed".to_string(),
-                        location: Location {
-                            file: source_file.path.to_string_lossy().to_string(),
-                            line: line_number,
-                            column: 0,
-                        },
-                        code_snippet: Some(line.to_string()),
+                        owasp: Some("A05:2021 – Security Misconfiguration".to_string()),
+                        references: vec!["https://owasp.org/Top10/A05_2021-Security_Misconfiguration/".to_string()],
+                        confidence: 0.8,
                     });
                 }
             }

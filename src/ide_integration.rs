@@ -321,7 +321,7 @@ impl DevaicLanguageServer {
         let mut fixes = Vec::new();
         
         // Cache key for quick fixes
-        let cache_key = format!("{}_{}", vuln.id, vuln.vulnerability_type);
+        let cache_key = format!("{}_{}", vuln.id, vuln.title);
         
         // Check cache first
         if let Some(cached_fixes) = self.quick_fix_cache.get(&cache_key) {
@@ -331,7 +331,7 @@ impl DevaicLanguageServer {
         // Generate fixes based on vulnerability type
         match vuln.category.as_str() {
             "injection" => {
-                if vuln.vulnerability_type.contains("SQL") {
+                if vuln.title.contains("SQL") {
                     fixes.push(QuickFix {
                         id: "sql_injection_fix_1".to_string(),
                         title: "Use Parameterized Query".to_string(),
@@ -341,7 +341,7 @@ impl DevaicLanguageServer {
                         confidence: 0.9,
                         safety_level: SafetyLevel::Safe,
                     });
-                } else if vuln.vulnerability_type.contains("Command") {
+                } else if vuln.title.contains("Command") {
                     fixes.push(QuickFix {
                         id: "cmd_injection_fix_1".to_string(),
                         title: "Sanitize Input".to_string(),
@@ -466,11 +466,11 @@ impl DevaicLanguageServer {
             let range = Range {
                 start: Position {
                     line: (vuln.line_number.saturating_sub(1)) as u32,
-                    character: vuln.column as u32,
+                    character: vuln.column_start as u32,
                 },
                 end: Position {
                     line: (vuln.line_number.saturating_sub(1)) as u32,
-                    character: (vuln.column + vuln.source_code.len()) as u32,
+                    character: vuln.column_end as u32,
                 },
             };
             
@@ -682,7 +682,7 @@ impl LanguageServer for DevaicLanguageServer {
                         ## 💡 **Recommendation**\n{}\n\n\
                         ## 🔗 **Related Issues**\n{}\n\n\
                         ---\n*DeVAIC Enhanced Security Analysis*",
-                        vuln.vulnerability_type,
+                        vuln.title,
                         vuln.description,
                         vuln.severity,
                         enhanced_vuln.confidence * 100.0,
@@ -711,11 +711,11 @@ impl LanguageServer for DevaicLanguageServer {
                         range: Some(Range {
                             start: Position {
                                 line: vuln_line,
-                                character: vuln.column as u32,
+                                character: vuln.column_start as u32,
                             },
                             end: Position {
                                 line: vuln_line,
-                                character: (vuln.column + vuln.source_code.len()) as u32,
+                                character: vuln.column_end as u32,
                             },
                         }),
                     }));

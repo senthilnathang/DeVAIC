@@ -164,15 +164,19 @@ impl ZigParser {
                 vulnerabilities.push(Vulnerability {
                     id: "ZIG-MEM-001".to_string(),
                     cwe: Some("CWE-119".to_string()),
-                    vulnerability_type: "Unsafe Memory Access".to_string(),
+                    title: "Unsafe Memory Access".to_string(),
                     severity: Severity::High,
                     category: "vulnerability".to_string(),
                     description: "Unsafe pointer cast detected - may lead to memory corruption".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Use safe alternatives or add proper bounds checking and validation".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.8,
                 });
             }
 
@@ -181,15 +185,19 @@ impl ZigParser {
                 vulnerabilities.push(Vulnerability {
                     id: "ZIG-UB-001".to_string(),
                     cwe: Some("CWE-758".to_string()),
-                    vulnerability_type: "Undefined Behavior".to_string(),
+                    title: "Undefined Behavior".to_string(),
                     severity: Severity::Critical,
                     category: "vulnerability".to_string(),
                     description: "Undefined behavior detected - unpredictable program behavior".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Replace undefined behavior with safe alternatives or proper error handling".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.9,
                 });
             }
 
@@ -198,15 +206,19 @@ impl ZigParser {
                 vulnerabilities.push(Vulnerability {
                     id: "ZIG-ALLOC-001".to_string(),
                     cwe: Some("CWE-401".to_string()),
-                    vulnerability_type: "Memory Management Issue".to_string(),
+                    title: "Memory Management Issue".to_string(),
                     severity: Severity::Medium,
                     category: "vulnerability".to_string(),
                     description: "Direct allocator usage without defer - potential memory leak".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Use defer or errdefer to ensure proper memory cleanup".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.75,
                 });
             }
 
@@ -215,15 +227,19 @@ impl ZigParser {
                 vulnerabilities.push(Vulnerability {
                     id: "ZIG-INT-001".to_string(),
                     cwe: Some("CWE-190".to_string()),
-                    vulnerability_type: "Integer Overflow".to_string(),
+                    title: "Integer Overflow".to_string(),
                     severity: Severity::Medium,
                     category: "vulnerability".to_string(),
                     description: "Wrapping arithmetic operation - potential integer overflow".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Use checked arithmetic or validate input ranges".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.8,
                 });
             }
 
@@ -232,15 +248,19 @@ impl ZigParser {
                 vulnerabilities.push(Vulnerability {
                     id: "ZIG-CAST-001".to_string(),
                     cwe: Some("CWE-704".to_string()),
-                    vulnerability_type: "Unsafe Type Cast".to_string(),
+                    title: "Unsafe Type Cast".to_string(),
                     severity: Severity::Medium,
                     category: "vulnerability".to_string(),
                     description: "Unsafe type cast detected - may cause data corruption".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Validate cast safety or use safe alternatives".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.75,
                 });
             }
 
@@ -249,15 +269,19 @@ impl ZigParser {
                 vulnerabilities.push(Vulnerability {
                     id: "ZIG-ERROR-001".to_string(),
                     cwe: Some("CWE-252".to_string()),
-                    vulnerability_type: "Unchecked Error Condition".to_string(),
+                    title: "Unchecked Error Condition".to_string(),
                     severity: Severity::Medium,
                     category: "vulnerability".to_string(),
                     description: "Error ignored in catch block - may hide failures".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Handle errors appropriately or log for debugging".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.75,
                 });
             }
 
@@ -266,15 +290,19 @@ impl ZigParser {
                 vulnerabilities.push(Vulnerability {
                     id: "ZIG-SECRET-001".to_string(),
                     cwe: Some("CWE-798".to_string()),
-                    vulnerability_type: "Hardcoded Credentials".to_string(),
+                    title: "Hardcoded Credentials".to_string(),
                     severity: Severity::Critical,
                     category: "authentication".to_string(),
                     description: "Hardcoded secret detected in Zig code".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Move secrets to environment variables or secure configuration".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.9,
                 });
             }
 
@@ -283,15 +311,19 @@ impl ZigParser {
                 vulnerabilities.push(Vulnerability {
                     id: "ZIG-FILE-001".to_string(),
                     cwe: Some("CWE-22".to_string()),
-                    vulnerability_type: "Path Traversal Risk".to_string(),
+                    title: "Path Traversal Risk".to_string(),
                     severity: Severity::High,
                     category: "security".to_string(),
                     description: "File operation without path validation - path traversal risk".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Validate and sanitize file paths before operations".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.8,
                 });
             }
 
@@ -300,15 +332,19 @@ impl ZigParser {
                 vulnerabilities.push(Vulnerability {
                     id: "ZIG-DEBUG-001".to_string(),
                     cwe: Some("CWE-489".to_string()),
-                    vulnerability_type: "Debug Code in Production".to_string(),
+                    title: "Debug Code in Production".to_string(),
                     severity: Severity::Low,
                     category: "security".to_string(),
                     description: "Debug code detected - may leak sensitive information".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Remove debug statements from production code".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.7,
                 });
             }
         }

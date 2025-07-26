@@ -190,7 +190,7 @@ patterns:
         let vulnerabilities = rules.analyze(&source_file, &ast).unwrap();
         assert_eq!(vulnerabilities.len(), 1);
         assert_eq!(vulnerabilities[0].id, "test-sql-injection");
-        assert_eq!(vulnerabilities[0].vulnerability_type, "SQL Injection Risk");
+        assert_eq!(vulnerabilities[0].title, "SQL Injection Risk");
     }
 
     #[test]

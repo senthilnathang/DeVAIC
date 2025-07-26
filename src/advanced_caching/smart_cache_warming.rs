@@ -842,7 +842,7 @@ impl SmartCacheWarmer {
     pub async fn new(
         config: CacheWarmingConfig,
         distributed_cache: Option<Arc<DistributedCache>>,
-    ) -> Result<Self, Box<dyn std::error::Error>> {
+    ) -> Result<Self, Box<dyn std::error::Error + Send + Sync>> {
         let pattern_analyzer = Arc::new(RwLock::new(AccessPatternAnalyzer::new(&config)));
         let predictor = Arc::new(RwLock::new(CachePredictionEngine::new()));
         let scheduler = Arc::new(RwLock::new(WarmingScheduler::new()));
@@ -933,7 +933,7 @@ impl SmartCacheWarmer {
     }
 
     /// Execute warming operations
-    pub async fn execute_warming(&self, predictions: Vec<CachePrediction>) -> Result<WarmingResults, Box<dyn std::error::Error>> {
+    pub async fn execute_warming(&self, predictions: Vec<CachePrediction>) -> Result<WarmingResults, Box<dyn std::error::Error + Send + Sync>> {
         let mut results = WarmingResults {
             total_predictions: predictions.len(),
             successful_warms: 0,
@@ -988,7 +988,8 @@ impl SmartCacheWarmer {
         loop {
             interval.tick().await;
             
-            if let Ok(predictions) = self.generate_predictions(30).await { // 30-minute horizon
+            let predictions = self.generate_predictions(30).await; // 30-minute horizon
+            if !predictions.is_empty() {
                 if let Ok(_) = self.execute_warming(predictions).await {
                     // Update performance metrics
                     self.update_performance_metrics().await;
@@ -1035,7 +1036,7 @@ impl SmartCacheWarmer {
         monitor.resource_overhead < 0.8 // Don't warm if resource usage is high
     }
 
-    async fn warm_cache_entry(&self, prediction: &CachePrediction) -> Result<(), Box<dyn std::error::Error>> {
+    async fn warm_cache_entry(&self, prediction: &CachePrediction) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         // Implementation would actually warm the cache entry
         // This might involve generating the cache data or fetching from primary source
         Ok(())
@@ -1098,7 +1099,7 @@ impl AccessPatternAnalyzer {
             anomaly_detector: AnomalyDetector {
                 baseline_metrics: BaselineMetrics::default(),
                 anomaly_threshold: 2.0,
-                detection_window: Duration::from_hours(1),
+                detection_window: Duration::from_secs(3600), // 1 hour
                 anomalies: VecDeque::new(),
             },
             analysis_stats: PatternAnalysisStats::default(),
@@ -1172,7 +1173,7 @@ impl CachePreloader {
 }
 
 impl WarmingMLEngine {
-    pub fn new(_config: &WarmingMLConfig) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn new(_config: &WarmingMLConfig) -> Result<Self, Box<dyn std::error::Error + Send + Sync>> {
         Ok(Self {
             models: HashMap::new(),
             training_data: VecDeque::new(),

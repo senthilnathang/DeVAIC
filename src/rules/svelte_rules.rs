@@ -188,15 +188,19 @@ impl SvelteRules {
                 vulnerabilities.push(Vulnerability {
                     id: "SVELTE-XSS-001".to_string(),
                     cwe: Some("CWE-79".to_string()),
-                    vulnerability_type: "Cross-Site Scripting (XSS)".to_string(),
+                    owasp: Some("A03:2021".to_string()),
+                    title: "Cross-Site Scripting (XSS)".to_string(),
                     severity: Severity::High,
                     category: "security".to_string(),
                     description: "Unsafe {@html} binding detected - may allow XSS attacks".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Sanitize HTML content or use safe binding alternatives. Consider using a library like DOMPurify.".to_string(),
+                    references: vec!["https://owasp.org/www-community/attacks/xss/".to_string()],
+                    confidence: 0.9,
                 });
             }
 
@@ -205,15 +209,19 @@ impl SvelteRules {
                 vulnerabilities.push(Vulnerability {
                     id: "SVELTE-XSS-002".to_string(),
                     cwe: Some("CWE-79".to_string()),
-                    vulnerability_type: "Unescaped User Input".to_string(),
+                    owasp: Some("A03:2021".to_string()),
+                    title: "Unescaped User Input".to_string(),
                     severity: Severity::Critical,
                     category: "security".to_string(),
                     description: "User input directly bound to {@html} - critical XSS vulnerability".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Never bind user input directly to {@html}. Implement proper input validation and sanitization.".to_string(),
+                    references: vec!["https://owasp.org/www-community/attacks/xss/".to_string()],
+                    confidence: 0.95,
                 });
             }
 
@@ -222,15 +230,19 @@ impl SvelteRules {
                 vulnerabilities.push(Vulnerability {
                     id: "SVELTE-REACTIVE-001".to_string(),
                     cwe: Some("CWE-79".to_string()),
-                    vulnerability_type: "Reactive Statement XSS".to_string(),
+                    owasp: Some("A03:2021".to_string()),
+                    title: "Reactive Statement XSS".to_string(),
                     severity: Severity::High,
                     category: "security".to_string(),
                     description: "Reactive statement performing unsafe DOM manipulation".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Avoid direct DOM manipulation in reactive statements. Use Svelte's safe binding mechanisms.".to_string(),
+                    references: vec!["https://svelte.dev/docs#component-format-script-3-$-marks-a-statement-as-reactive".to_string()],
+                    confidence: 0.85,
                 });
             }
 
@@ -239,15 +251,19 @@ impl SvelteRules {
                 vulnerabilities.push(Vulnerability {
                     id: "SVELTE-REACTIVE-002".to_string(),
                     cwe: Some("CWE-95".to_string()),
-                    vulnerability_type: "Code Injection".to_string(),
+                    owasp: Some("A03:2021".to_string()),
+                    title: "Code Injection".to_string(),
                     severity: Severity::Critical,
                     category: "security".to_string(),
                     description: "Reactive statement using eval or Function constructor - code injection risk".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Never use eval, Function, or timer functions with dynamic content in reactive statements.".to_string(),
+                    references: vec!["https://owasp.org/www-community/attacks/Code_Injection".to_string()],
+                    confidence: 0.95,
                 });
             }
 
@@ -256,15 +272,19 @@ impl SvelteRules {
                 vulnerabilities.push(Vulnerability {
                     id: "SVELTE-STORE-001".to_string(),
                     cwe: Some("CWE-20".to_string()),
-                    vulnerability_type: "Insufficient Input Validation".to_string(),
+                    owasp: Some("A03:2021".to_string()),
+                    title: "Insufficient Input Validation".to_string(),
                     severity: Severity::Medium,
                     category: "security".to_string(),
                     description: "Writable store without input validation - may accept malicious data".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Implement validation functions for writable stores to prevent malicious data injection.".to_string(),
+                    references: vec!["https://svelte.dev/docs#run-time-svelte-store-writable".to_string()],
+                    confidence: 0.7,
                 });
             }
 
@@ -273,15 +293,19 @@ impl SvelteRules {
                 vulnerabilities.push(Vulnerability {
                     id: "SVELTE-KIT-001".to_string(),
                     cwe: Some("CWE-20".to_string()),
-                    vulnerability_type: "Form Action Without Validation".to_string(),
+                    owasp: Some("A03:2021".to_string()),
+                    title: "Form Action Without Validation".to_string(),
                     severity: Severity::High,
                     category: "security".to_string(),
                     description: "SvelteKit form action without input validation".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Implement comprehensive input validation and sanitization for all form actions.".to_string(),
+                    references: vec!["https://kit.svelte.dev/docs/form-actions".to_string()],
+                    confidence: 0.8,
                 });
             }
 
@@ -290,15 +314,19 @@ impl SvelteRules {
                 vulnerabilities.push(Vulnerability {
                     id: "SVELTE-KIT-002".to_string(),
                     cwe: Some("CWE-20".to_string()),
-                    vulnerability_type: "API Endpoint Without Validation".to_string(),
+                    owasp: Some("A03:2021".to_string()),
+                    title: "API Endpoint Without Validation".to_string(),
                     severity: Severity::High,
                     category: "security".to_string(),
                     description: "SvelteKit API endpoint processing request data without validation".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Validate and sanitize all request data in API endpoints before processing.".to_string(),
+                    references: vec!["https://kit.svelte.dev/docs/routing#server".to_string()],
+                    confidence: 0.8,
                 });
             }
 
@@ -307,15 +335,19 @@ impl SvelteRules {
                 vulnerabilities.push(Vulnerability {
                     id: "SVELTE-KIT-003".to_string(),
                     cwe: Some("CWE-862".to_string()),
-                    vulnerability_type: "Missing Authorization".to_string(),
+                    owasp: Some("A01:2021".to_string()),
+                    title: "Missing Authorization".to_string(),
                     severity: Severity::High,
                     category: "security".to_string(),
                     description: "SvelteKit handle hook without authorization checks".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Implement proper authentication and authorization checks in handle hooks.".to_string(),
+                    references: vec!["https://kit.svelte.dev/docs/hooks#server-hooks-handle".to_string()],
+                    confidence: 0.75,
                 });
             }
 
@@ -324,15 +356,19 @@ impl SvelteRules {
                 vulnerabilities.push(Vulnerability {
                     id: "SVELTE-CONTEXT-001".to_string(),
                     cwe: Some("CWE-200".to_string()),
-                    vulnerability_type: "Information Exposure".to_string(),
+                    owasp: Some("A02:2021".to_string()),
+                    title: "Information Exposure".to_string(),
                     severity: Severity::Medium,
                     category: "security".to_string(),
                     description: "Sensitive data shared through Svelte context - may leak to child components".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Avoid sharing sensitive data through context. Use secure state management alternatives.".to_string(),
+                    references: vec!["https://svelte.dev/docs#run-time-svelte-setcontext".to_string()],
+                    confidence: 0.65,
                 });
             }
 
@@ -341,15 +377,19 @@ impl SvelteRules {
                 vulnerabilities.push(Vulnerability {
                     id: "SVELTE-EVENT-001".to_string(),
                     cwe: Some("CWE-79".to_string()),
-                    vulnerability_type: "Event Handler XSS".to_string(),
+                    owasp: Some("A03:2021".to_string()),
+                    title: "Event Handler XSS".to_string(),
                     severity: Severity::High,
                     category: "security".to_string(),
                     description: "Event handler performing unsafe operations - XSS risk".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Sanitize data and avoid unsafe operations in event handlers.".to_string(),
+                    references: vec!["https://svelte.dev/docs#template-syntax-element-directives-on-eventname".to_string()],
+                    confidence: 0.8,
                 });
             }
 
@@ -358,15 +398,19 @@ impl SvelteRules {
                 vulnerabilities.push(Vulnerability {
                     id: "SVELTE-TEMPLATE-001".to_string(),
                     cwe: Some("CWE-94".to_string()),
-                    vulnerability_type: "Template Injection".to_string(),
+                    owasp: Some("A03:2021".to_string()),
+                    title: "Template Injection".to_string(),
                     severity: Severity::High,
                     category: "security".to_string(),
                     description: "Template expression using user input - potential injection vulnerability".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Validate and sanitize user input before using in template expressions.".to_string(),
+                    references: vec!["https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/07-Input_Validation_Testing/18-Testing_for_Server_Side_Template_Injection".to_string()],
+                    confidence: 0.85,
                 });
             }
 
@@ -375,15 +419,19 @@ impl SvelteRules {
                 vulnerabilities.push(Vulnerability {
                     id: "SVELTE-NAV-001".to_string(),
                     cwe: Some("CWE-601".to_string()),
-                    vulnerability_type: "Open Redirect".to_string(),
+                    owasp: Some("A01:2021".to_string()),
+                    title: "Open Redirect".to_string(),
                     severity: Severity::Medium,
                     category: "security".to_string(),
                     description: "Dynamic navigation target - potential open redirect vulnerability".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Validate navigation targets against allowlist before using goto().".to_string(),
+                    references: vec!["https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html".to_string()],
+                    confidence: 0.7,
                 });
             }
 
@@ -392,15 +440,19 @@ impl SvelteRules {
                 vulnerabilities.push(Vulnerability {
                     id: "SVELTE-ROUTE-001".to_string(),
                     cwe: Some("CWE-20".to_string()),
-                    vulnerability_type: "Parameter Injection".to_string(),
+                    owasp: Some("A03:2021".to_string()),
+                    title: "Parameter Injection".to_string(),
                     severity: Severity::Medium,
                     category: "security".to_string(),
                     description: "Route parameter used without validation - injection risk".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Validate and sanitize route parameters before use.".to_string(),
+                    references: vec!["https://kit.svelte.dev/docs/routing#page-params".to_string()],
+                    confidence: 0.7,
                 });
             }
 
@@ -409,15 +461,19 @@ impl SvelteRules {
                 vulnerabilities.push(Vulnerability {
                     id: "SVELTE-SECRET-001".to_string(),
                     cwe: Some("CWE-798".to_string()),
-                    vulnerability_type: "Hardcoded Secrets".to_string(),
+                    owasp: Some("A07:2021".to_string()),
+                    title: "Hardcoded Secrets".to_string(),
                     severity: Severity::Critical,
                     category: "authentication".to_string(),
                     description: "Hardcoded API secret detected in Svelte code".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Move secrets to environment variables and use proper secret management.".to_string(),
+                    references: vec!["https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html".to_string()],
+                    confidence: 0.9,
                 });
             }
 
@@ -426,15 +482,19 @@ impl SvelteRules {
                 vulnerabilities.push(Vulnerability {
                     id: "SVELTE-ENV-001".to_string(),
                     cwe: Some("CWE-200".to_string()),
-                    vulnerability_type: "Public Environment Secret".to_string(),
+                    owasp: Some("A02:2021".to_string()),
+                    title: "Public Environment Secret".to_string(),
                     severity: Severity::High,
                     category: "security".to_string(),
                     description: "Secret value in PUBLIC_ environment variable - will be exposed to client".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Never put secrets in PUBLIC_ environment variables. Use server-side environment variables instead.".to_string(),
+                    references: vec!["https://kit.svelte.dev/docs/modules#$env-static-public".to_string()],
+                    confidence: 0.85,
                 });
             }
 
@@ -443,15 +503,19 @@ impl SvelteRules {
                 vulnerabilities.push(Vulnerability {
                     id: "SVELTE-WS-001".to_string(),
                     cwe: Some("CWE-346".to_string()),
-                    vulnerability_type: "Origin Validation Bypass".to_string(),
+                    owasp: Some("A05:2021".to_string()),
+                    title: "Origin Validation Bypass".to_string(),
                     severity: Severity::Medium,
                     category: "security".to_string(),
                     description: "WebSocket connection without origin validation".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Implement origin validation for WebSocket connections to prevent CSRF attacks.".to_string(),
+                    references: vec!["https://cheatsheetseries.owasp.org/cheatsheets/HTML5_Security_Cheat_Sheet.html#websockets".to_string()],
+                    confidence: 0.75,
                 });
             }
         }

@@ -428,7 +428,7 @@ impl OptimizedVulnerabilityAggregator {
         use std::hash::{Hash, Hasher};
         let mut hasher = siphasher::sip::SipHasher::new();
         
-        vuln.vulnerability_type.hash(&mut hasher);
+        vuln.title.hash(&mut hasher);
         vuln.file_path.hash(&mut hasher);
         vuln.line_number.hash(&mut hasher);
         vuln.source_code.hash(&mut hasher);
@@ -481,16 +481,20 @@ mod tests {
         
         let vuln = Vulnerability {
             id: "test".to_string(),
-            vulnerability_type: "SQL Injection".to_string(),
+            title: "SQL Injection".to_string(),
             severity: crate::Severity::High,
             category: "security".to_string(),
             description: "Test vulnerability".to_string(),
             file_path: "test.py".to_string(),
             line_number: 10,
-            column: 5,
+            column_start: 5,
+            column_end: 5,
             source_code: "test code".to_string(),
             recommendation: "Fix this".to_string(),
             cwe: None,
+            owasp: None,
+            references: vec![],
+            confidence: 0.8,
         };
         
         aggregator.add(vuln.clone());

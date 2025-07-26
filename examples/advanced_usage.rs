@@ -93,7 +93,7 @@ fn custom_rules_compliance_example() -> devaic::Result<()> {
         devaic::Vulnerability {
             id: "TEST-001".to_string(),
             cwe: Some("CWE-89".to_string()),
-            vulnerability_type: "SQL Injection".to_string(),
+            title: "SQL Injection".to_string(),
             severity: Severity::High,
             category: "injection".to_string(),
             description: "Potential SQL injection vulnerability".to_string(),
@@ -127,7 +127,7 @@ fn full_featured_analysis() -> devaic::Result<()> {
         devaic::Vulnerability {
             id: "VULN-001".to_string(),
             cwe: Some("CWE-79".to_string()),
-            vulnerability_type: "Cross-Site Scripting".to_string(),
+            title: "Cross-Site Scripting".to_string(),
             severity: Severity::High,
             category: "injection".to_string(),
             description: "Potential XSS vulnerability".to_string(),
@@ -140,7 +140,7 @@ fn full_featured_analysis() -> devaic::Result<()> {
         devaic::Vulnerability {
             id: "VULN-002".to_string(),
             cwe: Some("CWE-327".to_string()),
-            vulnerability_type: "Weak Cryptography".to_string(),
+            title: "Weak Cryptography".to_string(),
             severity: Severity::Medium,
             category: "cryptography".to_string(),
             description: "Use of weak cryptographic algorithm".to_string(),

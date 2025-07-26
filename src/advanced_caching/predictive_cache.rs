@@ -110,6 +110,7 @@ pub struct FeatureVector {
 pub struct PredictionResult {
     pub cache_key: String,
     pub predicted_access_probability: f64,
+    #[serde(skip)]
     pub predicted_access_time: Option<Instant>,
     pub confidence_score: f64,
     pub prediction_type: PredictionType,
@@ -1433,7 +1434,7 @@ pub enum PrefetchInsightType {
 #[derive(Debug)]
 pub struct TrendAnalyzer {
     trend_models: HashMap<String, TrendModel>,
-    trend_detectors: HashMap<String, Box<dyn TrendDetectionMethod + Send + Sync>>,
+    trend_detectors: HashMap<String, Box<dyn TrendDetectionMethodTrait + Send + Sync>>,
     trend_forecasters: HashMap<String, TrendForecaster>,
     trend_analysis_results: HashMap<String, TrendAnalysisResult>,
 }
@@ -1450,7 +1451,7 @@ pub struct TrendModel {
 }
 
 /// Trend detection method trait
-pub trait TrendDetectionMethod: std::fmt::Debug {
+pub trait TrendDetectionMethodTrait: std::fmt::Debug {
     fn detect_trend(&self, data: &[f64]) -> Result<DetectedTrend, TrendDetectionError>;
     fn get_method_info(&self) -> TrendMethodInfo;
     fn configure(&mut self, config: TrendDetectionConfig) -> Result<(), TrendDetectionError>;
@@ -1772,14 +1773,14 @@ pub struct ExtractedFeatures {
 #[derive(Debug)]
 pub struct UsageForecaster {
     forecaster_id: String,
-    forecasting_models: HashMap<String, Box<dyn ForecastingModel + Send + Sync>>,
+    forecasting_models: HashMap<String, Box<dyn ForecastingModelTrait + Send + Sync>>,
     ensemble_method: ForecastEnsembleMethod,
     forecast_horizon: Duration,
     forecast_intervals: Vec<Duration>,
 }
 
 /// Forecasting model trait
-pub trait ForecastingModel: std::fmt::Debug {
+pub trait ForecastingModelTrait: std::fmt::Debug {
     fn forecast(&self, historical_data: &[f64], horizon: usize) -> Result<Vec<f64>, ForecastError>;
     fn forecast_with_intervals(&self, historical_data: &[f64], horizon: usize, confidence: f64) -> Result<Vec<(f64, f64, f64)>, ForecastError>;
     fn update_model(&mut self, new_data: &[f64]) -> Result<(), ForecastError>;
@@ -1843,7 +1844,7 @@ pub struct TrendAnalysisSummary {
 }
 
 impl PredictiveCache {
-    pub async fn new() -> Result<Self, Box<dyn std::error::Error>> {
+    pub async fn new() -> Result<Self, Box<dyn std::error::Error + Send + Sync>> {
         let config = PredictiveCacheConfig::default();
         
         Ok(Self {

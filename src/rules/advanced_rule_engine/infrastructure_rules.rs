@@ -12,8 +12,8 @@
 use crate::{
     error::Result,
     parsers::{ParsedAst, SourceFile},
-    rules::advanced_rule_engine::*,
-    Severity, Vulnerability, Location,
+    rules::advanced_rule_engine::{api_security::{ValidationRule, SecurityImpact}, *},
+    Severity, Vulnerability,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -785,21 +785,19 @@ impl IaCSecurityAnalyzer {
                     vulnerabilities.push(Vulnerability {
                         id: format!("TF-SG-001-{}", line_number),
                         cwe: Some("CWE-284".to_string()),
-                        vulnerability_type: "Overly Permissive Security Group".to_string(),
+                        title: "Overly Permissive Security Group".to_string(),
                         severity: Severity::High,
                         category: "network".to_string(),
                         description: "Security group allows unrestricted access".to_string(),
                         file_path: source_file.path.to_string_lossy().to_string(),
                         line_number,
-                        column: 0,
+                        column_start: 0,
+                        column_end: line.len(),
                         source_code: line.to_string(),
                         recommendation: "Restrict security group access to specific IP ranges and ports".to_string(),
-                        location: Location {
-                            file: source_file.path.to_string_lossy().to_string(),
-                            line: line_number,
-                            column: 0,
-                        },
-                        code_snippet: Some(line.to_string()),
+                        owasp: Some("A05:2021 – Security Misconfiguration".to_string()),
+                        references: vec!["https://owasp.org/Top10/A05_2021-Security_Misconfiguration/".to_string()],
+                        confidence: 0.8,
                     });
                 }
             }
@@ -810,21 +808,19 @@ impl IaCSecurityAnalyzer {
                     vulnerabilities.push(Vulnerability {
                         id: format!("TF-S3-001-{}", line_number),
                         cwe: Some("CWE-200".to_string()),
-                        vulnerability_type: "Public S3 Bucket".to_string(),
+                        title: "Public S3 Bucket".to_string(),
                         severity: Severity::High,
                         category: "configuration".to_string(),
                         description: "S3 bucket configured with public access".to_string(),
                         file_path: source_file.path.to_string_lossy().to_string(),
                         line_number,
-                        column: 0,
+                        column_start: 0,
+                        column_end: line.len(),
                         source_code: line.to_string(),
                         recommendation: "Remove public ACL and implement proper IAM policies".to_string(),
-                        location: Location {
-                            file: source_file.path.to_string_lossy().to_string(),
-                            line: line_number,
-                            column: 0,
-                        },
-                        code_snippet: Some(line.to_string()),
+                        owasp: Some("A05:2021 – Security Misconfiguration".to_string()),
+                        references: vec!["https://owasp.org/Top10/A05_2021-Security_Misconfiguration/".to_string()],
+                        confidence: 0.8,
                     });
                 }
             }
@@ -835,21 +831,19 @@ impl IaCSecurityAnalyzer {
                     vulnerabilities.push(Vulnerability {
                         id: format!("TF-IAM-001-{}", line_number),
                         cwe: Some("CWE-250".to_string()),
-                        vulnerability_type: "Overly Permissive IAM Policy".to_string(),
+                        title: "Overly Permissive IAM Policy".to_string(),
                         severity: Severity::High,
                         category: "authorization".to_string(),
                         description: "IAM policy uses wildcard permissions".to_string(),
                         file_path: source_file.path.to_string_lossy().to_string(),
                         line_number,
-                        column: 0,
+                        column_start: 0,
+                        column_end: line.len(),
                         source_code: line.to_string(),
                         recommendation: "Use least privilege principle and specify exact permissions".to_string(),
-                        location: Location {
-                            file: source_file.path.to_string_lossy().to_string(),
-                            line: line_number,
-                            column: 0,
-                        },
-                        code_snippet: Some(line.to_string()),
+                        owasp: Some("A05:2021 – Security Misconfiguration".to_string()),
+                        references: vec!["https://owasp.org/Top10/A05_2021-Security_Misconfiguration/".to_string()],
+                        confidence: 0.8,
                     });
                 }
             }
@@ -860,21 +854,19 @@ impl IaCSecurityAnalyzer {
                     vulnerabilities.push(Vulnerability {
                         id: format!("TF-SECRET-001-{}", line_number),
                         cwe: Some("CWE-798".to_string()),
-                        vulnerability_type: "Hardcoded Secret".to_string(),
+                        title: "Hardcoded Secret".to_string(),
                         severity: Severity::Critical,
                         category: "secrets".to_string(),
                         description: "Hardcoded secret detected in Terraform configuration".to_string(),
                         file_path: source_file.path.to_string_lossy().to_string(),
                         line_number,
-                        column: 0,
+                        column_start: 0,
+                        column_end: line.len(),
                         source_code: line.to_string(),
                         recommendation: "Use Terraform variables or external secret management".to_string(),
-                        location: Location {
-                            file: source_file.path.to_string_lossy().to_string(),
-                            line: line_number,
-                            column: 0,
-                        },
-                        code_snippet: Some(line.to_string()),
+                        owasp: Some("A05:2021 – Security Misconfiguration".to_string()),
+                        references: vec!["https://owasp.org/Top10/A05_2021-Security_Misconfiguration/".to_string()],
+                        confidence: 0.8,
                     });
                 }
             }
@@ -896,21 +888,19 @@ impl IaCSecurityAnalyzer {
                     vulnerabilities.push(Vulnerability {
                         id: format!("CF-SG-001-{}", line_number),
                         cwe: Some("CWE-284".to_string()),
-                        vulnerability_type: "Open Security Group".to_string(),
+                        title: "Open Security Group".to_string(),
                         severity: Severity::High,
                         category: "network".to_string(),
                         description: "CloudFormation security group allows unrestricted access".to_string(),
                         file_path: source_file.path.to_string_lossy().to_string(),
                         line_number,
-                        column: 0,
+                        column_start: 0,
+                        column_end: line.len(),
                         source_code: line.to_string(),
                         recommendation: "Restrict security group access to specific IP ranges".to_string(),
-                        location: Location {
-                            file: source_file.path.to_string_lossy().to_string(),
-                            line: line_number,
-                            column: 0,
-                        },
-                        code_snippet: Some(line.to_string()),
+                        owasp: Some("A05:2021 – Security Misconfiguration".to_string()),
+                        references: vec!["https://owasp.org/Top10/A05_2021-Security_Misconfiguration/".to_string()],
+                        confidence: 0.8,
                     });
                 }
             }
@@ -921,21 +911,19 @@ impl IaCSecurityAnalyzer {
                     vulnerabilities.push(Vulnerability {
                         id: format!("CF-S3-001-{}", line_number),
                         cwe: Some("CWE-200".to_string()),
-                        vulnerability_type: "Public S3 Access".to_string(),
+                        title: "Public S3 Access".to_string(),
                         severity: Severity::High,
                         category: "configuration".to_string(),
                         description: "CloudFormation template allows public S3 access".to_string(),
                         file_path: source_file.path.to_string_lossy().to_string(),
                         line_number,
-                        column: 0,
+                        column_start: 0,
+                        column_end: line.len(),
                         source_code: line.to_string(),
                         recommendation: "Remove public access policies and implement proper IAM controls".to_string(),
-                        location: Location {
-                            file: source_file.path.to_string_lossy().to_string(),
-                            line: line_number,
-                            column: 0,
-                        },
-                        code_snippet: Some(line.to_string()),
+                        owasp: Some("A05:2021 – Security Misconfiguration".to_string()),
+                        references: vec!["https://owasp.org/Top10/A05_2021-Security_Misconfiguration/".to_string()],
+                        confidence: 0.8,
                     });
                 }
             }
@@ -957,21 +945,19 @@ impl IaCSecurityAnalyzer {
                     vulnerabilities.push(Vulnerability {
                         id: format!("ANSIBLE-PRIV-001-{}", line_number),
                         cwe: Some("CWE-250".to_string()),
-                        vulnerability_type: "Privilege Escalation".to_string(),
+                        title: "Privilege Escalation".to_string(),
                         severity: Severity::Medium,
                         category: "authorization".to_string(),
                         description: "Ansible playbook uses privilege escalation".to_string(),
                         file_path: source_file.path.to_string_lossy().to_string(),
                         line_number,
-                        column: 0,
+                        column_start: 0,
+                        column_end: line.len(),
                         source_code: line.to_string(),
                         recommendation: "Use minimal required privileges and specific user accounts".to_string(),
-                        location: Location {
-                            file: source_file.path.to_string_lossy().to_string(),
-                            line: line_number,
-                            column: 0,
-                        },
-                        code_snippet: Some(line.to_string()),
+                        owasp: Some("A05:2021 – Security Misconfiguration".to_string()),
+                        references: vec!["https://owasp.org/Top10/A05_2021-Security_Misconfiguration/".to_string()],
+                        confidence: 0.8,
                     });
                 }
             }
@@ -982,21 +968,19 @@ impl IaCSecurityAnalyzer {
                     vulnerabilities.push(Vulnerability {
                         id: format!("ANSIBLE-INJECT-001-{}", line_number),
                         cwe: Some("CWE-78".to_string()),
-                        vulnerability_type: "Command Injection Risk".to_string(),
+                        title: "Command Injection Risk".to_string(),
                         severity: Severity::High,
                         category: "injection".to_string(),
                         description: "Ansible task vulnerable to command injection".to_string(),
                         file_path: source_file.path.to_string_lossy().to_string(),
                         line_number,
-                        column: 0,
+                        column_start: 0,
+                        column_end: line.len(),
                         source_code: line.to_string(),
                         recommendation: "Use Ansible modules instead of shell commands with variables".to_string(),
-                        location: Location {
-                            file: source_file.path.to_string_lossy().to_string(),
-                            line: line_number,
-                            column: 0,
-                        },
-                        code_snippet: Some(line.to_string()),
+                        owasp: Some("A05:2021 – Security Misconfiguration".to_string()),
+                        references: vec!["https://owasp.org/Top10/A05_2021-Security_Misconfiguration/".to_string()],
+                        confidence: 0.8,
                     });
                 }
             }
@@ -1007,21 +991,19 @@ impl IaCSecurityAnalyzer {
                     vulnerabilities.push(Vulnerability {
                         id: format!("ANSIBLE-CONN-001-{}", line_number),
                         cwe: Some("CWE-295".to_string()),
-                        vulnerability_type: "Insecure Connection".to_string(),
+                        title: "Insecure Connection".to_string(),
                         severity: Severity::Medium,
                         category: "network".to_string(),
                         description: "Ansible disables certificate validation".to_string(),
                         file_path: source_file.path.to_string_lossy().to_string(),
                         line_number,
-                        column: 0,
+                        column_start: 0,
+                        column_end: line.len(),
                         source_code: line.to_string(),
                         recommendation: "Enable certificate validation and use proper SSL/TLS configuration".to_string(),
-                        location: Location {
-                            file: source_file.path.to_string_lossy().to_string(),
-                            line: line_number,
-                            column: 0,
-                        },
-                        code_snippet: Some(line.to_string()),
+                        owasp: Some("A05:2021 – Security Misconfiguration".to_string()),
+                        references: vec!["https://owasp.org/Top10/A05_2021-Security_Misconfiguration/".to_string()],
+                        confidence: 0.8,
                     });
                 }
             }
@@ -1039,21 +1021,19 @@ impl IaCSecurityAnalyzer {
             vulnerabilities.push(Vulnerability {
                 id: "PULUMI-SECRET-001".to_string(),
                 cwe: Some("CWE-798".to_string()),
-                vulnerability_type: "Unencrypted Secret".to_string(),
+                title: "Unencrypted Secret".to_string(),
                 severity: Severity::High,
                 category: "secrets".to_string(),
                 description: "Pulumi configuration may contain unencrypted secrets".to_string(),
                 file_path: source_file.path.to_string_lossy().to_string(),
                 line_number: 1,
-                column: 0,
+                column_start: 0,
+                column_end: 0,
                 source_code: "Contains secret references".to_string(),
                 recommendation: "Use pulumi.secret() or stack configuration for sensitive values".to_string(),
-                location: Location {
-                    file: source_file.path.to_string_lossy().to_string(),
-                    line: 1,
-                    column: 0,
-                },
-                code_snippet: Some("Contains secret references".to_string()),
+                owasp: Some("A02:2021 – Cryptographic Failures".to_string()),
+                references: vec!["https://owasp.org/Top10/A02_2021-Cryptographic_Failures/".to_string()],
+                confidence: 0.9,
             });
         }
         

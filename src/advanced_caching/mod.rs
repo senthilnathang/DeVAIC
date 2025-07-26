@@ -12,12 +12,12 @@ pub mod predictive_cache;
 pub mod memory_aware_cache;
 
 pub use distributed_cache::{
-    DistributedCache, DistributedCacheConfig, CacheBackend, RedisCache, MemcachedCache,
+    DistributedCache, DistributedCacheConfig, CacheBackend,
     CacheCluster, CacheNode, CacheReplicationStrategy,
 };
 
 pub use smart_cache_warming::{
-    SmartCacheWarmer, CacheWarmingConfig, WarmingStrategy, PredictiveWarming,
+    SmartCacheWarmer, CacheWarmingConfig, WarmingStrategy,
     CachePreloader, WarmingScheduler,
 };
 
@@ -27,7 +27,7 @@ pub use cache_coherency::{
 };
 
 pub use cache_analytics::{
-    CacheAnalytics, CacheMetrics, CacheOptimizer, CacheInsights,
+    CacheAnalytics, CacheMetrics, CacheInsight,
     HitRateAnalyzer, EvictionAnalyzer, PerformanceProfiler,
 };
 
@@ -152,7 +152,7 @@ pub struct LocalCache {
 }
 
 /// Cache types for different use cases
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum CacheType {
     AST,              // AST parsing results
     Embeddings,       // AI embeddings
@@ -165,22 +165,25 @@ pub enum CacheType {
 }
 
 /// Cache entry with metadata
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct CacheEntry {
     pub key: String,
     pub value: Vec<u8>, // Serialized data
+    #[serde(skip, default = "Instant::now")]
     pub created_at: Instant,
+    #[serde(skip, default = "Instant::now")]
     pub last_accessed: Instant,
     pub access_count: u64,
     pub size_bytes: usize,
     pub cache_type: CacheType,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub ttl: Option<Duration>,
     pub compression_info: Option<CompressionInfo>,
     pub metadata: HashMap<String, String>,
 }
 
 /// Compression information
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct CompressionInfo {
     pub algorithm: CompressionAlgorithm,
     pub original_size: usize,
@@ -336,7 +339,7 @@ impl AdvancedCachingSystem {
     }
 
     /// Initialize the advanced caching system
-    pub async fn initialize(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+    pub async fn initialize(&mut self) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         // Initialize distributed caching if enabled
         if self.config.enable_distributed_caching {
             let distributed_cache = DistributedCache::new(self.config.distributed_cache.clone()).await?;
@@ -408,7 +411,7 @@ impl AdvancedCachingSystem {
         value: &T,
         cache_type: CacheType,
         ttl: Option<Duration>,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         // Serialize the value
         let serialized = bincode::serialize(value)?;
         
@@ -457,7 +460,7 @@ impl AdvancedCachingSystem {
         cache_id: &str,
         key: &str,
         cache_type: CacheType,
-    ) -> Result<Option<T>, Box<dyn std::error::Error>> {
+    ) -> Result<Option<T>, Box<dyn std::error::Error + Send + Sync>> {
         // Try local cache first
         let local_cache = self.get_cache(cache_id, cache_type.clone()).await;
         if let Some(entry) = local_cache.retrieve(key).await? {
@@ -495,7 +498,7 @@ impl AdvancedCachingSystem {
         &self,
         cache_id: &str,
         key: &str,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         // Invalidate local cache
         let local_cache = self.get_cache(cache_id, CacheType::Temporary).await;
         local_cache.invalidate(key).await?;
@@ -529,7 +532,7 @@ impl AdvancedCachingSystem {
     }
 
     /// Start background optimization and monitoring tasks
-    async fn start_background_tasks(&self) -> Result<(), Box<dyn std::error::Error>> {
+    async fn start_background_tasks(&self) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         // Start cache warming if enabled
         if let Some(ref smart_warmer) = self.smart_warmer {
             smart_warmer.start_warming_scheduler().await;
@@ -562,7 +565,7 @@ impl AdvancedCachingSystem {
     fn apply_compression(
         &self,
         data: &[u8],
-    ) -> Result<(Vec<u8>, Option<CompressionInfo>), Box<dyn std::error::Error>> {
+    ) -> Result<(Vec<u8>, Option<CompressionInfo>), Box<dyn std::error::Error + Send + Sync>> {
         if !self.config.compression_config.enable_compression 
             || data.len() < self.config.compression_config.compression_threshold_bytes {
             return Ok((data.to_vec(), None));
@@ -607,7 +610,7 @@ impl AdvancedCachingSystem {
         &self,
         data: &[u8],
         compression_info: &Option<CompressionInfo>,
-    ) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
+    ) -> Result<Vec<u8>, Box<dyn std::error::Error + Send + Sync>> {
         match compression_info {
             Some(info) => {
                 match info.algorithm {
@@ -642,7 +645,7 @@ impl AdvancedCachingSystem {
         }
     }
 
-    async fn get_predictive_cache_stats(&self) -> Option<PredictiveCacheStats> {
+    async fn get_predictive_cache_stats(&self) -> Option<predictive_cache::PredictiveCacheStats> {
         if let Some(ref predictive_cache) = self.predictive_cache {
             Some(predictive_cache.get_statistics().await)
         } else {
@@ -662,7 +665,7 @@ impl LocalCache {
         }
     }
 
-    pub async fn store(&self, key: &str, entry: CacheEntry) -> Result<(), Box<dyn std::error::Error>> {
+    pub async fn store(&self, key: &str, entry: CacheEntry) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let mut storage = self.storage.write().unwrap();
         storage.insert(key.to_string(), entry);
         
@@ -674,7 +677,7 @@ impl LocalCache {
         Ok(())
     }
 
-    pub async fn retrieve(&self, key: &str) -> Result<Option<CacheEntry>, Box<dyn std::error::Error>> {
+    pub async fn retrieve(&self, key: &str) -> Result<Option<CacheEntry>, Box<dyn std::error::Error + Send + Sync>> {
         let mut storage = self.storage.write().unwrap();
         
         if let Some(mut entry) = storage.get_mut(key) {
@@ -697,7 +700,7 @@ impl LocalCache {
         }
     }
 
-    pub async fn invalidate(&self, key: &str) -> Result<(), Box<dyn std::error::Error>> {
+    pub async fn invalidate(&self, key: &str) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let mut storage = self.storage.write().unwrap();
         storage.remove(key);
         
@@ -719,7 +722,7 @@ pub struct CacheStatisticsReport {
     pub active_alerts: Vec<CacheAlert>,
     pub optimization_suggestions: Vec<OptimizationSuggestion>,
     pub distributed_cache_stats: Option<DistributedCacheStats>,
-    pub predictive_cache_stats: Option<PredictiveCacheStats>,
+    pub predictive_cache_stats: Option<predictive_cache::PredictiveCacheStats>,
 }
 
 /// Placeholder for distributed cache stats (to be implemented in distributed_cache.rs)
@@ -731,14 +734,6 @@ pub struct DistributedCacheStats {
     pub network_latency_ms: f64,
 }
 
-/// Placeholder for predictive cache stats (to be implemented in predictive_cache.rs)
-#[derive(Debug, Clone)]
-pub struct PredictiveCacheStats {
-    pub prediction_accuracy: f64,
-    pub prefetch_hit_rate: f64,
-    pub patterns_learned: usize,
-    pub predictions_made: u64,
-}
 
 #[cfg(test)]
 mod tests {

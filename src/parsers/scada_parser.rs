@@ -38,7 +38,7 @@ pub struct ScadaAstNode {
     pub node_type: ScadaNodeType,
     pub content: String,
     pub line_number: usize,
-    pub column: usize,
+    pub column_start: usize,
     pub children: Vec<ScadaAstNode>,
 }
 
@@ -81,7 +81,7 @@ impl ScadaParser {
                     node_type: ScadaNodeType::Expression,
                     content: trimmed.to_string(),
                     line_number: line_num + 1,
-                    column: 0,
+                    column_start: 0,
                     children: Vec::new(),
                 });
             } else if !matches!(node.node_type, ScadaNodeType::Unknown) {
@@ -92,14 +92,14 @@ impl ScadaParser {
         nodes
     }
 
-    fn parse_line(&self, line: &str, line_number: usize, column: usize) -> ScadaAstNode {
+    fn parse_line(&self, line: &str, line_number: usize, column_start: usize) -> ScadaAstNode {
         if self.st_patterns.program_block.is_match(line) {
             if let Some(captures) = self.st_patterns.program_block.captures(line) {
                 return ScadaAstNode {
                     node_type: ScadaNodeType::Program,
                     content: captures.get(1).map_or("", |m| m.as_str()).to_string(),
                     line_number,
-                    column,
+                    column_start,
                     children: Vec::new(),
                 };
             }
@@ -111,7 +111,7 @@ impl ScadaParser {
                     node_type: ScadaNodeType::FunctionBlock,
                     content: captures.get(1).map_or("", |m| m.as_str()).to_string(),
                     line_number,
-                    column,
+                    column_start,
                     children: Vec::new(),
                 };
             }
@@ -122,7 +122,7 @@ impl ScadaParser {
                 node_type: ScadaNodeType::VariableDeclaration,
                 content: line.to_string(),
                 line_number,
-                column,
+                column_start,
                 children: Vec::new(),
             };
         }
@@ -132,7 +132,7 @@ impl ScadaParser {
                 node_type: ScadaNodeType::Assignment,
                 content: line.to_string(),
                 line_number,
-                column,
+                column_start,
                 children: Vec::new(),
             };
         }
@@ -142,7 +142,7 @@ impl ScadaParser {
                 node_type: ScadaNodeType::IfStatement,
                 content: line.to_string(),
                 line_number,
-                column,
+                column_start,
                 children: Vec::new(),
             };
         }
@@ -152,7 +152,7 @@ impl ScadaParser {
                 node_type: ScadaNodeType::WhileLoop,
                 content: line.to_string(),
                 line_number,
-                column,
+                column_start,
                 children: Vec::new(),
             };
         }
@@ -162,7 +162,7 @@ impl ScadaParser {
                 node_type: ScadaNodeType::ForLoop,
                 content: line.to_string(),
                 line_number,
-                column,
+                column_start,
                 children: Vec::new(),
             };
         }
@@ -171,7 +171,7 @@ impl ScadaParser {
             node_type: ScadaNodeType::Unknown,
             content: line.to_string(),
             line_number,
-            column,
+            column_start,
             children: Vec::new(),
         }
     }

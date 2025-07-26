@@ -166,7 +166,7 @@ pub struct AICache {
     /// L3 Cache: Persistent similarity results
     l3_similarity_cache: HashMap<u64, SimilarityResultCache>,
     /// Cache statistics
-    cache_stats: AICache Statistics,
+    cache_stats: AICacheStatistics,
 }
 
 /// Cached similarity results
@@ -348,7 +348,7 @@ impl AIPerformanceOptimizer {
         let mut cache = self.cache_manager.write().unwrap();
         
         // Clean L1 cache (keep only most recent entries)
-        let l1_target_size = cache.l1_embedding_cache.cap() / 2;
+        let l1_target_size = cache.l1_embedding_cache.cap().get() / 2;
         cache.l1_embedding_cache.resize(std::num::NonZeroUsize::new(l1_target_size).unwrap());
         
         // Clean L2 cache (remove least frequently used)
@@ -378,17 +378,22 @@ impl AIPerformanceOptimizer {
 
     /// Get real-time performance metrics
     pub async fn get_performance_metrics(&self) -> AIPerformanceMetrics {
-        let metrics = self.metrics.read().unwrap();
-        let mut current_metrics = metrics.clone();
+        let mut current_metrics = {
+            let metrics = self.metrics.read().unwrap();
+            metrics.clone()
+        }; // Guard is dropped here
         
         // Update real-time values
         current_metrics.memory_pressure = self.calculate_memory_pressure().await;
         current_metrics.active_ai_tasks = (self.config.max_concurrent_ai_tasks - self.task_semaphore.available_permits()) as u64;
         
         // Calculate cache hit rates
-        let cache = self.cache_manager.read().unwrap();
-        current_metrics.embedding_cache_hit_rate = cache.calculate_l1_hit_rate();
-        current_metrics.workflow_cache_hit_rate = cache.calculate_l2_hit_rate();
+        let (embedding_hit_rate, workflow_hit_rate) = {
+            let cache = self.cache_manager.read().unwrap();
+            (cache.calculate_l1_hit_rate(), cache.calculate_l2_hit_rate())
+        }; // Guard is dropped here
+        current_metrics.embedding_cache_hit_rate = embedding_hit_rate;
+        current_metrics.workflow_cache_hit_rate = workflow_hit_rate;
         
         current_metrics
     }

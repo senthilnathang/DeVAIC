@@ -178,204 +178,252 @@ impl CarbonRules {
             // Check for unsafe blocks
             if let Some(captures) = self.patterns["unsafe_block_usage"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "CARBON-UNSAFE-001".to_string(),
+id: "CARBON-UNSAFE-001".to_string(),
                     cwe: Some("CWE-119".to_string()),
-                    vulnerability_type: "Unsafe Memory Access".to_string(),
+                    title: "Unsafe Memory Access".to_string(),
                     severity: Severity::High,
                     category: "memory".to_string(),
                     description: "Unsafe block detected - potential memory safety violation".to_string(),
                     file_path: file_path.to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Review unsafe operations and ensure memory safety guarantees".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.8,
                 });
             }
 
             // Check for C++ interop risks
             if let Some(captures) = self.patterns["cpp_interop_call"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "CARBON-CPP-001".to_string(),
+id: "CARBON-CPP-001".to_string(),
                     cwe: Some("CWE-829".to_string()),
-                    vulnerability_type: "Unsafe C++ Interop".to_string(),
+                    title: "Unsafe C++ Interop".to_string(),
                     severity: Severity::High,
                     category: "interop".to_string(),
                     description: "C++ interop call - potential security risks from legacy code".to_string(),
                     file_path: file_path.to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Validate C++ function calls and ensure safe boundaries".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.8,
                 });
             }
 
             // Check for unsafe type casts
             if let Some(captures) = self.patterns["unsafe_type_cast"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "CARBON-CAST-001".to_string(),
+id: "CARBON-CAST-001".to_string(),
                     cwe: Some("CWE-704".to_string()),
-                    vulnerability_type: "Unsafe Type Cast".to_string(),
+                    title: "Unsafe Type Cast".to_string(),
                     severity: Severity::Medium,
                     category: "type_safety".to_string(),
                     description: "Unsafe type cast operation detected".to_string(),
                     file_path: file_path.to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Use safe casting alternatives or validate cast safety".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.75,
                 });
             }
 
             // Check for public unsafe APIs
             if let Some(captures) = self.patterns["public_unsafe_api_function"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "CARBON-API-001".to_string(),
+id: "CARBON-API-001".to_string(),
                     cwe: Some("CWE-668".to_string()),
-                    vulnerability_type: "Unsafe Public API".to_string(),
+                    title: "Unsafe Public API".to_string(),
                     severity: Severity::High,
                     category: "api_design".to_string(),
                     description: "Public API with unsafe operations - security boundary violation".to_string(),
                     file_path: file_path.to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Ensure public APIs maintain safety invariants".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.8,
                 });
             }
 
             // Check for unhandled errors
             if let Some(captures) = self.patterns["unhandled_error_expectation"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "CARBON-ERROR-001".to_string(),
+id: "CARBON-ERROR-001".to_string(),
                     cwe: Some("CWE-252".to_string()),
-                    vulnerability_type: "Unchecked Error Condition".to_string(),
+                    title: "Unchecked Error Condition".to_string(),
                     severity: Severity::Medium,
                     category: "error_handling".to_string(),
                     description: "Error expectation without proper handling".to_string(),
                     file_path: file_path.to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Handle errors appropriately or document safety assumptions".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.75,
                 });
             }
 
             // Check for manual memory management
             if let Some(captures) = self.patterns["manual_memory_allocation"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "CARBON-MEM-001".to_string(),
+id: "CARBON-MEM-001".to_string(),
                     cwe: Some("CWE-401".to_string()),
-                    vulnerability_type: "Manual Memory Management".to_string(),
+                    title: "Manual Memory Management".to_string(),
                     severity: Severity::Medium,
                     category: "memory".to_string(),
                     description: "Manual memory management - potential memory leak".to_string(),
                     file_path: file_path.to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Use RAII or automatic memory management alternatives".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.75,
                 });
             }
 
             // Check for integer overflow risks
             if let Some(captures) = self.patterns["integer_overflow_operations"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "CARBON-INT-001".to_string(),
+id: "CARBON-INT-001".to_string(),
                     cwe: Some("CWE-190".to_string()),
-                    vulnerability_type: "Integer Overflow".to_string(),
+                    title: "Integer Overflow".to_string(),
                     severity: Severity::Medium,
                     category: "arithmetic".to_string(),
                     description: "Unsafe arithmetic operation - potential integer overflow".to_string(),
                     file_path: file_path.to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Use checked arithmetic or validate input ranges".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.75,
                 });
             }
 
             // Check for hardcoded secrets
             if let Some(captures) = self.patterns["hardcoded_credentials"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "CARBON-SECRET-001".to_string(),
+id: "CARBON-SECRET-001".to_string(),
                     cwe: Some("CWE-798".to_string()),
-                    vulnerability_type: "Hardcoded Credentials".to_string(),
+                    title: "Hardcoded Credentials".to_string(),
                     severity: Severity::Critical,
                     category: "authentication".to_string(),
                     description: "Hardcoded credentials detected in Carbon code".to_string(),
                     file_path: file_path.to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Move secrets to environment variables or secure configuration".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.9,
                 });
             }
 
             // Check for unsafe concurrency
             if let Some(captures) = self.patterns["unsafe_shared_access"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "CARBON-THREAD-001".to_string(),
+id: "CARBON-THREAD-001".to_string(),
                     cwe: Some("CWE-362".to_string()),
-                    vulnerability_type: "Race Condition".to_string(),
+                    title: "Race Condition".to_string(),
                     severity: Severity::High,
                     category: "concurrency".to_string(),
                     description: "Unsafe shared data access - potential race condition".to_string(),
                     file_path: file_path.to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Use safe concurrency primitives".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.8,
                 });
             }
 
             // Check for unencrypted network connections
             if let Some(captures) = self.patterns["unencrypted_network_connection"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "CARBON-NET-001".to_string(),
+id: "CARBON-NET-001".to_string(),
                     cwe: Some("CWE-319".to_string()),
-                    vulnerability_type: "Cleartext Transmission".to_string(),
+                    title: "Cleartext Transmission".to_string(),
                     severity: Severity::Medium,
                     category: "network".to_string(),
                     description: "HTTP connection without TLS - cleartext transmission risk".to_string(),
                     file_path: file_path.to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Use HTTPS/TLS for secure network communication".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.75,
                 });
             }
 
             // Check for debug code
             if let Some(captures) = self.patterns["debug_print_statements"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "CARBON-DEBUG-001".to_string(),
+id: "CARBON-DEBUG-001".to_string(),
                     cwe: Some("CWE-489".to_string()),
-                    vulnerability_type: "Debug Code in Production".to_string(),
+                    title: "Debug Code in Production".to_string(),
                     severity: Severity::Low,
                     category: "information_disclosure".to_string(),
                     description: "Debug code detected - may leak sensitive information".to_string(),
                     file_path: file_path.to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Remove debug statements from production code".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.7,
                 });
             }
 
             // Check for TODO/FIXME comments
             if let Some(captures) = self.patterns["todo_fixme_comments"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "CARBON-TODO-001".to_string(),
+id: "CARBON-TODO-001".to_string(),
                     cwe: Some("CWE-489".to_string()),
-                    vulnerability_type: "Incomplete Implementation".to_string(),
+                    title: "Incomplete Implementation".to_string(),
                     severity: Severity::Medium,
                     category: "development".to_string(),
                     description: "TODO/FIXME comment - incomplete implementation".to_string(),
                     file_path: file_path.to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Complete implementation before production deployment".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.75,
                 });
             }
         }

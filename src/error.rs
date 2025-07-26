@@ -44,6 +44,18 @@ impl From<printpdf::Error> for DevaicError {
     }
 }
 
+impl From<reqwest::Error> for DevaicError {
+    fn from(err: reqwest::Error) -> Self {
+        DevaicError::Analysis(format!("HTTP request error: {}", err))
+    }
+}
+
+impl From<regex::Error> for DevaicError {
+    fn from(err: regex::Error) -> Self {
+        DevaicError::Parse(format!("Regex error: {}", err))
+    }
+}
+
 impl From<serde_yaml::Error> for DevaicError {
     fn from(err: serde_yaml::Error) -> Self {
         DevaicError::Config(err.to_string())

@@ -136,187 +136,231 @@ impl VRules {
             // Check for unsafe memory blocks
             if let Some(captures) = self.patterns["unsafe_memory_block"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "V-UNSAFE-001".to_string(),
+id: "V-UNSAFE-001".to_string(),
                     cwe: Some("CWE-119".to_string()),
-                    vulnerability_type: "Unsafe Memory Access".to_string(),
+                    title: "Unsafe Memory Access".to_string(),
                     severity: Severity::High,
                     category: "memory".to_string(),
                     description: "Unsafe memory block detected".to_string(),
                     file_path: file_path.to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Review unsafe operations and ensure memory safety".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.8,
                 });
             }
 
             // Check for XSS vulnerabilities in vweb
             if let Some(captures) = self.patterns["vweb_xss_vulnerability"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "V-XSS-001".to_string(),
+id: "V-XSS-001".to_string(),
                     cwe: Some("CWE-79".to_string()),
-                    vulnerability_type: "Cross-Site Scripting".to_string(),
+                    title: "Cross-Site Scripting".to_string(),
                     severity: Severity::High,
                     category: "web".to_string(),
                     description: "Template interpolation without escaping - XSS risk".to_string(),
                     file_path: file_path.to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Use proper HTML escaping for user input in templates".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.8,
                 });
             }
 
             // Check for SQL injection
             if let Some(captures) = self.patterns["sql_injection_risk"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "V-SQL-001".to_string(),
+id: "V-SQL-001".to_string(),
                     cwe: Some("CWE-89".to_string()),
-                    vulnerability_type: "SQL Injection".to_string(),
+                    title: "SQL Injection".to_string(),
                     severity: Severity::Critical,
                     category: "database".to_string(),
                     description: "SQL query with string concatenation - injection risk".to_string(),
                     file_path: file_path.to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Use parameterized queries or ORM methods".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.9,
                 });
             }
 
             // Check for hardcoded database credentials
             if let Some(captures) = self.patterns["hardcoded_db_credentials"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "V-DB-001".to_string(),
+id: "V-DB-001".to_string(),
                     cwe: Some("CWE-798".to_string()),
-                    vulnerability_type: "Hardcoded Database Credentials".to_string(),
+                    title: "Hardcoded Database Credentials".to_string(),
                     severity: Severity::Critical,
                     category: "authentication".to_string(),
                     description: "Hardcoded database credentials detected".to_string(),
                     file_path: file_path.to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Move credentials to environment variables".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.9,
                 });
             }
 
             // Check for insecure HTTP requests
             if let Some(captures) = self.patterns["insecure_http_request"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "V-HTTP-001".to_string(),
+id: "V-HTTP-001".to_string(),
                     cwe: Some("CWE-918".to_string()),
-                    vulnerability_type: "Server-Side Request Forgery".to_string(),
+                    title: "Server-Side Request Forgery".to_string(),
                     severity: Severity::High,
                     category: "network".to_string(),
                     description: "HTTP request with dynamic URL - SSRF risk".to_string(),
                     file_path: file_path.to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Validate and whitelist URLs before making requests".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.8,
                 });
             }
 
             // Check for disabled SSL verification
             if let Some(captures) = self.patterns["disabled_ssl_verification"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "V-TLS-001".to_string(),
+id: "V-TLS-001".to_string(),
                     cwe: Some("CWE-295".to_string()),
-                    vulnerability_type: "Improper Certificate Validation".to_string(),
+                    title: "Improper Certificate Validation".to_string(),
                     severity: Severity::High,
                     category: "cryptography".to_string(),
                     description: "SSL certificate verification disabled".to_string(),
                     file_path: file_path.to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Enable proper SSL certificate validation".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.8,
                 });
             }
 
             // Check for unsafe file operations
             if let Some(captures) = self.patterns["unsafe_file_operation"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "V-FILE-001".to_string(),
+id: "V-FILE-001".to_string(),
                     cwe: Some("CWE-22".to_string()),
-                    vulnerability_type: "Path Traversal".to_string(),
+                    title: "Path Traversal".to_string(),
                     severity: Severity::High,
                     category: "file_system".to_string(),
                     description: "File operation with dynamic path - traversal risk".to_string(),
                     file_path: file_path.to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Validate and sanitize file paths".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.8,
                 });
             }
 
             // Check for ignored errors
             if let Some(captures) = self.patterns["ignored_error_result"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "V-ERR-001".to_string(),
+id: "V-ERR-001".to_string(),
                     cwe: Some("CWE-252".to_string()),
-                    vulnerability_type: "Unchecked Error Condition".to_string(),
+                    title: "Unchecked Error Condition".to_string(),
                     severity: Severity::Medium,
                     category: "error_handling".to_string(),
                     description: "Error result ignored in or block".to_string(),
                     file_path: file_path.to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Handle errors appropriately or log for debugging".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.75,
                 });
             }
 
             // Check for command injection
             if let Some(captures) = self.patterns["command_injection_risk"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "V-CMD-001".to_string(),
+id: "V-CMD-001".to_string(),
                     cwe: Some("CWE-78".to_string()),
-                    vulnerability_type: "Command Injection".to_string(),
+                    title: "Command Injection".to_string(),
                     severity: Severity::Critical,
                     category: "command_execution".to_string(),
                     description: "Command execution with dynamic input".to_string(),
                     file_path: file_path.to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Validate and sanitize command arguments".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.9,
                 });
             }
 
             // Check for hardcoded secrets
             if let Some(captures) = self.patterns["hardcoded_secrets"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "V-SECRET-001".to_string(),
+id: "V-SECRET-001".to_string(),
                     cwe: Some("CWE-798".to_string()),
-                    vulnerability_type: "Hardcoded Credentials".to_string(),
+                    title: "Hardcoded Credentials".to_string(),
                     severity: Severity::Critical,
                     category: "authentication".to_string(),
                     description: "Hardcoded secret detected".to_string(),
                     file_path: file_path.to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Move secrets to environment variables".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.9,
                 });
             }
 
             // Check for debug statements
             if let Some(captures) = self.patterns["debug_statements"].captures(line) {
                 vulnerabilities.push(Vulnerability {
-                    id: "V-DEBUG-001".to_string(),
+id: "V-DEBUG-001".to_string(),
                     cwe: Some("CWE-489".to_string()),
-                    vulnerability_type: "Debug Code in Production".to_string(),
+                    title: "Debug Code in Production".to_string(),
                     severity: Severity::Low,
                     category: "information_disclosure".to_string(),
                     description: "Debug statement detected".to_string(),
                     file_path: file_path.to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Remove debug statements from production code".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.7,
                 });
             }
         }

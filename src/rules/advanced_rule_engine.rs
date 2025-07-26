@@ -181,7 +181,7 @@ pub enum PatternType {
 }
 
 /// Rule categories for organization
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum RuleCategory {
     Security,
     Privacy,
@@ -202,6 +202,9 @@ pub enum RuleCategory {
     Injection,
     Deserialization,
     Configuration,
+    SecurityVulnerability,
+    AccessControl,
+    CryptographicSecurity,
 }
 
 /// Context requirements for rule execution
@@ -387,7 +390,7 @@ pub struct DataSanitizer {
 #[derive(Debug, Clone)]
 pub struct DataFlowVulnerability {
     pub flow_id: String,
-    pub vulnerability_type: String,
+    pub title: String,
     pub severity: Severity,
     pub confidence: f32,
     pub description: String,
@@ -395,11 +398,11 @@ pub struct DataFlowVulnerability {
 }
 
 /// Source location information
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct SourceLocation {
     pub file: String,
     pub line: usize,
-    pub column: usize,
+    pub column_start: usize,
     pub function: Option<String>,
     pub class: Option<String>,
 }
@@ -430,7 +433,7 @@ pub enum SensitiveDataType {
 }
 
 /// Sensitivity levels
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum SensitivityLevel {
     Public,
     Internal,
@@ -719,21 +722,19 @@ impl AdvancedRuleEngine {
         Vulnerability {
             id: format!("ADV-{}", Uuid::new_v4()),
             cwe: None,
-            vulnerability_type: "Pattern Match".to_string(),
+            title: "Pattern Match".to_string(),
             severity: Severity::Medium,
             category: "security".to_string(),
             description: "Pattern-based vulnerability detected".to_string(),
             file_path: source_file.path.to_string_lossy().to_string(),
             line_number,
-            column: 0,
+            column_start: 0,
+            column_end: line.len(),
             source_code: line.to_string(),
             recommendation: "Review and remediate the detected pattern".to_string(),
-            location: crate::Location {
-                file: source_file.path.to_string_lossy().to_string(),
-                line: line_number,
-                column: 0,
-            },
-            code_snippet: Some(line.to_string()),
+            owasp: None,
+            references: Vec::new(),
+            confidence: 0.7,
         }
     }
     

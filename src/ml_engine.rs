@@ -30,6 +30,18 @@ pub struct MLModel {
     pub confidence_threshold: f32,
 }
 
+impl MLModel {
+    pub fn new() -> Result<Self> {
+        Ok(Self {
+            name: "Default ML Model".to_string(),
+            version: "1.0.0".to_string(),
+            language: Language::Python,
+            model_type: ModelType::VulnerabilityClassifier,
+            confidence_threshold: 0.75,
+        })
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ModelType {
     VulnerabilityClassifier,
@@ -44,7 +56,7 @@ pub enum ModelType {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MLPrediction {
-    pub vulnerability_type: String,
+    pub title: String,
     pub confidence: f32,
     pub severity: Severity,
     pub explanation: String,
@@ -196,7 +208,7 @@ impl MLEngine {
                 vulnerabilities.push(create_vulnerability(
                     &format!("ML-{}-001", source_file.language.to_string().to_uppercase()),
                     Some("CWE-AI"),
-                    &prediction.vulnerability_type,
+                    &prediction.title,
                     prediction.severity,
                     "ml_detection",
                     &format!("ML-detected vulnerability: {} (confidence: {:.2})", 
@@ -320,7 +332,7 @@ impl MLEngine {
         if features.len() > 4 && features[4] > 0.0 { // Unsafe operations detected
             let confidence = self.confidence_calibrator.calibrate_confidence(0.85);
             predictions.push(MLPrediction {
-                vulnerability_type: "Memory Safety Violation".to_string(),
+                title: "Memory Safety Violation".to_string(),
                 confidence,
                 severity: Severity::High,
                 explanation: "Potential memory safety issue detected by ML model".to_string(),
@@ -349,7 +361,7 @@ impl MLEngine {
         if features.len() > 8 && features[8] > 0.0 { // HTTP usage detected
             let confidence = self.confidence_calibrator.calibrate_confidence(0.75);
             predictions.push(MLPrediction {
-                vulnerability_type: "Insecure Communication".to_string(),
+                title: "Insecure Communication".to_string(),
                 confidence,
                 severity: Severity::Medium,
                 explanation: "Insecure HTTP communication detected".to_string(),
@@ -895,5 +907,25 @@ impl ConfidenceCalibrator {
                 self.temperature_scaling *= 0.9; // Increase confidence
             }
         }
+    }
+}
+
+/// Machine learning-based rule generator
+pub struct MLRuleGenerator {
+    pub model: MLModel,
+    pub confidence_threshold: f32,
+}
+
+impl MLRuleGenerator {
+    pub fn new() -> Result<Self> {
+        Ok(Self {
+            model: MLModel::new()?,
+            confidence_threshold: 0.7,
+        })
+    }
+    
+    pub fn generate_rules(&self, _patterns: &[SecurityPattern]) -> Result<Vec<String>> {
+        // Placeholder implementation
+        Ok(vec![])
     }
 }

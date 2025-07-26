@@ -217,7 +217,7 @@ pub struct FunctionInfo {
 pub struct SecurityPattern {
     pub pattern_type: String,
     pub line_number: usize,
-    pub column: usize,
+    pub column_start: usize,
     pub severity: crate::Severity,
     pub description: String,
     pub code_snippet: String,

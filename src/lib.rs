@@ -77,7 +77,7 @@ pub use performance::{
 pub use business_logic_analyzer::{BusinessLogicAnalyzer, BusinessLogicConfig};
 pub use advanced_caching::{
     AdvancedCachingSystem, AdvancedCachingConfig, DistributedCache, SmartCacheWarmer,
-    CacheCoherencyManager, CacheType, CacheEntry, LocalCache, CacheStatisticsReport
+    CacheCoherencyManager, CacheType, CacheEntry as AdvancedCacheEntry, LocalCache, CacheStatisticsReport
 };
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize, Copy)]
@@ -198,6 +198,13 @@ impl std::fmt::Display for Language {
             Language::Nim => write!(f, "nim"),
         }
     }
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct Location {
+    pub line: usize,
+    pub column_start: usize,
+    pub file_path: String,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]

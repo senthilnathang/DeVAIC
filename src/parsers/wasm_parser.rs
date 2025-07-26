@@ -142,15 +142,19 @@ impl WasmParser {
                 vulnerabilities.push(Vulnerability {
                     id: "WASM-MEM-001".to_string(),
                     cwe: Some("CWE-770".to_string()),
-                    vulnerability_type: "Resource Exhaustion".to_string(),
+                    title: "Resource Exhaustion".to_string(),
                     severity: Severity::High,
                     category: "vulnerability".to_string(),
                     description: "Unrestricted memory growth detected - may lead to resource exhaustion".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Implement bounds checking and memory limits for memory.grow operations".to_string(),
+                    owasp: Some("A04:2021 – Insecure Design".to_string()),
+                    references: vec!["https://cwe.mitre.org/data/definitions/770.html".to_string()],
+                    confidence: 0.8,
                 });
             }
 
@@ -159,15 +163,19 @@ impl WasmParser {
                 vulnerabilities.push(Vulnerability {
                     id: "WASM-MEM-002".to_string(),
                     cwe: Some("CWE-119".to_string()),
-                    vulnerability_type: "Buffer Overflow Risk".to_string(),
+                    title: "Buffer Overflow Risk".to_string(),
                     severity: Severity::Medium,
                     category: "vulnerability".to_string(),
                     description: "Unsafe memory access pattern detected - validate bounds and alignment".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Ensure proper bounds checking and alignment validation for memory operations".to_string(),
+                    owasp: Some("A06:2021 – Vulnerable and Outdated Components".to_string()),
+                    references: vec!["https://cwe.mitre.org/data/definitions/119.html".to_string()],
+                    confidence: 0.7,
                 });
             }
 
@@ -176,15 +184,19 @@ impl WasmParser {
                 vulnerabilities.push(Vulnerability {
                     id: "WASM-IMPORT-001".to_string(),
                     cwe: Some("CWE-829".to_string()),
-                    vulnerability_type: "Dangerous Host Import".to_string(),
+                    title: "Dangerous Host Import".to_string(),
                     severity: Severity::Critical,
                     category: "security".to_string(),
                     description: "Dangerous host function import detected - may allow code execution or sensitive operations".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Review and validate all host function imports, implement input validation and sandboxing".to_string(),
+                    owasp: Some("A08:2021 – Software and Data Integrity Failures".to_string()),
+                    references: vec!["https://cwe.mitre.org/data/definitions/829.html".to_string()],
+                    confidence: 0.9,
                 });
             }
 
@@ -193,15 +205,19 @@ impl WasmParser {
                 vulnerabilities.push(Vulnerability {
                     id: "WASM-EXPORT-001".to_string(),
                     cwe: Some("CWE-200".to_string()),
-                    vulnerability_type: "Information Exposure".to_string(),
+                    title: "Information Exposure".to_string(),
                     severity: Severity::Medium,
                     category: "security".to_string(),
                     description: "Potentially sensitive export detected - may expose internal memory or functions".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Review exported functions and memory, ensure only necessary interfaces are exposed".to_string(),
+                    owasp: Some("A03:2021 – Injection".to_string()),
+                    references: vec!["https://cwe.mitre.org/data/definitions/200.html".to_string()],
+                    confidence: 0.7,
                 });
             }
 
@@ -210,15 +226,19 @@ impl WasmParser {
                 vulnerabilities.push(Vulnerability {
                     id: "WASM-TIMING-001".to_string(),
                     cwe: Some("CWE-208".to_string()),
-                    vulnerability_type: "Timing Attack Vulnerability".to_string(),
+                    title: "Timing Attack Vulnerability".to_string(),
                     severity: Severity::Medium,
                     category: "cryptographic".to_string(),
                     description: "Timing-sensitive floating-point operation detected - may be vulnerable to timing attacks".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Use constant-time implementations for cryptographic operations or add timing randomization".to_string(),
+                    owasp: Some("A02:2021 – Cryptographic Failures".to_string()),
+                    references: vec!["https://cwe.mitre.org/data/definitions/208.html".to_string()],
+                    confidence: 0.7,
                 });
             }
 
@@ -227,15 +247,19 @@ impl WasmParser {
                 vulnerabilities.push(Vulnerability {
                     id: "WASM-CRYPTO-001".to_string(),
                     cwe: Some("CWE-338".to_string()),
-                    vulnerability_type: "Weak Random Number Generation".to_string(),
+                    owasp: Some("A02:2021".to_string()),
+                    title: "Weak Random Number Generation".to_string(),
                     severity: Severity::High,
                     category: "cryptographic".to_string(),
                     description: "Weak random number generation detected - not suitable for cryptographic purposes".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Use cryptographically secure random number generators (crypto.getRandomValues or secure host functions)".to_string(),
+                    references: vec![],
+                    confidence: 0.8,
                 });
             }
 
@@ -244,15 +268,19 @@ impl WasmParser {
                 vulnerabilities.push(Vulnerability {
                     id: "WASM-CONTROL-001".to_string(),
                     cwe: Some("CWE-691".to_string()),
-                    vulnerability_type: "Control Flow Vulnerability".to_string(),
+                    owasp: Some("A03:2021".to_string()),
+                    title: "Control Flow Vulnerability".to_string(),
                     severity: Severity::Medium,
                     category: "vulnerability".to_string(),
                     description: "Unrestricted indirect call detected - may allow control flow hijacking".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Validate function table indices and implement call site verification".to_string(),
+                    references: vec![],
+                    confidence: 0.7,
                 });
             }
 
@@ -261,15 +289,19 @@ impl WasmParser {
                 vulnerabilities.push(Vulnerability {
                     id: "WASM-SECRET-001".to_string(),
                     cwe: Some("CWE-798".to_string()),
-                    vulnerability_type: "Hardcoded Credentials".to_string(),
+                    owasp: Some("A07:2021".to_string()),
+                    title: "Hardcoded Credentials".to_string(),
                     severity: Severity::Critical,
                     category: "authentication".to_string(),
                     description: "Hardcoded secret detected in WASM data section".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Remove hardcoded secrets, use secure configuration or environment variables".to_string(),
+                    references: vec![],
+                    confidence: 0.9,
                 });
             }
 
@@ -278,15 +310,19 @@ impl WasmParser {
                 vulnerabilities.push(Vulnerability {
                     id: "WASM-TABLE-001".to_string(),
                     cwe: Some("CWE-913".to_string()),
-                    vulnerability_type: "Resource Management Vulnerability".to_string(),
+                    title: "Resource Management Vulnerability".to_string(),
                     severity: Severity::Medium,
                     category: "vulnerability".to_string(),
                     description: "Function table manipulation detected - ensure proper access control".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Implement proper bounds checking and access control for table operations".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.8,
                 });
             }
 
@@ -295,15 +331,19 @@ impl WasmParser {
                 vulnerabilities.push(Vulnerability {
                     id: "WASM-HOST-001".to_string(),
                     cwe: Some("CWE-20".to_string()),
-                    vulnerability_type: "Insufficient Input Validation".to_string(),
+                    title: "Insufficient Input Validation".to_string(),
                     severity: Severity::High,
                     category: "security".to_string(),
                     description: "Host function import without validation comments - may lack input validation".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Document and implement input validation for all host function bindings".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.9,
                 });
             }
 
@@ -312,15 +352,19 @@ impl WasmParser {
                 vulnerabilities.push(Vulnerability {
                     id: "WASM-TIMING-002".to_string(),
                     cwe: Some("CWE-208".to_string()),
-                    vulnerability_type: "Timing Attack Vulnerability".to_string(),
+                    title: "Timing Attack Vulnerability".to_string(),
                     severity: Severity::High,
                     category: "cryptographic".to_string(),
                     description: "Potential constant-time violation in cryptographic operation".to_string(),
                     file_path: source_file.path.to_string_lossy().to_string(),
                     line_number: line_num,
-                    column: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_start: captures.get(0).map(|m| m.start()).unwrap_or(0),
+                    column_end: captures.get(0).map(|m| m.end()).unwrap_or(0),
                     source_code: trimmed_line.to_string(),
                     recommendation: "Ensure cryptographic operations execute in constant time regardless of input values".to_string(),
+                    owasp: None,
+                    references: vec![],
+                    confidence: 0.85,
                 });
             }
         }

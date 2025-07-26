@@ -114,7 +114,7 @@ pub struct DetectedPatternInfo {
     pub code_snippet: String,
     
     /// Detected vulnerability type
-    pub vulnerability_type: String,
+    pub title: String,
     
     /// Estimated severity
     pub estimated_severity: Severity,
@@ -179,6 +179,9 @@ pub enum SimilarityType {
     
     /// Similar vulnerability class or family
     VulnerabilityFamily,
+    
+    /// Specific vulnerability pattern
+    VulnerabilityPattern,
     
     /// Pattern with similar security implications
     SecurityEquivalent,
@@ -966,7 +969,7 @@ pub struct RiskProfile {
 }
 
 /// Risk level classification
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum RiskLevel {
     VeryLow,
     Low,
@@ -1338,6 +1341,7 @@ impl SemanticSimilarityEngine {
         }
 
         let analysis_duration = start_time.elapsed();
+        let similarities_count = if !similar_patterns.is_empty() { 1 } else { 0 };
         
         Ok(SimilarityAnalysisResult {
             original_pattern: pattern.clone(),
@@ -1349,7 +1353,7 @@ impl SemanticSimilarityEngine {
                     .as_secs(),
                 analysis_duration_ms: analysis_duration.as_millis() as u64,
                 patterns_analyzed: 1,
-                similarities_found: if !similar_patterns.is_empty() { 1 } else { 0 },
+                similarities_found: similarities_count,
                 techniques_used: vec![
                     AnalysisTechnique::SemanticAnalysis,
                     AnalysisTechnique::EmbeddingVector,
@@ -1469,7 +1473,7 @@ impl SemanticSimilarityEngine {
                     column_end: 50,
                 },
                 code_snippet: code.to_string(),
-                vulnerability_type: original_pattern.category.clone(),
+                title: original_pattern.category.clone(),
                 estimated_severity: original_pattern.severity.clone(),
                 language,
                 function_context: None,
@@ -1492,6 +1496,166 @@ impl SemanticSimilarityEngine {
                 "Apply input validation".to_string(),
             ],
         })
+    }
+
+    /// Find similar vulnerabilities in code
+    pub async fn find_similar_vulnerabilities(&self, code: &str, language: &str) -> Result<Vec<SimilarPattern>> {
+        let lang = match language {
+            "java" => Language::Java,
+            "python" => Language::Python,
+            "javascript" => Language::Javascript,
+            "c" => Language::C,
+            "cpp" => Language::Cpp,
+            _ => Language::Java, // default
+        };
+
+        // Analyze the code to find vulnerability patterns
+        let features = self.analyze_semantics(code, lang)?;
+        
+        // Search for similar patterns in our knowledge base
+        let mut similar_patterns = Vec::new();
+        
+        // This is a simplified implementation
+        // In a real implementation, this would use ML models and semantic analysis
+        if code.contains("sql") || code.contains("query") {
+            similar_patterns.push(SimilarPattern {
+                pattern_info: DetectedPatternInfo {
+                    location: CodeLocation { file_path: "<analysis>".to_string(), line_start: 1, line_end: 1, column_start: 1, column_end: 10 },
+                    code_snippet: "SQL query detected".to_string(),
+                    title: "SQL Injection".to_string(),
+                    estimated_severity: crate::Severity::High,
+                    language: lang,
+                    function_context: None,
+                },
+                similarity_score: 0.8,
+                similarity_type: SimilarityType::VulnerabilityPattern,
+                similarity_factors: Vec::new(),
+                differences: Vec::new(),
+                detection_confidence: 0.8,
+                recommendations: vec!["Use parameterized queries".to_string()],
+            });
+        }
+
+        if code.contains("eval") || code.contains("exec") {
+            similar_patterns.push(SimilarPattern {
+                pattern_info: DetectedPatternInfo {
+                    location: CodeLocation { file_path: "<analysis>".to_string(), line_start: 1, line_end: 1, column_start: 1, column_end: 10 },
+                    code_snippet: "Dynamic code execution detected".to_string(),
+                    title: "Code Injection".to_string(),
+                    estimated_severity: crate::Severity::Critical,
+                    language: lang,
+                    function_context: None,
+                },
+                similarity_score: 0.9,
+                similarity_type: SimilarityType::VulnerabilityPattern,
+                similarity_factors: Vec::new(),
+                differences: Vec::new(),
+                detection_confidence: 0.9,
+                recommendations: vec!["Avoid dynamic code execution".to_string()],
+            });
+        }
+
+        Ok(similar_patterns)
+    }
+}
+
+impl SemanticAnalyzer for SemanticSimilarityEngine {
+    fn analyze_semantics(&self, code: &str, language: Language) -> Result<SemanticFeatures> {
+        // Use the first available semantic analyzer
+        if let Some(analyzer) = self.semantic_analyzers.first() {
+            analyzer.analyze_semantics(code, language)
+        } else {
+            // Fallback implementation
+            Ok(SemanticFeatures {
+                ast_features: ASTFeatures {
+                    node_types: HashMap::new(),
+                    depth: 0,
+                    branching_factor: 0.0,
+                    leaf_count: 0,
+                    complexity_score: 0.0,
+                },
+                data_flow_features: DataFlowFeatures {
+                    sources: Vec::new(),
+                    sinks: Vec::new(),
+                    transformations: Vec::new(),
+                    flow_paths: Vec::new(),
+                    taint_propagation: TaintPropagation {
+                        propagation_rules: Vec::new(),
+                        sanitization_points: Vec::new(),
+                        taint_summary: TaintSummary {
+                            total_sources: 0,
+                            total_sinks: 0,
+                            vulnerable_paths: 0,
+                            sanitized_paths: 0,
+                            overall_risk: 0.0,
+                        },
+                    },
+                },
+                control_flow_features: ControlFlowFeatures {
+                    basic_blocks: 0,
+                    conditional_blocks: 0,
+                    loop_blocks: 0,
+                    exception_blocks: 0,
+                    complexity_metrics: ComplexityMetrics {
+                        cyclomatic_complexity: 0,
+                        nesting_depth: 0,
+                        branch_count: 0,
+                        decision_points: 0,
+                    },
+                },
+                api_usage_features: APIUsageFeatures {
+                    api_calls: Vec::new(),
+                    library_imports: Vec::new(),
+                    framework_usage: Vec::new(),
+                    security_apis: Vec::new(),
+                },
+                identifier_features: IdentifierFeatures {
+                    variable_names: Vec::new(),
+                    function_names: Vec::new(),
+                    class_names: Vec::new(),
+                    naming_patterns: Vec::new(),
+                    semantic_roles: Vec::new(),
+                },
+                structural_features: StructuralFeatures {
+                    nesting_levels: Vec::new(),
+                    block_sizes: Vec::new(),
+                    statement_types: HashMap::new(),
+                    patterns: Vec::new(),
+                },
+            })
+        }
+    }
+    
+    fn extract_security_semantics(&self, code: &str, language: Language) -> Result<SecuritySemantics> {
+        // Use the first available semantic analyzer
+        if let Some(analyzer) = self.semantic_analyzers.first() {
+            analyzer.extract_security_semantics(code, language)
+        } else {
+            // Fallback implementation
+            Ok(SecuritySemantics {
+                input_validation: Vec::new(),
+                output_encoding: Vec::new(),
+                authentication: Vec::new(),
+                authorization: Vec::new(),
+                cryptographic: Vec::new(),
+                error_handling: Vec::new(),
+                resource_management: Vec::new(),
+            })
+        }
+    }
+    
+    fn compare_semantics(&self, features1: &SemanticFeatures, features2: &SemanticFeatures) -> f32 {
+        // Use the first available semantic analyzer
+        if let Some(analyzer) = self.semantic_analyzers.first() {
+            analyzer.compare_semantics(features1, features2)
+        } else {
+            // Fallback simple comparison
+            0.5
+        }
+    }
+    
+    fn get_analyzer_name(&self) -> String {
+        "SemanticSimilarityEngine".to_string()
     }
 }
 
@@ -2770,7 +2934,7 @@ impl VariationDetector for SemanticVariationDetector {
     }
 
     fn get_supported_variation_types(&self) -> Vec<VariationType> {
-        vec![VariationType::SemanticVariation, VariationType::FunctionalEquivalent]
+        vec![VariationType::SemanticVariation, VariationType::StructuralVariation]
     }
 }
 
@@ -2935,5 +3099,116 @@ impl ObfuscationVariationDetector {
         code.contains("btoa") || code.contains("atob") ||
         code.contains("unescape") || code.contains("decodeURI") ||
         code.contains("base64") || code.contains("hex")
+    }
+}
+
+/// Similarity analysis result
+#[derive(Debug, Clone)]
+pub struct SimilarityResult {
+    pub similarity_score: f32,
+    pub confidence: f32,
+    pub method_used: String,
+    pub processing_time_ms: u64,
+}
+
+/// Advanced pattern variation detector using sophisticated analysis techniques
+pub struct AdvancedPatternVariationDetector;
+
+impl AdvancedPatternVariationDetector {
+    pub fn new() -> Self {
+        Self
+    }
+}
+
+impl VariationDetector for AdvancedPatternVariationDetector {
+    fn detect_variations(&self, _original_pattern: &SecurityPattern, _code: &str, _language: Language) -> Result<Vec<VariationDetection>> {
+        let variations = Vec::new();
+        
+        // Advanced pattern detection using sophisticated algorithms
+        // This would implement advanced heuristics and pattern matching
+        
+        Ok(variations)
+    }
+    
+    fn get_detector_name(&self) -> String {
+        "AdvancedPatternVariationDetector".to_string()
+    }
+    
+    fn get_supported_variation_types(&self) -> Vec<VariationType> {
+        vec![
+            VariationType::SemanticVariation,
+            VariationType::StructuralVariation,
+            VariationType::SyntacticVariation,
+        ]
+    }
+}
+
+/// Machine learning-based variation detector
+pub struct MachineLearningVariationDetector;
+
+impl MachineLearningVariationDetector {
+    pub fn new() -> Self {
+        Self
+    }
+}
+
+impl VariationDetector for MachineLearningVariationDetector {
+    fn detect_variations(&self, original_pattern: &SecurityPattern, code: &str, language: Language) -> Result<Vec<VariationDetection>> {
+        let mut variations = Vec::new();
+        
+        // Use machine learning models to detect pattern variations
+        // This would typically involve trained models for pattern recognition
+        
+        // Placeholder implementation - in a real system this would use ML models
+        // to analyze code embeddings, semantic features, and pattern variations
+        
+        Ok(variations)
+    }
+    
+    fn get_detector_name(&self) -> String {
+        "MachineLearningVariationDetector".to_string()
+    }
+    
+    fn get_supported_variation_types(&self) -> Vec<VariationType> {
+        vec![
+            VariationType::SemanticVariation,
+            VariationType::StructuralVariation,
+            VariationType::APIVariation,
+            VariationType::LanguageSpecificVariation,
+        ]
+    }
+}
+
+/// Context-aware variation detector
+pub struct ContextualVariationDetector;
+
+impl ContextualVariationDetector {
+    pub fn new() -> Self {
+        Self
+    }
+}
+
+impl VariationDetector for ContextualVariationDetector {
+    fn detect_variations(&self, original_pattern: &SecurityPattern, code: &str, language: Language) -> Result<Vec<VariationDetection>> {
+        let mut variations = Vec::new();
+        
+        // Analyze contextual variations based on framework, environment, and usage context
+        // This detector considers the broader context in which patterns appear
+        
+        // Placeholder implementation
+        
+        Ok(variations)
+    }
+    
+    fn get_detector_name(&self) -> String {
+        "ContextualVariationDetector".to_string()
+    }
+    
+    fn get_supported_variation_types(&self) -> Vec<VariationType> {
+        vec![
+            VariationType::StructuralVariation,
+            VariationType::APIVariation,
+            VariationType::LanguageSpecificVariation,
+        ]
     }
 }

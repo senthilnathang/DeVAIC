@@ -400,7 +400,7 @@ pub trait DimensionalityReducer: Send + Sync {
 /// Model management system
 pub struct ModelManager {
     /// Registered models
-    models: DashMap<String, Arc<MLModel>>,
+    models: DashMap<String, Arc<dyn MLModel>>,
     
     /// Model performance tracker
     performance_tracker: Arc<ModelPerformanceTracker>,
@@ -589,6 +589,17 @@ pub struct PatternDiscoveryEngine {
     
     /// Association rule learner
     association_learner: AssociationRuleLearner,
+}
+
+impl PatternDiscoveryEngine {
+    pub fn new() -> Self {
+        Self {
+            frequent_pattern_miner: FrequentPatternMiner::new(),
+            anomaly_detector: AnomalyPatternDetector::new(),
+            sequential_miner: SequentialPatternMiner::new(),
+            association_learner: AssociationRuleLearner::new(),
+        }
+    }
 }
 
 /// ML validation system
@@ -1164,8 +1175,7 @@ impl DataAugmentationSystem { pub fn new() -> Self { Self } }
 pub struct DataQualityChecker;
 impl DataQualityChecker { pub fn new() -> Self { Self } }
 
-pub struct PatternDiscoveryEngine;
-impl PatternDiscoveryEngine { pub fn new() -> Self { Self } }
+// PatternDiscoveryEngine implementation provided above
 
 pub struct RuleTemplateSystem;
 impl RuleTemplateSystem { pub fn new() -> Self { Self } }
@@ -1192,9 +1202,32 @@ pub struct DynamicEnsembleSelector;
 impl DynamicEnsembleSelector { pub fn new() -> Self { Self } }
 
 pub struct FrequentPatternMiner;
+impl FrequentPatternMiner {
+    pub fn new() -> Self {
+        Self
+    }
+}
+
 pub struct AnomalyPatternDetector;
+impl AnomalyPatternDetector { 
+    pub fn new() -> Self { 
+        Self 
+    } 
+}
+
 pub struct SequentialPatternMiner;
+impl SequentialPatternMiner { 
+    pub fn new() -> Self { 
+        Self 
+    } 
+}
+
 pub struct AssociationRuleLearner;
+impl AssociationRuleLearner { 
+    pub fn new() -> Self { 
+        Self 
+    } 
+}
 
 #[derive(Debug, Clone)]
 pub struct DiscoveredPattern {
