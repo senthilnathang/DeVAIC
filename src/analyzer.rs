@@ -10,6 +10,8 @@ use crate::{
     semantic_similarity_engine::{SemanticSimilarityEngine, SimilarityConfig},
     business_logic_analyzer::{BusinessLogicAnalyzer, BusinessLogicConfig},
     progress_reporter::{ProgressReporter, ProgressEvent},
+    false_positive_reduction::{FalsePositiveReducer, EnhancedVulnerability},
+    impact_assessment::{ImpactAssessmentEngine, AssessedVulnerability},
     Language, Vulnerability,
 };
 use std::path::Path;
@@ -27,6 +29,8 @@ pub struct Analyzer {
     business_logic_analyzer: Option<BusinessLogicAnalyzer>,
     enable_ai_analysis: bool,
     progress_reporter: Option<ProgressReporter>,
+    false_positive_reducer: Option<FalsePositiveReducer>,
+    impact_assessment_engine: Option<ImpactAssessmentEngine>,
 }
 
 impl Analyzer {
@@ -51,6 +55,24 @@ impl Analyzer {
         };
         
         let enable_ai_analysis = config.enable_ai_analysis.unwrap_or(false);
+        
+        // Initialize false positive reducer if AI analysis is enabled
+        let false_positive_reducer = if enable_ai_analysis {
+            Some(FalsePositiveReducer::new())
+        } else {
+            None
+        };
+        
+        // Initialize impact assessment engine if AI analysis is enabled
+        let impact_assessment_engine = if enable_ai_analysis {
+            match ImpactAssessmentEngine::new() {
+                Ok(engine) => Some(engine),
+                Err(_) => None,
+            }
+        } else {
+            None
+        };
+        
         Ok(Self {
             config,
             rule_engine,
@@ -61,6 +83,8 @@ impl Analyzer {
             business_logic_analyzer,
             enable_ai_analysis,
             progress_reporter: None,
+            false_positive_reducer,
+            impact_assessment_engine,
         })
     }
 
@@ -88,6 +112,24 @@ impl Analyzer {
         };
         
         let enable_ai_analysis = config.enable_ai_analysis.unwrap_or(false);
+        
+        // Initialize false positive reducer if AI analysis is enabled
+        let false_positive_reducer = if enable_ai_analysis {
+            Some(FalsePositiveReducer::new())
+        } else {
+            None
+        };
+        
+        // Initialize impact assessment engine if AI analysis is enabled
+        let impact_assessment_engine = if enable_ai_analysis {
+            match ImpactAssessmentEngine::new() {
+                Ok(engine) => Some(engine),
+                Err(_) => None,
+            }
+        } else {
+            None
+        };
+        
         Self {
             config,
             rule_engine,
@@ -98,6 +140,8 @@ impl Analyzer {
             business_logic_analyzer,
             enable_ai_analysis,
             progress_reporter: None,
+            false_positive_reducer,
+            impact_assessment_engine,
         }
     }
 
@@ -129,6 +173,320 @@ impl Analyzer {
     /// Get progress event receiver
     pub fn get_progress_receiver(&self) -> Option<broadcast::Receiver<ProgressEvent>> {
         self.progress_reporter.as_ref().map(|p| p.subscribe())
+    }
+
+    /// Enable intelligent false positive reduction
+    pub fn enable_false_positive_reduction(&mut self) {
+        if self.false_positive_reducer.is_none() {
+            self.false_positive_reducer = Some(FalsePositiveReducer::new());
+        }
+    }
+
+    /// Analyze directory with enhanced vulnerability processing
+    pub async fn analyze_directory_enhanced(&self, path: &Path) -> Result<Vec<EnhancedVulnerability>> {
+        // Get regular vulnerabilities
+        let vulnerabilities = self.analyze_directory(path).await?;
+        
+        // Apply false positive reduction if enabled
+        if let Some(ref reducer) = self.false_positive_reducer {
+            Ok(reducer.process_vulnerabilities(vulnerabilities))
+        } else {
+            // Convert to enhanced vulnerabilities without ML processing
+            Ok(vulnerabilities.into_iter().map(|vuln| EnhancedVulnerability {
+                vulnerability: vuln,
+                false_positive_probability: 0.3, // Default assumption
+                confidence_score: 0.7,
+                contributing_factors: Vec::new(),
+                similar_patterns: Vec::new(),
+                user_recommendations: Vec::new(),
+                suggested_actions: Vec::new(),
+            }).collect())
+        }
+    }
+
+    /// Record user feedback for continuous learning
+    pub fn record_vulnerability_feedback(&self, feedback: crate::false_positive_reduction::VulnerabilityFeedback) -> Result<()> {
+        if let Some(ref reducer) = self.false_positive_reducer {
+            reducer.record_feedback(feedback)
+                .map_err(|e| DevaicError::Analysis(format!("Failed to record feedback: {}", e)))?;
+        }
+        Ok(())
+    }
+
+    /// Get false positive reduction analytics
+    pub fn get_false_positive_analytics(&self) -> Option<crate::false_positive_reduction::FPReductionAnalytics> {
+        self.false_positive_reducer.as_ref().map(|reducer| reducer.get_analytics())
+    }
+
+    /// Analyze directory with comprehensive impact assessment
+    pub async fn analyze_directory_with_impact_assessment(&self, path: &Path) -> Result<Vec<AssessedVulnerability>> {
+        // First get enhanced vulnerabilities
+        let enhanced_vulns = self.analyze_directory_enhanced(path).await?;
+        
+        // Apply impact assessment if enabled
+        if let Some(ref impact_engine) = self.impact_assessment_engine {
+            impact_engine.assess_vulnerabilities_batch(&enhanced_vulns)
+                .map_err(|e| DevaicError::Analysis(format!("Impact assessment failed: {}", e)))
+        } else {
+            // Convert to assessed vulnerabilities without impact assessment
+            let assessed_vulns: Result<Vec<AssessedVulnerability>> = enhanced_vulns.into_iter().map(|enhanced_vuln| {
+                // Create a minimal assessed vulnerability without full impact analysis
+                self.create_minimal_assessed_vulnerability(enhanced_vuln)
+            }).collect();
+            assessed_vulns
+        }
+    }
+
+    /// Assess impact for a single enhanced vulnerability
+    pub fn assess_vulnerability_impact(&self, enhanced_vuln: &EnhancedVulnerability) -> Result<AssessedVulnerability> {
+        if let Some(ref impact_engine) = self.impact_assessment_engine {
+            impact_engine.assess_vulnerability_impact(enhanced_vuln)
+        } else {
+            self.create_minimal_assessed_vulnerability(enhanced_vuln.clone())
+        }
+    }
+
+    /// Enable impact assessment functionality
+    pub fn enable_impact_assessment(&mut self) -> Result<()> {
+        if self.impact_assessment_engine.is_none() {
+            self.impact_assessment_engine = Some(ImpactAssessmentEngine::new()?);
+        }
+        Ok(())
+    }
+
+    /// Get impact assessment analytics
+    pub fn get_impact_assessment_analytics(&self) -> Option<crate::impact_assessment::AssessmentAnalytics> {
+        self.impact_assessment_engine.as_ref().and_then(|engine| {
+            engine.get_assessment_analytics().ok()
+        })
+    }
+
+    /// Create minimal assessed vulnerability without full impact analysis
+    fn create_minimal_assessed_vulnerability(&self, enhanced_vuln: EnhancedVulnerability) -> Result<AssessedVulnerability> {
+        use crate::impact_assessment::*;
+        use std::time::SystemTime;
+        
+        // Create basic CVSS assessment
+        let cvss_assessment = CvssAssessment {
+            version: CvssVersion::V3_1,
+            base_metrics: CvssBaseMetrics {
+                attack_vector: AttackVector::Network,
+                attack_complexity: AttackComplexity::Low,
+                privileges_required: PrivilegesRequired::None,
+                user_interaction: UserInteraction::None,
+                scope: Scope::Unchanged,
+                confidentiality_impact: Impact::High,
+                integrity_impact: Impact::High,
+                availability_impact: Impact::High,
+            },
+            temporal_metrics: CvssTemporalMetrics {
+                exploit_code_maturity: ExploitCodeMaturity::ProofOfConcept,
+                remediation_level: RemediationLevel::OfficialFix,
+                report_confidence: ReportConfidence::Confirmed,
+            },
+            environmental_metrics: CvssEnvironmentalMetrics {
+                confidentiality_requirement: SecurityRequirement::High,
+                integrity_requirement: SecurityRequirement::High,
+                availability_requirement: SecurityRequirement::High,
+                modified_attack_vector: None,
+                modified_attack_complexity: None,
+                modified_privileges_required: None,
+                modified_user_interaction: None,
+                modified_scope: None,
+                modified_confidentiality_impact: None,
+                modified_integrity_impact: None,
+                modified_availability_impact: None,
+            },
+            scores: CvssScores {
+                base_score: match enhanced_vuln.vulnerability.severity {
+                    crate::Severity::Critical => 9.5,
+                    crate::Severity::High => 8.0,
+                    crate::Severity::Medium => 6.0,
+                    crate::Severity::Low => 3.0,
+                    crate::Severity::Info => 1.0,
+                },
+                temporal_score: 0.0,
+                environmental_score: 0.0,
+                overall_score: match enhanced_vuln.vulnerability.severity {
+                    crate::Severity::Critical => 9.5,
+                    crate::Severity::High => 8.0,
+                    crate::Severity::Medium => 6.0,
+                    crate::Severity::Low => 3.0,
+                    crate::Severity::Info => 1.0,
+                },
+                severity_rating: match enhanced_vuln.vulnerability.severity {
+                    crate::Severity::Critical => CvssSeverityRating::Critical,
+                    crate::Severity::High => CvssSeverityRating::High,
+                    crate::Severity::Medium => CvssSeverityRating::Medium,
+                    crate::Severity::Low => CvssSeverityRating::Low,
+                    crate::Severity::Info => CvssSeverityRating::None,
+                },
+            },
+            contextual_adjustments: vec![],
+            confidence_metrics: ConfidenceMetrics {
+                base_confidence: enhanced_vuln.confidence_score,
+                temporal_confidence: 0.7,
+                environmental_confidence: 0.5,
+                overall_confidence: enhanced_vuln.confidence_score * 0.8,
+                uncertainty_factors: vec!["Limited context analysis".to_string()],
+            },
+        };
+
+        // Create basic risk assessment
+        let risk_classification = match enhanced_vuln.vulnerability.severity {
+            crate::Severity::Critical => RiskClassification::Critical,
+            crate::Severity::High => RiskClassification::High,
+            crate::Severity::Medium => RiskClassification::Moderate,
+            crate::Severity::Low => RiskClassification::Low,
+            crate::Severity::Info => RiskClassification::Negligible,
+        };
+
+        let risk_assessment = OverallRiskAssessment {
+            composite_risk_score: cvss_assessment.scores.overall_score,
+            risk_classification: risk_classification.clone(),
+            risk_factors: RiskFactorsBreakdown {
+                technical_factors: 0.7,
+                business_factors: 0.5,
+                environmental_factors: 0.5,
+                threat_factors: 0.6,
+                control_factors: 0.5,
+            },
+            uncertainty_analysis: UncertaintyAnalysis {
+                confidence_interval: (0.3, 0.9),
+                uncertainty_sources: vec!["Simplified assessment".to_string()],
+                sensitivity_analysis: vec![],
+            },
+            risk_trend: RiskTrendPrediction {
+                trend_direction: TrendDirection::Stable,
+                trend_magnitude: 0.0,
+                prediction_confidence: 0.5,
+                time_horizon: std::time::Duration::from_secs(30 * 24 * 3600),
+            },
+            critical_paths: vec![],
+        };
+
+        // Create basic remediation guidance
+        let remediation_priority = match risk_classification {
+            RiskClassification::Critical | RiskClassification::Catastrophic => RemediationPriority::Critical,
+            RiskClassification::High | RiskClassification::Severe => RemediationPriority::High,
+            RiskClassification::Moderate => RemediationPriority::Medium,
+            RiskClassification::Low => RemediationPriority::Low,
+            RiskClassification::Negligible => RemediationPriority::Planning,
+        };
+
+        let remediation_guidance = RemediationGuidance {
+            priority_level: remediation_priority,
+            recommended_timeline: RemediationTimeline {
+                emergency_patch: None,
+                temporary_mitigation: None,
+                full_remediation: std::time::Duration::from_secs(30 * 24 * 3600),
+                testing_period: std::time::Duration::from_secs(3 * 24 * 3600),
+                deployment_window: None,
+            },
+            remediation_strategies: vec![],
+            resource_requirements: ResourceRequirements {
+                personnel_hours: 16.0,
+                skill_requirements: vec!["Security Engineering".to_string()],
+                technology_requirements: vec!["Patch Management".to_string()],
+                budget_estimate: 5000.0,
+            },
+            risk_reduction_potential: RiskReductionPotential {
+                risk_reduction_percentage: 80.0,
+                residual_risk_level: 2.0,
+                effectiveness_confidence: 0.7,
+            },
+            interim_mitigations: vec![],
+        };
+
+        Ok(AssessedVulnerability {
+            enhanced_vulnerability: enhanced_vuln,
+            cvss_assessment,
+            business_impact: BusinessImpactAnalysis::default(),
+            environmental_impact: EnvironmentalImpact {
+                environment_type: EnvironmentType::Production,
+                network_exposure: NetworkExposureAnalysis {
+                    internet_facing: false,
+                    network_segmentation: NetworkSegmentationLevel::Basic,
+                    firewall_protection: FirewallProtectionLevel::Basic,
+                    access_controls: AccessControlLevel::Basic,
+                },
+                data_sensitivity: DataSensitivityAssessment {
+                    contains_pii: false,
+                    contains_financial_data: false,
+                    contains_health_data: false,
+                    contains_trade_secrets: false,
+                    data_sensitivity_score: 5.0,
+                },
+                system_criticality: SystemCriticalityAssessment {
+                    business_criticality: 5.0,
+                    technical_criticality: 5.0,
+                    dependency_criticality: 5.0,
+                    overall_criticality: 5.0,
+                },
+                security_controls: SecurityControlsAssessment {
+                    preventive_controls: 5.0,
+                    detective_controls: 5.0,
+                    corrective_controls: 5.0,
+                    overall_control_effectiveness: 5.0,
+                },
+                detection_capabilities: DetectionCapabilitiesAssessment {
+                    monitoring_coverage: 5.0,
+                    alerting_effectiveness: 5.0,
+                    incident_response_readiness: 5.0,
+                    forensic_capabilities: 5.0,
+                },
+            },
+            exploitability: ExploitabilityAssessment {
+                exploit_availability: ExploitAvailability {
+                    public_exploits_available: false,
+                    exploit_maturity: ExploitMaturityLevel::ProofOfConcept,
+                    exploit_reliability: 0.5,
+                    weaponization_difficulty: 0.7,
+                },
+                attack_complexity_analysis: AttackComplexityAnalysis {
+                    technical_complexity: 0.5,
+                    resource_requirements: 0.5,
+                    skill_requirements: 0.5,
+                    time_requirements: std::time::Duration::from_secs(8 * 3600),
+                },
+                attacker_requirements: AttackerRequirements {
+                    required_skills: vec!["Basic security knowledge".to_string()],
+                    required_resources: vec!["Standard tools".to_string()],
+                    required_access: vec!["Network access".to_string()],
+                    overall_difficulty: 0.5,
+                },
+                attack_vectors: vec![],
+                weaponization_potential: WeaponizationPotential {
+                    automation_potential: 0.5,
+                    scalability: 0.5,
+                    persistence_capability: 0.5,
+                    evasion_capability: 0.5,
+                },
+                exploit_reliability: ExploitReliability {
+                    success_rate: 0.5,
+                    consistency: 0.5,
+                    environmental_dependency: 0.5,
+                },
+                time_to_exploit: TimeToExploit {
+                    minimum_time: std::time::Duration::from_secs(1 * 3600),
+                    average_time: std::time::Duration::from_secs(8 * 3600),
+                    maximum_time: std::time::Duration::from_secs(24 * 3600),
+                    time_variance: std::time::Duration::from_secs(4 * 3600),
+                },
+            },
+            compliance_impact: ComplianceImpactAnalysis::default(),
+            risk_correlations: vec![],
+            risk_assessment,
+            remediation_guidance,
+            assessment_metadata: AssessmentMetadata {
+                assessed_at: SystemTime::now(),
+                engine_version: "DeVAIC-minimal".to_string(),
+                data_sources: vec!["Basic Assessment".to_string()],
+                overall_confidence: 0.6,
+                reviewer: None,
+                last_updated: SystemTime::now(),
+            },
+        })
     }
 
     pub async fn analyze_directory(&self, path: &Path) -> Result<Vec<Vulnerability>> {

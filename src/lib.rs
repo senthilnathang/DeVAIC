@@ -40,6 +40,10 @@ pub mod business_logic_analyzer;
 pub mod performance;
 pub mod advanced_caching;
 pub mod progress_reporter;
+pub mod adaptive_rule_prioritization;
+pub mod false_positive_reduction;
+pub mod impact_assessment;
+pub mod incremental_analysis;
 
 pub use analyzer::Analyzer;
 pub use build_break::{BuildBreakAnalyzer, BuildBreakResult};
@@ -79,6 +83,19 @@ pub use business_logic_analyzer::{BusinessLogicAnalyzer, BusinessLogicConfig};
 pub use advanced_caching::{
     AdvancedCachingSystem, AdvancedCachingConfig, DistributedCache, SmartCacheWarmer,
     CacheCoherencyManager, CacheType, CacheEntry as AdvancedCacheEntry, LocalCache, CacheStatisticsReport
+};
+pub use false_positive_reduction::{
+    FalsePositiveReducer, EnhancedVulnerability, VulnerabilityFeedback, Classification,
+    FeedbackContext, RemediationEffort, FPReductionAnalytics
+};
+pub use impact_assessment::{
+    ImpactAssessmentEngine, AssessedVulnerability, CvssAssessment, BusinessImpactAnalysis,
+    EnvironmentalImpact, ExploitabilityAssessment, ComplianceImpactAnalysis, OverallRiskAssessment,
+    RemediationGuidance, RiskClassification, RemediationPriority, ImpactAssessmentConfig
+};
+pub use incremental_analysis::{
+    IncrementalAnalysisEngine, IncrementalConfig, IncrementalAnalysisResult, IncrementalStatistics,
+    FileMetadata, FileDependency, DependencyType, AnalysisType
 };
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize, Copy)]

@@ -340,7 +340,7 @@ pub enum EncodingType {
 pub enum EncodingContext {
     Html,
     HtmlAttribute,
-    JavaScript,
+    Javascript,
     Css,
     Url,
     Json,

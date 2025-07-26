@@ -942,7 +942,7 @@ pub struct ComplianceCheck {
 pub enum ScriptLanguage {
     Lua,
     Python,
-    JavaScript,
+    Javascript,
     Ruby,
 }
 

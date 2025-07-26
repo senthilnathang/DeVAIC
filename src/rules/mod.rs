@@ -38,8 +38,10 @@ use crate::{
     config::RulesConfig,
     error::Result,
     parsers::{ParsedAst, SourceFile},
+    adaptive_rule_prioritization::{AdaptiveRulePrioritizer, AnalysisContext, RulePriority},
     Language, Severity, Vulnerability,
 };
+use std::sync::Arc;
 
 pub struct RuleEngine {
     config: RulesConfig,
@@ -77,6 +79,7 @@ pub struct RuleEngine {
     sanitizer_rules: sanitizer_rules::SanitizerRules,
     dependency_scanner_rules: dependency_scanner_rules::DependencyScannerRules,
     custom_pattern_rules: Option<custom_pattern_rules::CustomPatternRules>,
+    adaptive_prioritizer: Option<Arc<AdaptiveRulePrioritizer>>,
 }
 
 impl RuleEngine {
@@ -117,11 +120,48 @@ impl RuleEngine {
             sanitizer_rules: sanitizer_rules::SanitizerRules::new(),
             dependency_scanner_rules: dependency_scanner_rules::DependencyScannerRules::new(),
             custom_pattern_rules: None,
+            adaptive_prioritizer: None,
         }
     }
 
     pub fn set_custom_pattern_rules(&mut self, custom_rules: custom_pattern_rules::CustomPatternRules) {
         self.custom_pattern_rules = Some(custom_rules);
+    }
+
+    /// Enable adaptive rule prioritization
+    pub fn enable_adaptive_prioritization(&mut self, prioritizer: Arc<AdaptiveRulePrioritizer>) {
+        self.adaptive_prioritizer = Some(prioritizer);
+    }
+
+    /// Get available rule IDs for prioritization
+    pub fn get_available_rules(&self, language: &Language) -> Vec<String> {
+        // This would be enhanced to return actual rule IDs from each rule set
+        // For now, return sample rule IDs based on language
+        match language {
+            Language::Rust => vec![
+                "rust_buffer_overflow".to_string(),
+                "rust_memory_leak".to_string(),
+                "rust_unsafe_usage".to_string(),
+                "rust_panic_detection".to_string(),
+            ],
+            Language::Javascript => vec![
+                "js_xss_detection".to_string(),
+                "js_sql_injection".to_string(),
+                "js_prototype_pollution".to_string(),
+                "js_eval_usage".to_string(),
+            ],
+            Language::Python => vec![
+                "py_sql_injection".to_string(),
+                "py_command_injection".to_string(),
+                "py_pickle_usage".to_string(),
+                "py_eval_exec_usage".to_string(),
+            ],
+            _ => vec![
+                "generic_input_validation".to_string(),
+                "generic_authentication".to_string(),
+                "generic_crypto_usage".to_string(),
+            ],
+        }
     }
 
     pub fn get_rule_count(&self) -> usize {
