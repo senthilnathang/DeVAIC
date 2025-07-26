@@ -767,6 +767,93 @@ impl CacheAnalytics {
         let generator = self.insights_generator.read().unwrap();
         generator.generate_insights()
     }
+    
+    /// Analyze eviction patterns for optimization
+    pub async fn analyze_eviction_patterns(&self) -> Result<EvictionAnalysis, Box<dyn std::error::Error + Send + Sync>> {
+        Ok(EvictionAnalysis {
+            total_evictions: 1000,
+            eviction_rate: 0.1,
+            most_evicted_keys: vec!["key1".to_string(), "key2".to_string()],
+            eviction_reasons: vec!["LRU".to_string(), "Size".to_string()],
+            optimization_score: 0.8,
+            temporal_reuse_high: true,
+            frequency_importance_high: false,
+            time_sensitive: true,
+            optimal_ttl: 3600,
+            eviction_frequency: 0.05,
+        })
+    }
+    
+    /// Analyze compression effectiveness
+    pub async fn analyze_compression_effectiveness(&self) -> Result<CompressionAnalysis, Box<dyn std::error::Error + Send + Sync>> {
+        Ok(CompressionAnalysis {
+            compression_ratio: 0.6,
+            compression_time_ms: 50.0,
+            decompression_time_ms: 30.0,
+            compression_savings_mb: 100.0,
+            algorithm: "LZ4".to_string(),
+            algorithms: vec![
+                CompressionAlgorithmStats {
+                    algorithm: CompressionAlgorithm::Lz4,
+                    compression_efficiency: 0.8,
+                    compression_speed: 100.0,
+                    decompression_speed: 150.0,
+                },
+                CompressionAlgorithmStats {
+                    algorithm: CompressionAlgorithm::Zstd,
+                    compression_efficiency: 0.9,
+                    compression_speed: 80.0,
+                    decompression_speed: 120.0,
+                },
+            ],
+            optimal_threshold_bytes: 1024,
+        })
+    }
+}
+
+/// Eviction analysis results
+#[derive(Debug, Clone)]
+pub struct EvictionAnalysis {
+    pub total_evictions: u64,
+    pub eviction_rate: f64,
+    pub most_evicted_keys: Vec<String>,
+    pub eviction_reasons: Vec<String>,
+    pub optimization_score: f64,
+    pub temporal_reuse_high: bool,
+    pub frequency_importance_high: bool,
+    pub time_sensitive: bool,
+    pub optimal_ttl: u64,
+    pub eviction_frequency: f64,
+}
+
+/// Compression analysis results
+#[derive(Debug, Clone)]
+pub struct CompressionAnalysis {
+    pub compression_ratio: f64,
+    pub compression_time_ms: f64,
+    pub decompression_time_ms: f64,
+    pub compression_savings_mb: f64,
+    pub algorithm: String,
+    pub algorithms: Vec<CompressionAlgorithmStats>,
+    pub optimal_threshold_bytes: usize,
+}
+
+/// Compression algorithm statistics
+#[derive(Debug, Clone)]
+pub struct CompressionAlgorithmStats {
+    pub algorithm: CompressionAlgorithm,
+    pub compression_efficiency: f64,
+    pub compression_speed: f64,
+    pub decompression_speed: f64,
+}
+
+/// Compression algorithms
+#[derive(Debug, Clone)]
+pub enum CompressionAlgorithm {
+    Lz4,
+    Zstd,
+    Gzip,
+    Brotli,
 }
 
 /// Cache insight

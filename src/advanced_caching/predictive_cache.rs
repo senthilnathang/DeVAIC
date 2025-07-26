@@ -1884,6 +1884,24 @@ impl PredictiveCache {
         // Get prefetch recommendations
         Vec::new() // Placeholder
     }
+    
+    /// Analyze access patterns for optimization
+    pub async fn analyze_access_patterns(&self) -> Result<Vec<crate::advanced_caching::AccessPattern>, Box<dyn std::error::Error + Send + Sync>> {
+        let mut patterns = Vec::new();
+        
+        // Create mock access patterns for now
+        // In a real implementation, this would analyze actual access data
+        patterns.push(crate::advanced_caching::AccessPattern {
+            key: "pattern1".to_string(),
+            frequency: 100,
+            last_access: std::time::Instant::now(),
+            access_interval_ms: vec![100, 150, 120],
+            predictability_score: 0.85,
+            importance_score: 0.9,
+        });
+        
+        Ok(patterns)
+    }
 }
 
 // Implementation stubs

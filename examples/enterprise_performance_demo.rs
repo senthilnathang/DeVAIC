@@ -4,13 +4,14 @@
 /// optimization suite for AI-powered vulnerability detection systems.
 
 use devaic::{
-    Config,
     performance::{
         AIPerformanceOptimizer, AIPerformanceConfig,
         MemoryProfiler, MemoryProfilerConfig,
         ScalabilityAnalyzer, ScalabilityConfig,
         EnterpriseBenchmarkSuite, EnterpriseBenchmarkConfig,
         WorkerSpecialization,
+        memory_profiler::AllocationType,
+        scalability_analyzer::{AnalysisType, FileSizeDistribution},
     },
 };
 use std::time::Duration;
@@ -106,7 +107,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         memory_profiler.track_allocation(
             "semantic_similarity", 
             1024 * 1024 * 10, // 10MB allocation
-            devaic::performance::AllocationType::Embedding
+            AllocationType::Embedding
         ).await;
         
         sleep(Duration::from_millis(500)).await;
@@ -154,10 +155,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 concurrent_users: vec![1, 2, 4],
                 files_per_user: vec![5, 10],
                 analysis_types: vec![
-                    devaic::performance::AnalysisType::TraditionalOnly,
-                    devaic::performance::AnalysisType::AICombined,
+                    AnalysisType::TraditionalOnly,
+                    AnalysisType::AICombined,
                 ],
-                file_size_distribution: devaic::performance::FileSizeDistribution {
+                file_size_distribution: FileSizeDistribution {
                     small_files_percent: 70.0,
                     medium_files_percent: 25.0,
                     large_files_percent: 5.0,
@@ -300,7 +301,7 @@ def validate_input(user_input):
     memory_profiler.track_allocation(
         "workload_processing", 
         workload_files.len() * 1024 * 50, // Estimate 50KB per file
-        devaic::performance::AllocationType::String
+        AllocationType::String
     ).await;
     
     // Process files with AI optimization

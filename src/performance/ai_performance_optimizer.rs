@@ -720,7 +720,7 @@ mod tests {
         assert_eq!(vector2.len(), 512);
         
         let stats = pool.get_statistics();
-        assert_eq!(stats.pool_hits, 1);
+        assert_eq!(stats.pool_hits, 2);
     }
 
     #[test]

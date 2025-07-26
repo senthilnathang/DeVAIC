@@ -4,20 +4,21 @@ use devaic::{
 };
 use std::path::PathBuf;
 
-fn main() -> devaic::Result<()> {
+#[tokio::main]
+async fn main() -> devaic::Result<()> {
     // Example 1: Basic analysis with ML enhancement
-    basic_ml_analysis()?;
+    basic_ml_analysis().await?;
     
     // Example 2: Custom rules with compliance reporting
-    custom_rules_compliance_example()?;
+    custom_rules_compliance_example().await?;
     
     // Example 3: Full featured analysis with visualization
-    full_featured_analysis()?;
+    full_featured_analysis().await?;
     
     Ok(())
 }
 
-fn basic_ml_analysis() -> devaic::Result<()> {
+async fn basic_ml_analysis() -> devaic::Result<()> {
     println!("=== Example 1: ML-Enhanced Analysis ===");
     
     // Initialize ML engine
@@ -40,7 +41,7 @@ fn basic_ml_analysis() -> devaic::Result<()> {
     // Analyze a file
     let target = PathBuf::from("tests/fixtures/vulnerable.py");
     if target.exists() {
-        let vulnerabilities = analyzer.analyze_file(&target)?;
+        let vulnerabilities = analyzer.analyze_file(&target).await?;
         println!("Found {} vulnerabilities", vulnerabilities.len());
         
         // Get ML metrics
@@ -54,7 +55,7 @@ fn basic_ml_analysis() -> devaic::Result<()> {
     Ok(())
 }
 
-fn custom_rules_compliance_example() -> devaic::Result<()> {
+async fn custom_rules_compliance_example() -> devaic::Result<()> {
     println!("\n=== Example 2: Custom Rules + Compliance ===");
     
     // Initialize custom rule engine
@@ -99,9 +100,13 @@ fn custom_rules_compliance_example() -> devaic::Result<()> {
             description: "Potential SQL injection vulnerability".to_string(),
             file_path: "test.py".to_string(),
             line_number: 42,
-            column: 10,
+            column_start: 10,
+            column_end: 50,
             source_code: "query = \"SELECT * FROM users WHERE id = \" + user_id".to_string(),
             recommendation: "Use parameterized queries".to_string(),
+            owasp: Some("A03:2021".to_string()),
+            references: vec!["https://owasp.org/www-project-top-ten/2017/A1_2017-Injection".to_string()],
+            confidence: 0.9,
         }
     ];
     
@@ -113,7 +118,7 @@ fn custom_rules_compliance_example() -> devaic::Result<()> {
     Ok(())
 }
 
-fn full_featured_analysis() -> devaic::Result<()> {
+async fn full_featured_analysis() -> devaic::Result<()> {
     println!("\n=== Example 3: Full Featured Analysis ===");
     
     // Initialize all engines
@@ -133,9 +138,13 @@ fn full_featured_analysis() -> devaic::Result<()> {
             description: "Potential XSS vulnerability".to_string(),
             file_path: "app.js".to_string(),
             line_number: 15,
-            column: 5,
+            column_start: 5,
+            column_end: 35,
             source_code: "document.innerHTML = userInput".to_string(),
             recommendation: "Sanitize user input before rendering".to_string(),
+            owasp: Some("A03:2021".to_string()),
+            references: vec!["https://owasp.org/www-project-top-ten/2017/A7_2017-Cross-Site_Scripting_(XSS)".to_string()],
+            confidence: 0.85,
         },
         devaic::Vulnerability {
             id: "VULN-002".to_string(),
@@ -146,9 +155,13 @@ fn full_featured_analysis() -> devaic::Result<()> {
             description: "Use of weak cryptographic algorithm".to_string(),
             file_path: "crypto.py".to_string(),
             line_number: 23,
-            column: 8,
+            column_start: 8,
+            column_end: 29,
             source_code: "hashlib.md5(password)".to_string(),
             recommendation: "Use SHA-256 or stronger hashing algorithm".to_string(),
+            owasp: Some("A02:2021".to_string()),
+            references: vec!["https://cwe.mitre.org/data/definitions/327.html".to_string()],
+            confidence: 0.75,
         },
     ];
     

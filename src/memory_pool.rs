@@ -1,7 +1,10 @@
 use std::collections::VecDeque;
 use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use parking_lot::{RwLock, Mutex as PLMutex};
 use crate::Vulnerability;
+use std::alloc::{GlobalAlloc, Layout, System};
+use std::ptr::NonNull;
 
 /// Memory pool for reusing allocated objects to reduce garbage collection pressure
 pub struct MemoryPool<T> {
@@ -9,6 +12,10 @@ pub struct MemoryPool<T> {
     factory: Box<dyn Fn() -> T + Send + Sync>,
     max_size: usize,
     reset_fn: Option<Box<dyn Fn(&mut T) + Send + Sync>>,
+    // Performance metrics
+    total_allocations: AtomicUsize,
+    cache_hits: AtomicUsize,
+    cache_misses: AtomicUsize,
 }
 
 impl<T> MemoryPool<T>
@@ -24,6 +31,9 @@ where
             factory: Box::new(factory),
             max_size,
             reset_fn: None,
+            total_allocations: AtomicUsize::new(0),
+            cache_hits: AtomicUsize::new(0),
+            cache_misses: AtomicUsize::new(0),
         }
     }
 
@@ -37,16 +47,22 @@ where
 
     /// Get an object from the pool or create a new one
     pub fn get(&self) -> PooledObject<T> {
+        self.total_allocations.fetch_add(1, Ordering::Relaxed);
+        
         let mut pool = self.pool.lock();
         let object = match pool.pop_front() {
             Some(mut obj) => {
+                self.cache_hits.fetch_add(1, Ordering::Relaxed);
                 // Reset the object if reset function is provided
                 if let Some(ref reset_fn) = self.reset_fn {
                     reset_fn(&mut obj);
                 }
                 obj
             }
-            None => Box::new((self.factory)()),
+            None => {
+                self.cache_misses.fetch_add(1, Ordering::Relaxed);
+                Box::new((self.factory)())
+            }
         };
 
         PooledObject {
@@ -73,6 +89,30 @@ where
         
         for _ in 0..actual_count {
             pool.push_back(Box::new((self.factory)()));
+        }
+    }
+    
+    /// Get pool performance statistics
+    pub fn stats(&self) -> PoolStats {
+        let total = self.total_allocations.load(Ordering::Relaxed);
+        let hits = self.cache_hits.load(Ordering::Relaxed);
+        let misses = self.cache_misses.load(Ordering::Relaxed);
+        
+        PoolStats {
+            total_allocations: total,
+            cache_hits: hits,
+            cache_misses: misses,
+            hit_ratio: if total > 0 { hits as f64 / total as f64 } else { 0.0 },
+            current_size: self.size(),
+            max_size: self.max_size,
+        }
+    }
+    
+    /// Warm up the pool by pre-allocating and immediately releasing objects
+    pub fn warm_up(&self, iterations: usize) {
+        for _ in 0..iterations {
+            let _obj = self.get();
+            // Object is automatically returned to pool when dropped
         }
     }
 }
@@ -277,6 +317,26 @@ pub struct ArenaStats {
     pub max_memory: usize,
 }
 
+#[derive(Debug)]
+pub struct PoolStats {
+    pub total_allocations: usize,
+    pub cache_hits: usize,
+    pub cache_misses: usize,
+    pub hit_ratio: f64,
+    pub current_size: usize,
+    pub max_size: usize,
+}
+
+impl PoolStats {
+    pub fn print_summary(&self) {
+        println!("Pool Statistics:");
+        println!("  Total allocations: {}", self.total_allocations);
+        println!("  Cache hits: {} ({:.1}%)", self.cache_hits, self.hit_ratio * 100.0);
+        println!("  Cache misses: {}", self.cache_misses);
+        println!("  Current size: {}/{}", self.current_size, self.max_size);
+    }
+}
+
 /// Global memory pools for common object types
 pub struct GlobalMemoryPools {
     vulnerability_pool: VulnerabilityPool,
@@ -317,7 +377,16 @@ impl GlobalMemoryPools {
             vulnerability_pool_size: self.vulnerability_pool.size(),
             string_pool_size: self.string_pool.pool.size(),
             arena_stats: self.arena.stats(),
+            vulnerability_pool_stats: self.vulnerability_pool.pool.stats(),
+            string_pool_stats: self.string_pool.pool.stats(),
         }
+    }
+    
+    /// Warm up all pools for better initial performance
+    pub fn warm_up(&self) {
+        // Warm up pools by allocating and releasing objects
+        self.vulnerability_pool.pool.warm_up(10);
+        self.string_pool.pool.warm_up(20);
     }
 
     /// Clear all pools
@@ -333,17 +402,115 @@ pub struct MemoryStats {
     pub vulnerability_pool_size: usize,
     pub string_pool_size: usize,
     pub arena_stats: ArenaStats,
+    pub vulnerability_pool_stats: PoolStats,
+    pub string_pool_stats: PoolStats,
 }
 
 impl MemoryStats {
     pub fn print_summary(&self) {
         println!("Memory Pool Statistics:");
-        println!("  Vulnerability pool size: {}", self.vulnerability_pool_size);
-        println!("  String pool size: {}", self.string_pool_size);
-        println!("  Arena chunks: {}", self.arena_stats.total_chunks);
-        println!("  Arena allocated: {} KB", self.arena_stats.total_allocated / 1024);
-        println!("  Arena max memory: {} MB", self.arena_stats.max_memory / 1024 / 1024);
+        println!("\nVulnerability Pool:");
+        self.vulnerability_pool_stats.print_summary();
+        println!("\nString Pool:");
+        self.string_pool_stats.print_summary();
+        println!("\nMemory Arena:");
+        println!("  Total chunks: {}", self.arena_stats.total_chunks);
+        println!("  Allocated memory: {} KB", self.arena_stats.total_allocated / 1024);
+        println!("  Maximum memory: {} MB", self.arena_stats.max_memory / 1024 / 1024);
+        println!("  Memory utilization: {:.1}%", 
+            (self.arena_stats.total_allocated as f64 / self.arena_stats.max_memory as f64) * 100.0);
     }
+}
+
+/// Lock-free memory allocator for high-performance scenarios
+pub struct LockFreeAllocator {
+    system_allocator: System,
+    allocation_count: AtomicUsize,
+    deallocation_count: AtomicUsize,
+    total_allocated: AtomicUsize,
+}
+
+impl LockFreeAllocator {
+    pub fn new() -> Self {
+        Self {
+            system_allocator: System,
+            allocation_count: AtomicUsize::new(0),
+            deallocation_count: AtomicUsize::new(0),
+            total_allocated: AtomicUsize::new(0),
+        }
+    }
+    
+    pub fn allocate_aligned(&self, size: usize, align: usize) -> Option<NonNull<u8>> {
+        let layout = Layout::from_size_align(size, align).ok()?;
+        
+        // Use system allocator but track metrics
+        unsafe {
+            let ptr = self.system_allocator.alloc(layout);
+            if !ptr.is_null() {
+                self.allocation_count.fetch_add(1, Ordering::Relaxed);
+                self.total_allocated.fetch_add(size, Ordering::Relaxed);
+                NonNull::new(ptr)
+            } else {
+                None
+            }
+        }
+    }
+    
+    pub unsafe fn deallocate_aligned(&self, ptr: NonNull<u8>, size: usize, align: usize) {
+        let layout = Layout::from_size_align_unchecked(size, align);
+        self.system_allocator.dealloc(ptr.as_ptr(), layout);
+        self.deallocation_count.fetch_add(1, Ordering::Relaxed);
+        self.total_allocated.fetch_sub(size, Ordering::Relaxed);
+    }
+    
+    pub fn stats(&self) -> AllocatorStats {
+        AllocatorStats {
+            allocations: self.allocation_count.load(Ordering::Relaxed),
+            deallocations: self.deallocation_count.load(Ordering::Relaxed),
+            active_allocations: self.allocation_count.load(Ordering::Relaxed) 
+                - self.deallocation_count.load(Ordering::Relaxed),
+            total_allocated_bytes: self.total_allocated.load(Ordering::Relaxed),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct AllocatorStats {
+    pub allocations: usize,
+    pub deallocations: usize,
+    pub active_allocations: usize,
+    pub total_allocated_bytes: usize,
+}
+
+impl AllocatorStats {
+    pub fn print_summary(&self) {
+        println!("Lock-Free Allocator Statistics:");
+        println!("  Total allocations: {}", self.allocations);
+        println!("  Total deallocations: {}", self.deallocations);
+        println!("  Active allocations: {}", self.active_allocations);
+        println!("  Total allocated: {} KB", self.total_allocated_bytes / 1024);
+    }
+}
+
+/// Thread-local memory pools for zero-contention allocation
+thread_local! {
+    static LOCAL_VULNERABILITY_POOL: MemoryPool<Vec<Vulnerability>> = 
+        MemoryPool::new(|| Vec::with_capacity(50), 20)
+            .with_reset(|v| v.clear());
+    
+    static LOCAL_STRING_POOL: MemoryPool<String> = 
+        MemoryPool::new(|| String::with_capacity(512), 30)
+            .with_reset(|s| s.clear());
+}
+
+/// Get thread-local vulnerability pool for zero-contention access
+pub fn get_local_vulnerability_pool() -> impl Fn() -> PooledObject<Vec<Vulnerability>> {
+    || LOCAL_VULNERABILITY_POOL.with(|pool| pool.get())
+}
+
+/// Get thread-local string pool for zero-contention access
+pub fn get_local_string_pool() -> impl Fn() -> PooledObject<String> {
+    || LOCAL_STRING_POOL.with(|pool| pool.get())
 }
 
 /// Global instance of memory pools
@@ -351,6 +518,7 @@ static GLOBAL_POOLS: once_cell::sync::Lazy<GlobalMemoryPools> =
     once_cell::sync::Lazy::new(|| {
         let pools = GlobalMemoryPools::new();
         pools.initialize();
+        pools.warm_up();  // Warm up pools for better performance
         pools
     });
 
